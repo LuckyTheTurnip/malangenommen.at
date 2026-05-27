@@ -1,0 +1,543 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+
+:root {
+	color-scheme: dark;
+	--bg-top: #0c1020;
+	--bg-bottom: #05070d;
+	--panel: rgba(11, 16, 28, 0.76);
+	--panel-strong: rgba(7, 11, 20, 0.9);
+	--text: #f5f7ff;
+	--muted: rgba(245, 247, 255, 0.72);
+	--soft: rgba(255, 255, 255, 0.12);
+	--accent: #ff7d5e;
+	--accent-soft: rgba(255, 125, 94, 0.2);
+	--accent-strong: rgba(255, 125, 94, 0.45);
+	--card-top: rgba(25, 31, 49, 0.92);
+	--card-bottom: rgba(10, 14, 25, 0.96);
+	--stack-shadow: 0 28px 60px rgba(0, 0, 0, 0.36);
+	--card-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+	--card-radius: 32px;
+	--deck-width: min(92vw, 430px);
+	--deck-height: clamp(470px, 74dvh, 720px);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	width: 100%;
+	min-height: 100%;
+}
+
+body {
+	overflow: hidden;
+	font-family: 'Inter', sans-serif;
+	color: var(--text);
+	background:
+		radial-gradient(circle at top left, rgba(255, 125, 94, 0.2), transparent 34%),
+		radial-gradient(circle at 80% 20%, rgba(103, 157, 255, 0.18), transparent 30%),
+		linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+	background-size: 32px 32px;
+	mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent 88%);
+	opacity: 0.35;
+}
+
+.game {
+	position: relative;
+	isolation: isolate;
+	width: 100%;
+	min-height: 100dvh;
+	padding: max(16px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	touch-action: none;
+}
+
+.game__glow {
+	position: absolute;
+	inset: auto;
+	border-radius: 999px;
+	filter: blur(30px);
+	opacity: 0.8;
+	pointer-events: none;
+	z-index: -1;
+}
+
+.game__glow--one {
+	width: 36vw;
+	height: 36vw;
+	top: -8vw;
+	left: -6vw;
+	background: var(--accent-soft);
+}
+
+.game__glow--two {
+	width: 44vw;
+	height: 44vw;
+	right: -12vw;
+	bottom: 8vh;
+	background: rgba(92, 152, 255, 0.16);
+}
+
+.game__header,
+.game__status {
+	width: min(100%, 780px);
+}
+
+.game__header {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	padding-inline: 4px;
+}
+
+.game__header-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-left: auto;
+	flex-wrap: wrap;
+}
+
+.game__eyebrow {
+	margin: 0 0 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	font-size: 0.72rem;
+.game__motion-toggle {
+	margin: 0;
+	padding: 0.72rem 0.95rem;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+	cursor: pointer;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.game__motion-toggle:hover,
+.game__motion-toggle:focus-visible {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.11);
+	border-color: rgba(255, 255, 255, 0.22);
+	outline: none;
+}
+
+.game__motion-toggle.is-active {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: color-mix(in srgb, var(--accent) 52%, rgba(255, 255, 255, 0.14));
+	color: #fff;
+}
+
+.game__motion-toggle.is-disabled {
+	opacity: 0.56;
+	cursor: not-allowed;
+	background: rgba(255, 255, 255, 0.05);
+	border-color: rgba(255, 255, 255, 0.08);
+}
+	font-weight: 700;
+	color: var(--accent);
+}
+
+.game__title {
+	margin: 0;
+	font-size: clamp(1.18rem, 3vw, 1.75rem);
+	line-height: 1.05;
+	letter-spacing: -0.05em;
+	font-weight: 800;
+	max-width: 11ch;
+}
+
+/* counter removed — UI no longer shows remaining card count */
+
+.game__motion-toggle {
+	margin: 0;
+	padding: 0.72rem 0.95rem;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+	cursor: pointer;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.game__motion-toggle:hover,
+.game__motion-toggle:focus-visible {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.11);
+	border-color: rgba(255, 255, 255, 0.22);
+	outline: none;
+}
+
+.game__motion-toggle.is-active {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: color-mix(in srgb, var(--accent) 52%, rgba(255, 255, 255, 0.14));
+	color: #fff;
+}
+
+.game__motion-toggle.is-disabled {
+	opacity: 0.56;
+	cursor: not-allowed;
+	background: rgba(255, 255, 255, 0.05);
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.deck-stage {
+	position: relative;
+	width: 100%;
+	max-width: 780px;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 0;
+	perspective: 1200px;
+}
+
+.deck-stack {
+	position: absolute;
+	inset: 0;
+	/* hide the behind-stack previews so only the active card is visible */
+	display: none;
+}
+
+.stack-card,
+.active-card {
+	position: absolute;
+	width: var(--deck-width);
+	height: var(--deck-height);
+	border-radius: var(--card-radius);
+	overflow: hidden;
+	transform-origin: center center;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.stack-card {
+	background: linear-gradient(180deg, rgba(21, 27, 42, 0.94), rgba(6, 9, 16, 0.97));
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: var(--stack-shadow);
+	backdrop-filter: blur(10px);
+	opacity: 0;
+	transition: transform 240ms ease, opacity 240ms ease, filter 240ms ease;
+}
+
+.stack-card.is-visible {
+	opacity: 1;
+}
+
+.stack-card::before,
+.active-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 30%),
+		radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.08), transparent 35%);
+	pointer-events: none;
+}
+
+.stack-card::after,
+.active-card::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
+	pointer-events: none;
+}
+
+.stack-card__inner {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 20px 20px 18px;
+	border-radius: inherit;
+	color: white;
+}
+
+.stack-card__badge,
+.card-badge {
+	width: fit-content;
+	padding: 0.42rem 0.72rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	line-height: 1;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.stack-card__question {
+	margin: 0;
+	font-size: 1rem;
+	line-height: 1.35;
+	color: rgba(245, 247, 255, 0.84);
+	line-clamp: 4;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.stack-card--0 {
+	transform: translate3d(0, 12px, 0) scale(0.965);
+	opacity: 0.42;
+}
+
+.stack-card--1 {
+	transform: translate3d(0, 24px, 0) scale(0.93);
+	opacity: 0.24;
+}
+
+.stack-card--2 {
+	transform: translate3d(0, 36px, 0) scale(0.895);
+	opacity: 0.12;
+}
+
+
+.active-card {
+	background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: var(--card-shadow);
+	backdrop-filter: blur(18px);
+	display: block;
+	position: relative;
+	overflow: hidden;
+	/* outer card handles only entrance/exit translate (no continuous motion) */
+	transform: translate3d(0, 0, 0);
+	transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 420ms ease, filter 420ms ease;
+}
+
+/* Inner element receives live motion/drag transforms. No transitions here. */
+.active-card__tilt {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	--drag-x: 0px;
+	--drag-y: 0px;
+	--drag-rot: 0deg;
+	--motion-x: 0px;
+	--motion-y: 0px;
+	--tilt-x: 0deg;
+	--tilt-y: 0deg;
+	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(calc(var(--tilt-y) * 1deg)) rotateY(calc(var(--tilt-x) * 1deg)) rotate(var(--drag-rot));
+	transition: none;
+	will-change: transform;
+}
+
+.active-card.is-leaving {
+	opacity: 0;
+	/* fly completely off the top of the viewport */
+	transform: translate3d(0, -150vh, 0) rotate(-12deg) scale(0.92);
+	filter: blur(1px);
+}
+
+.active-card.is-entering {
+	opacity: 0;
+	/* spawn from well below the viewport so the card enters from bottom */
+	transform: translate3d(0, 150vh, 0) scale(0.98);
+	filter: blur(0);
+}
+
+.active-card__content {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	padding: clamp(18px, 4.8vw, 28px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 18px;
+}
+
+.active-card__topline {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+/* .card-index removed */
+
+.card-question-shell {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 0;
+}
+
+.card-question {
+	width: 100%;
+	margin: 0;
+	font-family: 'Fraunces', serif;
+	font-size: clamp(1.55rem, 5vw, 2.35rem);
+	line-height: 1.12;
+	letter-spacing: -0.045em;
+	text-wrap: balance;
+	hyphens: auto;
+	overflow-wrap: anywhere;
+	color: var(--text);
+	max-height: 100%;
+	overflow: hidden;
+}
+
+.card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	font-size: 0.9rem;
+	line-height: 1.3;
+	color: var(--muted);
+}
+
+.gesture-hint {
+	position: absolute;
+	left: 50%;
+	bottom: 10px;
+	transform: translateX(-50%);
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0.65rem 0.95rem;
+	border-radius: 999px;
+	background: rgba(7, 11, 20, 0.58);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	color: var(--muted);
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+	pointer-events: none;
+}
+
+.gesture-hint__arrow {
+	color: var(--accent);
+	font-size: 1rem;
+}
+
+.game__status {
+	min-height: 1.25rem;
+	text-align: center;
+	color: var(--muted);
+	font-size: 0.9rem;
+	letter-spacing: 0.02em;
+}
+
+.theme-hypothetical {
+	--accent: #ff8a5b;
+	--accent-soft: rgba(255, 138, 91, 0.18);
+	--card-top: rgba(38, 23, 31, 0.96);
+	--card-bottom: rgba(14, 10, 18, 0.97);
+}
+
+.theme-showstopper {
+	--accent: #6fc4ff;
+	--accent-soft: rgba(111, 196, 255, 0.16);
+	--card-top: rgba(17, 28, 44, 0.96);
+	--card-bottom: rgba(10, 14, 26, 0.98);
+}
+
+.theme-kombichaos {
+	--accent: #9eff7a;
+	--accent-soft: rgba(158, 255, 122, 0.16);
+	--card-top: rgba(20, 30, 18, 0.96);
+	--card-bottom: rgba(10, 16, 12, 0.98);
+}
+
+.theme-monkeyspaw {
+	--accent: #ffc45c;
+	--accent-soft: rgba(255, 196, 92, 0.16);
+	--card-top: rgba(35, 27, 17, 0.96);
+	--card-bottom: rgba(15, 11, 7, 0.98);
+}
+
+@media (max-width: 520px) {
+	:root {
+		--card-radius: 28px;
+		--deck-height: clamp(460px, 73dvh, 660px);
+	}
+
+	.game {
+		padding-inline: 12px;
+	}
+
+	.game__header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.game__header-actions {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.game__title {
+		max-width: 14ch;
+	}
+
+	.stack-card__inner,
+	.active-card__content {
+		padding: 18px 16px 16px;
+	}
+
+	.game__motion-toggle {
+		padding: 0.64rem 0.82rem;
+		font-size: 0.82rem;
+	}
+
+	.gesture-hint {
+		bottom: 6px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
