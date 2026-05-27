@@ -1,0 +1,549 @@
+document.addEventListener('DOMContentLoaded', () => {
+	const app = document.querySelector('[data-app]')
+	const activeCard = document.querySelector('[data-active-card]')
+	const tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
+	const categoryLabel = document.querySelector('[data-category-label]')
+	const questionNode = document.querySelector('[data-question]')
+	
+	const motionToggle = document.querySelector('[data-motion-toggle]')
+	const statusNode = document.querySelector('[data-status]')
+	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
+
+	if (!app || !activeCard || !categoryLabel || !questionNode || stackCards.length === 0) {
+		return
+	}
+
+	const CATEGORY_STYLES = {
+		hypothetical: {
+			label: 'Hypothetical',
+			className: 'theme-hypothetical',
+			text: '#fff9f6',
+			accent: '#ff8a5b',
+			accentSoft: 'rgba(255, 138, 91, 0.18)',
+			top: 'rgba(38, 23, 31, 0.96)',
+			bottom: 'rgba(14, 10, 18, 0.97)'
+		},
+		showstopper: {
+			label: 'Showstopper',
+			className: 'theme-showstopper',
+			text: '#f4fbff',
+			accent: '#6fc4ff',
+			accentSoft: 'rgba(111, 196, 255, 0.16)',
+			top: 'rgba(17, 28, 44, 0.96)',
+			bottom: 'rgba(10, 14, 26, 0.98)'
+		},
+		kombichaos: {
+			label: 'Kombichaos',
+			className: 'theme-kombichaos',
+			text: '#f7fff1',
+			accent: '#9eff7a',
+			accentSoft: 'rgba(158, 255, 122, 0.16)',
+			top: 'rgba(20, 30, 18, 0.96)',
+			bottom: 'rgba(10, 16, 12, 0.98)'
+		},
+		monkeyspaw: {
+			label: 'Monkey’s Paw',
+			className: 'theme-monkeyspaw',
+			text: '#fff7e9',
+			accent: '#ffc45c',
+			accentSoft: 'rgba(255, 196, 92, 0.16)',
+			top: 'rgba(35, 27, 17, 0.96)',
+			bottom: 'rgba(15, 11, 7, 0.98)'
+		}
+	}
+
+	const state = {
+		cards: [],
+		currentCard: null,
+		drawPile: [],
+		isAnimating: false,
+		isDragging: false,
+		isMotionEnabled: false,
+		isMotionSuspended: false,
+		motionPermissionState: 'idle',
+		touchStartX: 0,
+		touchStartY: 0,
+		lastTouchY: 0,
+		lastTouchX: 0,
+		touchStartTime: 0,
+		dragOffsetY: 0,
+		motionX: 0,
+		motionY: 0,
+		tiltX: 0,
+		tiltY: 0,
+		fitFrame: 0
+	}
+
+	const SWIPE_DISTANCE = 88
+	const SWIPE_RATIO = 1.2
+	const SWIPE_VELOCITY = 0.72
+	const MAX_DRAG_ROTATION = 6
+	const MAX_TILT_X = 11
+	const MAX_TILT_Y = 13
+	const MAX_MOTION_X = 20
+	const MAX_MOTION_Y = 22
+	const TILT_DAMPING = 0.16
+
+	const normalizeCategory = (value) => {
+		const normalized = String(value || '')
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z]/g, '')
+
+		if (normalized.includes('showstopper')) {
+			return 'showstopper'
+		}
+
+		if (normalized.includes('kombichaos')) {
+			return 'kombichaos'
+		}
+
+		if (normalized.includes('monkeyspaw') || normalized.includes('mokeyspaw') || normalized.includes('mokeystpaw')) {
+			return 'monkeyspaw'
+		}
+
+		return 'hypothetical'
+	}
+
+	const shuffle = (items) => {
+		const next = items.slice()
+
+		for (let index = next.length - 1; index > 0; index -= 1) {
+			const swapIndex = Math.floor(Math.random() * (index + 1))
+			;[next[index], next[swapIndex]] = [next[swapIndex], next[index]]
+		}
+
+		return next
+	}
+
+	const toCards = (rawCards) => {
+		return rawCards
+			.map((card, index) => {
+				const categoryKey = normalizeCategory(card?.category)
+				const question = String(card?.question || '').trim()
+
+				if (!question) {
+					return null
+				}
+
+				return {
+					id: `${categoryKey}-${index}`,
+					categoryKey,
+					categoryLabel: CATEGORY_STYLES[categoryKey].label,
+					question,
+					rawIndex: index
+				}
+			})
+			.filter(Boolean)
+	}
+
+	const getData = async () => {
+		if (window.MAL_ANGENOMMEN_DATA?.cards) {
+			return window.MAL_ANGENOMMEN_DATA
+		}
+
+		const response = await fetch('MalAngenommen_V2.json')
+		if (!response.ok) {
+			throw new Error('Konnte die Kartendaten nicht laden.')
+		}
+
+		return response.json()
+	}
+
+	const setTheme = (card) => {
+		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+
+		app.classList.remove(...Object.values(CATEGORY_STYLES).map((entry) => entry.className))
+		app.classList.add(theme.className)
+		app.style.setProperty('--accent', theme.accent)
+		app.style.setProperty('--accent-soft', theme.accentSoft)
+		app.style.setProperty('--card-top', theme.top)
+		app.style.setProperty('--card-bottom', theme.bottom)
+
+		activeCard.style.setProperty('--card-text', theme.text)
+	}
+
+	const updateMotionButton = (label, className, pressed) => {
+		if (!motionToggle) {
+			return
+		}
+
+		motionToggle.textContent = label
+		motionToggle.classList.remove('is-active', 'is-disabled')
+		if (className) {
+			motionToggle.classList.add(className)
+		}
+		motionToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false')
+	}
+
+	const applyMotionTransform = () => {
+		const target = activeCard
+		target.style.setProperty('--motion-x', `${state.motionX}px`)
+		target.style.setProperty('--motion-y', `${state.motionY}px`)
+		target.style.setProperty('--tilt-x', `${state.tiltX}`)
+		target.style.setProperty('--tilt-y', `${state.tiltY}`)
+	}
+
+	const updateTiltFromOrientation = (event) => {
+		if (!state.isMotionEnabled || state.isMotionSuspended) {
+			return
+		}
+
+		const beta = Number(event.beta ?? 0)
+		const gamma = Number(event.gamma ?? 0)
+		const targetMotionX = Math.max(-MAX_MOTION_X, Math.min(MAX_MOTION_X, beta * 0.24))
+		const targetMotionY = Math.max(-MAX_MOTION_Y, Math.min(MAX_MOTION_Y, -gamma * 0.28))
+		const targetTiltX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, beta * TILT_DAMPING))
+		const targetTiltY = Math.max(-MAX_TILT_Y, Math.min(MAX_TILT_Y, -gamma * TILT_DAMPING))
+
+		state.motionX += (targetMotionX - state.motionX) * 0.18
+		state.motionY += (targetMotionY - state.motionY) * 0.18
+		state.tiltX += (targetTiltX - state.tiltX) * 0.18
+		state.tiltY += (targetTiltY - state.tiltY) * 0.18
+		applyMotionTransform()
+	}
+
+	const disableMotion = () => {
+		state.isMotionEnabled = false
+		state.isMotionSuspended = false
+		state.motionPermissionState = 'denied'
+		state.motionX = 0
+		state.motionY = 0
+		state.tiltX = 0
+		state.tiltY = 0
+		applyMotionTransform()
+		updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
+		statusNode.textContent = '3D Motion wurde deaktiviert.'
+	}
+
+	const enableMotion = () => {
+		state.isMotionEnabled = true
+		state.isMotionSuspended = false
+		state.motionPermissionState = 'granted'
+		statusNode.textContent = '3D Motion ist aktiv.'
+		updateMotionButton('3D Motion aktiv', 'is-active', true)
+	}
+
+	const suspendMotionForTransition = () => {
+		if (!state.isMotionEnabled) {
+			return false
+		}
+
+		state.isMotionSuspended = true
+		state.isMotionEnabled = false
+		state.motionX = 0
+		state.motionY = 0
+		state.tiltX = 0
+		state.tiltY = 0
+		applyMotionTransform()
+		updateMotionButton('3D Motion', '', false)
+		return true
+	}
+
+	const resumeMotionAfterTransition = () => {
+		if (state.motionPermissionState !== 'granted') {
+			state.isMotionSuspended = false
+			return
+		}
+
+		state.isMotionSuspended = false
+		state.isMotionEnabled = true
+		updateMotionButton('3D Motion aktiv', 'is-active', true)
+	}
+
+	const requestMotionPermission = async () => {
+		if (!motionToggle || state.motionPermissionState === 'granted') {
+			return
+		}
+
+		updateMotionButton('3D Motion...', '', false)
+
+		try {
+			if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+				const permission = await DeviceOrientationEvent.requestPermission()
+				if (permission !== 'granted') {
+					disableMotion()
+					return
+				}
+			}
+
+			enableMotion()
+		} catch (error) {
+			console.error(error)
+			disableMotion()
+		}
+	}
+
+	const toggleMotion = async () => {
+		if (!motionToggle) return
+		if (state.isMotionEnabled) {
+			disableMotion()
+			return
+		}
+		if (state.motionPermissionState === 'granted') {
+			enableMotion()
+			return
+		}
+		await requestMotionPermission()
+	}
+
+	const fitQuestionText = () => {
+		if (state.fitFrame) {
+			cancelAnimationFrame(state.fitFrame)
+		}
+
+		state.fitFrame = requestAnimationFrame(() => {
+			const shell = questionNode.parentElement
+			if (!shell) {
+				return
+			}
+
+			const maxSize = 34
+			const minSize = 18
+			let bestSize = minSize
+			let low = minSize
+			let high = maxSize
+
+			questionNode.style.fontSize = `${maxSize}px`
+
+			while (low <= high) {
+				const mid = Math.floor((low + high) / 2)
+				questionNode.style.fontSize = `${mid}px`
+
+				if (questionNode.scrollHeight <= shell.clientHeight + 2) {
+					bestSize = mid
+					low = mid + 1
+				} else {
+					high = mid - 1
+				}
+			}
+
+			questionNode.style.fontSize = `${bestSize}px`
+		})
+	}
+
+	const updateDeckLabels = () => {
+		const remaining = state.drawPile.length + 1
+		statusNode.textContent = `${remaining} Karten im Stapel`
+	}
+
+	const buildDrawPile = (excludeId) => {
+		state.drawPile = shuffle(state.cards.filter((card) => card.id !== excludeId))
+	}
+
+	const setPreviewCards = () => {
+		const previewCards = state.drawPile.slice(0, stackCards.length)
+
+		stackCards.forEach((stackCard, index) => {
+			const preview = previewCards[index]
+			const theme = preview ? CATEGORY_STYLES[preview.categoryKey] : CATEGORY_STYLES.hypothetical
+
+			stackCard.className = `stack-card stack-card--${index} ${preview ? 'is-visible' : ''}`
+			stackCard.style.setProperty('--card-top', theme.top)
+			stackCard.style.setProperty('--card-bottom', theme.bottom)
+			stackCard.style.setProperty('--accent', theme.accent)
+
+			if (!preview) {
+				stackCard.innerHTML = ''
+				return
+			}
+
+			stackCard.innerHTML = `
+				<div class="stack-card__inner">
+					<span class="stack-card__badge">${theme.label}</span>
+					<p class="stack-card__question">${preview.question}</p>
+				</div>
+			`
+		})
+	}
+
+	const renderCard = (card) => {
+		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+
+		categoryLabel.textContent = theme.label
+		questionNode.textContent = card.question
+		activeCard.style.setProperty('--card-top', theme.top)
+		activeCard.style.setProperty('--card-bottom', theme.bottom)
+		activeCard.style.setProperty('--accent', theme.accent)
+		questionNode.style.color = theme.text
+
+		setTheme(card)
+		updateDeckLabels()
+		setPreviewCards()
+		fitQuestionText()
+	}
+
+	const startFromRandomCard = () => {
+		const randomIndex = Math.floor(Math.random() * state.cards.length)
+		state.currentCard = state.cards[randomIndex]
+		buildDrawPile(state.currentCard.id)
+		renderCard(state.currentCard)
+	}
+
+	const resetCardPosition = () => {
+		activeCard.classList.remove('is-dragging', 'is-leaving')
+		const target = activeCard
+		target.style.setProperty('--drag-x', '0px')
+		target.style.setProperty('--drag-y', '0px')
+		target.style.setProperty('--drag-rot', '0deg')
+		activeCard.style.opacity = ''
+		activeCard.style.filter = ''
+		state.dragOffsetY = 0
+		state.isDragging = false
+		applyMotionTransform()
+	}
+
+	const advanceCard = () => {
+		if (state.isAnimating) {
+			return
+		}
+
+		const motionWasActive = suspendMotionForTransition()
+
+		if (state.drawPile.length === 0) {
+			buildDrawPile(state.currentCard.id)
+			setPreviewCards()
+		}
+
+		const nextCard = state.drawPile.shift()
+		if (!nextCard) {
+			resetCardPosition()
+			return
+		}
+
+		state.isAnimating = true
+		activeCard.classList.add('is-leaving')
+		activeCard.classList.remove('is-dragging')
+
+		window.setTimeout(() => {
+			state.currentCard = nextCard
+			renderCard(state.currentCard)
+
+			activeCard.classList.add('is-entering')
+			activeCard.classList.remove('is-leaving')
+			activeCard.style.transition = 'none'
+			activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
+			const target = activeCard
+			target.style.setProperty('--drag-x', '0px')
+			target.style.setProperty('--drag-y', '0px')
+			target.style.setProperty('--drag-rot', '0deg')
+			activeCard.style.opacity = ''
+			activeCard.style.filter = ''
+			applyMotionTransform()
+
+			requestAnimationFrame(() => {
+				activeCard.style.transition = ''
+				activeCard.style.transform = ''
+				activeCard.classList.remove('is-entering')
+				state.isAnimating = false
+				if (motionWasActive) {
+					resumeMotionAfterTransition()
+				}
+			})
+		}, 420)
+	}
+
+	const onTouchStart = (event) => {
+		if (state.isAnimating || !event.touches || event.touches.length !== 1) {
+			return
+		}
+
+		const touch = event.touches[0]
+		state.isDragging = true
+		state.touchStartX = touch.clientX
+		state.touchStartY = touch.clientY
+		state.lastTouchX = touch.clientX
+		state.lastTouchY = touch.clientY
+		state.touchStartTime = performance.now()
+		activeCard.classList.add('is-dragging')
+	}
+
+	const onTouchMove = (event) => {
+		if (!state.isDragging || state.isAnimating || !event.touches || event.touches.length !== 1) {
+			return
+		}
+
+		const touch = event.touches[0]
+		state.lastTouchX = touch.clientX
+		state.lastTouchY = touch.clientY
+
+		const deltaX = touch.clientX - state.touchStartX
+		const deltaY = touch.clientY - state.touchStartY
+		const dragDistance = Math.max(0, -deltaY)
+		state.dragOffsetY = deltaY
+
+		event.preventDefault()
+
+		const rotation = Math.max(-MAX_DRAG_ROTATION, Math.min(MAX_DRAG_ROTATION, deltaX * 0.02 - dragDistance * 0.03))
+		const target = activeCard
+		target.style.setProperty('--drag-x', `${deltaX * 0.08}px`)
+		target.style.setProperty('--drag-y', `${deltaY}px`)
+		target.style.setProperty('--drag-rot', `${rotation}deg`)
+		activeCard.style.opacity = `${Math.max(0.72, 1 - dragDistance / 420)}`
+		activeCard.style.filter = `brightness(${Math.max(0.92, 1 - dragDistance / 1200)})`
+		applyMotionTransform()
+	}
+
+	const onTouchEnd = () => {
+		if (!state.isDragging || state.isAnimating) {
+			return
+		}
+
+		const elapsed = Math.max(1, performance.now() - state.touchStartTime)
+		const deltaX = state.lastTouchX - state.touchStartX
+		const deltaY = state.lastTouchY - state.touchStartY
+		const velocityY = Math.abs(deltaY) / elapsed
+		const isUpwardSwipe = deltaY < -SWIPE_DISTANCE && Math.abs(deltaY) > Math.abs(deltaX) * SWIPE_RATIO
+		const isFastFlick = deltaY < -40 && velocityY > SWIPE_VELOCITY
+
+		if (isUpwardSwipe || isFastFlick) {
+			advanceCard()
+			return
+		}
+
+		resetCardPosition()
+	}
+
+	const onKeyDown = (event) => {
+		if (event.key === 'ArrowUp' || event.key === 'PageUp' || event.key === ' ') {
+			event.preventDefault()
+			advanceCard()
+		}
+	}
+
+	const bindEvents = () => {
+		activeCard.addEventListener('touchstart', onTouchStart, { passive: true })
+		activeCard.addEventListener('touchmove', onTouchMove, { passive: false })
+		activeCard.addEventListener('touchend', onTouchEnd)
+		activeCard.addEventListener('touchcancel', resetCardPosition)
+		motionToggle?.addEventListener('click', toggleMotion)
+		window.addEventListener('keydown', onKeyDown)
+		window.addEventListener('resize', fitQuestionText)
+		window.addEventListener('deviceorientation', updateTiltFromOrientation)
+	}
+
+	const initialize = async () => {
+		try {
+			const data = await getData()
+			state.cards = toCards(Array.isArray(data.cards) ? data.cards : [])
+
+			if (state.cards.length === 0) {
+				throw new Error('Keine Karten gefunden.')
+			}
+
+			startFromRandomCard()
+			bindEvents()
+			updateMotionButton('3D Motion', '', false)
+			statusNode.textContent = 'Swipe hoch, um eine neue Karte zu ziehen.'
+		} catch (error) {
+			console.error(error)
+			statusNode.textContent = 'Die Karten konnten nicht geladen werden.'
+			questionNode.textContent = 'Die Karten konnten nicht geladen werden.'
+			categoryLabel.textContent = 'Fehler'
+			updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
+		}
+	}
+
+	initialize()
+})
