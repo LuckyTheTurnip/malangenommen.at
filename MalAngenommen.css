@@ -135,7 +135,8 @@ body::before {
 	text-transform: uppercase;
 	letter-spacing: 0.22em;
 	font-size: 0.72rem;
-.game__motion-toggle {
+.game__motion-toggle,
+.game__language-toggle {
 	margin: 0;
 	padding: 0.72rem 0.95rem;
 	border-radius: 999px;
@@ -152,15 +153,22 @@ body::before {
 	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
 }
 
+.game__language-toggle {
+	min-width: 96px;
+}
+
 .game__motion-toggle:hover,
-.game__motion-toggle:focus-visible {
+.game__motion-toggle:focus-visible,
+.game__language-toggle:hover,
+.game__language-toggle:focus-visible {
 	transform: translateY(-1px);
 	background: rgba(255, 255, 255, 0.11);
 	border-color: rgba(255, 255, 255, 0.22);
 	outline: none;
 }
 
-.game__motion-toggle.is-active {
+.game__motion-toggle.is-active,
+.game__language-toggle.is-active {
 	background: rgba(255, 255, 255, 0.12);
 	border-color: color-mix(in srgb, var(--accent) 52%, rgba(255, 255, 255, 0.14));
 	color: #fff;
@@ -532,7 +540,8 @@ body::before {
 		padding: 18px 16px 16px;
 	}
 
-	.game__motion-toggle {
+	.game__motion-toggle,
+	.game__language-toggle {
 		padding: 0.64rem 0.82rem;
 		font-size: 0.82rem;
 	}

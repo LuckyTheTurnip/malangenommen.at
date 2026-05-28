@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const questionNode = document.querySelector('[data-question]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
+	const languageToggle = document.querySelector('[data-language-toggle]')
 	const statusNode = document.querySelector('[data-status]')
 	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
 
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		cards: [],
 		currentCard: null,
 		drawPile: [],
+		language: 'de',
 		isAnimating: false,
 		isDragging: false,
 		isMotionEnabled: false,
@@ -121,9 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		return rawCards
 			.map((card, index) => {
 				const categoryKey = normalizeCategory(card?.category)
-				const question = String(card?.question || '').trim()
+				const questionDe = String(card?.question || '').trim()
+				const questionEn = String(card?.question_en || '').trim()
 
-				if (!question) {
+				if (!questionDe && !questionEn) {
 					return null
 				}
 
@@ -131,11 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
 					id: `${categoryKey}-${index}`,
 					categoryKey,
 					categoryLabel: CATEGORY_STYLES[categoryKey].label,
-					question,
+					questionDe,
+					questionEn,
 					rawIndex: index
 				}
 			})
 			.filter(Boolean)
+	}
+
+	const getCardQuestion = (card) => {
+		if (!card) {
+			return ''
+		}
+
+		if (state.language === 'en') {
+			return card.questionEn || card.questionDe || ''
+		}
+
+		return card.questionDe || card.questionEn || ''
 	}
 
 	const getData = async () => {
@@ -175,6 +191,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			motionToggle.classList.add(className)
 		}
 		motionToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false')
+	}
+
+	const updateLanguageButton = () => {
+		if (!languageToggle) {
+			return
+		}
+
+		const isEnglish = state.language === 'en'
+		languageToggle.textContent = isEnglish ? 'Deutsch' : 'English'
+		languageToggle.classList.toggle('is-active', isEnglish)
+		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
 	}
 
 	const applyMotionTransform = () => {
@@ -352,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			stackCard.innerHTML = `
 				<div class="stack-card__inner">
 					<span class="stack-card__badge">${theme.label}</span>
-					<p class="stack-card__question">${preview.question}</p>
+					<p class="stack-card__question">${getCardQuestion(preview)}</p>
 				</div>
 			`
 		})
@@ -362,16 +389,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 
 		categoryLabel.textContent = theme.label
-		questionNode.textContent = card.question
+		questionNode.textContent = getCardQuestion(card)
 		activeCard.style.setProperty('--card-top', theme.top)
 		activeCard.style.setProperty('--card-bottom', theme.bottom)
 		activeCard.style.setProperty('--accent', theme.accent)
 		questionNode.style.color = theme.text
 
 		setTheme(card)
+		updateLanguageButton()
 		updateDeckLabels()
 		setPreviewCards()
 		fitQuestionText()
+	}
+
+	const toggleLanguage = () => {
+		state.language = state.language === 'en' ? 'de' : 'en'
+		updateLanguageButton()
+
+		if (state.currentCard) {
+			renderCard(state.currentCard)
+		}
 	}
 
 	const startFromRandomCard = () => {
@@ -543,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.addEventListener('touchend', onTouchEnd)
 		activeCard.addEventListener('touchcancel', resetCardPosition)
 		motionToggle?.addEventListener('click', toggleMotion)
+		languageToggle?.addEventListener('click', toggleLanguage)
 		window.addEventListener('keydown', onKeyDown)
 		window.addEventListener('resize', fitQuestionText)
 		window.addEventListener('deviceorientation', updateTiltFromOrientation)
@@ -560,6 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			startFromRandomCard()
 			bindEvents()
 			updateMotionButton('3D Motion', '', false)
+			updateLanguageButton()
 			statusNode.textContent = 'Swipe hoch, um eine neue Karte zu ziehen.'
 		} catch (error) {
 			console.error(error)
