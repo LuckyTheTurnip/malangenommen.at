@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
+	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
 	const categoryLabel = document.querySelector('[data-category-label]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
