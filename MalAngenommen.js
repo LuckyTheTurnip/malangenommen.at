@@ -454,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.classList.remove('is-dragging')
 
 		let enterTransitionFinished = false
+		let enterAnimation = null
 		const finishEnterTransition = () => {
 			if (enterTransitionFinished) {
 				return
@@ -461,8 +462,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			enterTransitionFinished = true
 			activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
+			enterAnimation?.cancel()
 			activeCard.style.transition = ''
 			activeCard.style.transform = ''
+			activeCard.style.opacity = ''
+			activeCard.style.filter = ''
 			activeCard.classList.remove('is-entering')
 			state.isAnimating = false
 			if (motionWasActive) {
@@ -486,20 +490,45 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.classList.remove('is-leaving')
 			activeCard.style.transition = 'none'
 			activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
+			activeCard.style.opacity = '0'
 			const target = activeCard
 			target.style.setProperty('--drag-x', '0px')
 			target.style.setProperty('--drag-y', '0px')
 			target.style.setProperty('--drag-rot', '0deg')
-			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
 			applyMotionTransform()
 			activeCard.getBoundingClientRect()
+
+			if (typeof activeCard.animate === 'function') {
+				enterAnimation = activeCard.animate(
+					[
+						{
+							transform: 'translate3d(0, 150vh, 0) scale(0.98)',
+							opacity: 0
+						},
+						{
+							transform: 'translate3d(0px, 0px, 0) rotateX(0deg) rotateY(0deg) rotate(0deg)',
+							opacity: 1
+						}
+					],
+					{
+						duration: 420,
+						easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+						fill: 'both'
+					}
+				)
+
+				enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
+				return
+			}
+
 			activeCard.addEventListener('transitionend', onEnterTransitionEnd)
 
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
 					activeCard.style.transition = ''
 					activeCard.style.transform = ''
+					activeCard.style.opacity = ''
 					window.setTimeout(finishEnterTransition, 500)
 				})
 			})
