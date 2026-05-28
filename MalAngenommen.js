@@ -416,6 +416,31 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.classList.add('is-leaving')
 		activeCard.classList.remove('is-dragging')
 
+		let enterTransitionFinished = false
+		const finishEnterTransition = () => {
+			if (enterTransitionFinished) {
+				return
+			}
+
+			enterTransitionFinished = true
+			activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
+			activeCard.style.transition = ''
+			activeCard.style.transform = ''
+			activeCard.classList.remove('is-entering')
+			state.isAnimating = false
+			if (motionWasActive) {
+				resumeMotionAfterTransition()
+			}
+		}
+
+		const onEnterTransitionEnd = (event) => {
+			if (event.target !== activeCard || event.propertyName !== 'transform') {
+				return
+			}
+
+			finishEnterTransition()
+		}
+
 		window.setTimeout(() => {
 			state.currentCard = nextCard
 			renderCard(state.currentCard)
@@ -431,15 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
 			applyMotionTransform()
+			activeCard.addEventListener('transitionend', onEnterTransitionEnd)
 
 			requestAnimationFrame(() => {
 				activeCard.style.transition = ''
 				activeCard.style.transform = ''
-				activeCard.classList.remove('is-entering')
-				state.isAnimating = false
-				if (motionWasActive) {
-					resumeMotionAfterTransition()
-				}
+				window.setTimeout(finishEnterTransition, 500)
 			})
 		}, 420)
 	}
