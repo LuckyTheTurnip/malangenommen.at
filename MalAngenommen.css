@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #00ffff;
+	background: #e1ff00;
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -355,10 +355,12 @@ body::before {
 	background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	box-shadow: var(--card-shadow);
-	backdrop-filter: blur(18px);
+	backdrop-filter: none;
 	display: block;
 	position: relative;
 	overflow: hidden;
+	transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
 	/* live motion is applied directly to the visible card */
 	--drag-x: 0px;
 	--drag-y: 0px;
@@ -369,7 +371,7 @@ body::before {
 	--tilt-y: 0deg;
 	--tilt-z: 0deg;
 	--flip-deg: 0deg;
-	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(calc(var(--tilt-y) * 1deg)) rotateY(calc(var(--tilt-x) * 1deg)) rotateZ(calc(var(--tilt-z) * 1deg)) rotate(var(--drag-rot)) rotateY(var(--flip-deg));
+	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)) rotateZ(var(--tilt-z)) rotate(var(--drag-rot)) rotateY(var(--flip-deg));
 	transition: transform 420ms cubic-bezier(0.2,0.7,0.2,1);
 	will-change: transform;
 }
@@ -381,6 +383,8 @@ body::before {
 	display: flex;
 	align-items: stretch;
 	justify-content: stretch;
+	transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
 }
 
 /* 3D flip faces */
@@ -388,6 +392,7 @@ body::before {
 	position: absolute;
 	inset: 0;
 	transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
 	/* structural faces only; shell now owns the Y rotation */
 	transition: none;
 	transform: none;
@@ -396,6 +401,7 @@ body::before {
 .card-face {
 	position: absolute;
 	inset: 0;
+	background-color: #0b0f19;
 	background: linear-gradient(
 		180deg,
 		color-mix(in srgb, var(--card-top) 90%, #0a0d16),
@@ -403,10 +409,22 @@ body::before {
 	);
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
+	transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
+}
+
+.card-face--front {
+	transform: rotateY(0deg) translateZ(1px);
+	z-index: 2;
+	opacity: 1;
+	visibility: visible;
 }
 
 .card-face--back {
-	transform: rotateY(180deg);
+	transform: rotateY(180deg) translateZ(1px);
+	z-index: 1;
+	opacity: 0;
+	visibility: hidden;
 }
 
 .active-card {
@@ -415,6 +433,17 @@ body::before {
 
 .active-card.is-flipped {
 	--flip-deg: 180deg;
+}
+
+.active-card.is-flipped .card-face--front {
+	opacity: 0;
+	visibility: hidden;
+}
+
+.active-card.is-flipped .card-face--back {
+	z-index: 3;
+	opacity: 1;
+	visibility: visible;
 }
 
 .active-card.is-leaving {
@@ -482,8 +511,10 @@ body::before {
 	font-weight: 800;
 	letter-spacing: 0.22em;
 	text-transform: uppercase;
+	fill: #f2f5ff;
 	fill: color-mix(in srgb, var(--text) 84%, var(--accent) 16%);
 	opacity: 0.9;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.22);
 }
 
 .card-back-logo-wrap {
@@ -494,6 +525,7 @@ body::before {
 	display: grid;
 	place-items: center;
 	border-radius: 999px;
+	background: radial-gradient(circle at 35% 28%, #f8d6be, #151926);
 	background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--accent) 26%, white), color-mix(in srgb, var(--card-bottom) 70%, black));
 	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
@@ -502,7 +534,7 @@ body::before {
 	width: 72%;
 	height: 72%;
 	object-fit: contain;
-	filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.26));
+	filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.26)) brightness(1.08);
 }
 
 @keyframes orbit-spin {
