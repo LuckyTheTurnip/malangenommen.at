@@ -453,12 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		categoryLabel.textContent = theme.label
 		if (frontQuestionNode) frontQuestionNode.textContent = getCardQuestion(card)
-		if (backQuestionNode) backQuestionNode.textContent = getCardQuestion(card)
 		activeCard.style.setProperty('--card-top', theme.top)
 		activeCard.style.setProperty('--card-bottom', theme.bottom)
 		activeCard.style.setProperty('--accent', theme.accent)
 		if (frontQuestionNode) frontQuestionNode.style.color = theme.text
-		if (backQuestionNode) backQuestionNode.style.color = theme.text
 
 		setTheme(card)
 		updateLanguageButton()

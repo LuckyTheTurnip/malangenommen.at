@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #ff0066;
+	background: #00ffff;
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -396,6 +396,11 @@ body::before {
 .card-face {
 	position: absolute;
 	inset: 0;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--card-top) 90%, #0a0d16),
+		color-mix(in srgb, var(--card-bottom) 94%, #05070c)
+	);
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 }
@@ -436,6 +441,77 @@ body::before {
 	flex-direction: column;
 	justify-content: space-between;
 	gap: 18px;
+}
+
+.active-card__content--back {
+	justify-content: center;
+	align-items: center;
+	padding: clamp(14px, 4vw, 24px);
+}
+
+.card-back-design {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	border-radius: inherit;
+}
+
+.card-back-orbit {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: min(88%, 360px);
+	aspect-ratio: 16 / 11;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	animation: orbit-spin 13s linear infinite;
+}
+
+.card-back-orbit-svg {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.card-back-orbit-text {
+	font-family: 'Inter', sans-serif;
+	font-size: clamp(11px, 2.5vw, 13px);
+	font-weight: 800;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	fill: color-mix(in srgb, var(--text) 84%, var(--accent) 16%);
+	opacity: 0.9;
+}
+
+.card-back-logo-wrap {
+	position: relative;
+	z-index: 2;
+	width: clamp(106px, 30vw, 154px);
+	aspect-ratio: 1 / 1;
+	display: grid;
+	place-items: center;
+	border-radius: 999px;
+	background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--accent) 26%, white), color-mix(in srgb, var(--card-bottom) 70%, black));
+	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.card-back-logo {
+	width: 72%;
+	height: 72%;
+	object-fit: contain;
+	filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.26));
+}
+
+@keyframes orbit-spin {
+	from {
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
 }
 
 .active-card__topline {
@@ -571,6 +647,14 @@ body::before {
 		padding: 18px 16px 16px;
 	}
 
+	.active-card__content--back {
+		padding: 14px;
+	}
+
+	.card-back-orbit {
+		width: 96%;
+	}
+
 	.game__motion-toggle,
 	.game__language-toggle {
 		padding: 0.64rem 0.82rem;
@@ -583,6 +667,10 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.card-back-orbit {
+		animation: none;
+	}
+
 	*,
 	*::before,
 	*::after {
