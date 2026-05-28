@@ -456,12 +456,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
 			applyMotionTransform()
+			activeCard.getBoundingClientRect()
 			activeCard.addEventListener('transitionend', onEnterTransitionEnd)
 
 			requestAnimationFrame(() => {
-				activeCard.style.transition = ''
-				activeCard.style.transform = ''
-				window.setTimeout(finishEnterTransition, 500)
+				requestAnimationFrame(() => {
+					activeCard.style.transition = ''
+					activeCard.style.transform = ''
+					window.setTimeout(finishEnterTransition, 500)
+				})
 			})
 		}, 420)
 	}
