@@ -687,13 +687,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const onFlipEnd = (ev) => {
-			if (ev.target !== faces || ev.propertyName !== 'transform') return
-			faces.removeEventListener('transitionend', onFlipEnd)
+			if (ev.target !== activeCard || ev.propertyName !== 'transform') return
+			activeCard.removeEventListener('transitionend', onFlipEnd)
 			state.isAnimating = false
 			if (motionWasActive) resumeMotionAfterTransition()
 		}
 
-		faces.addEventListener('transitionend', onFlipEnd)
+		activeCard.addEventListener('transitionend', onFlipEnd, { once: true })
 	}
 
 	const onKeyDown = (event) => {
