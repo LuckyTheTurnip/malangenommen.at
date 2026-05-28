@@ -2,8 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
 	const activeCard = document.querySelector('[data-active-card]')
 	const tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
+	const facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
+	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
+	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
 	const categoryLabel = document.querySelector('[data-category-label]')
-	const questionNode = document.querySelector('[data-question]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		isMotionEnabled: false,
 		isMotionSuspended: false,
 		motionPermissionState: 'idle',
+		isFlipped: false,
 		motionBaselineBeta: null,
 		motionBaselineGamma: null,
 		motionBaselinePending: false,
@@ -94,6 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MAX_MOTION_Y = 22
 	const TILT_DAMPING = 0.16
 	const TILT_Z_DAMPING = 0.08
+
+	const softClamp = (value, max) => {
+		return max * Math.tanh(value / max)
+	}
 
 	const normalizeCategory = (value) => {
 		const normalized = String(value || '')
@@ -235,6 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--tilt-z', `${state.tiltZ}`)
 	}
 
+	const setFlipClass = (flipped) => {
+		state.isFlipped = !!flipped
+		if (state.isFlipped) {
+			activeCard.classList.add('is-flipped')
+		} else {
+			activeCard.classList.remove('is-flipped')
+		}
+	}
+
 	const updateTiltFromOrientation = (event) => {
 		const beta = Number(event.beta ?? 0)
 		const gamma = Number(event.gamma ?? 0)
@@ -255,11 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		const deltaBeta = beta - baselineBeta
 		const deltaGamma = gamma - baselineGamma
 		const activationAlpha = Math.min(1, Math.max(0, (performance.now() - state.motionActivatedAt) / 260))
-		const targetMotionX = Math.max(-MAX_MOTION_X, Math.min(MAX_MOTION_X, deltaBeta * 0.24)) * activationAlpha
-		const targetMotionY = Math.max(-MAX_MOTION_Y, Math.min(MAX_MOTION_Y, -deltaGamma * 0.28)) * activationAlpha
-		const targetTiltX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, deltaBeta * TILT_DAMPING)) * activationAlpha
-		const targetTiltY = Math.max(-MAX_TILT_Y, Math.min(MAX_TILT_Y, -deltaGamma * TILT_DAMPING)) * activationAlpha
-		const targetTiltZ = Math.max(-MAX_TILT_Z, Math.min(MAX_TILT_Z, deltaGamma * TILT_Z_DAMPING)) * activationAlpha
+		const targetMotionX = softClamp(deltaBeta * 0.24, MAX_MOTION_X) * activationAlpha
+		const targetMotionY = softClamp(-deltaGamma * 0.28, MAX_MOTION_Y) * activationAlpha
+		const targetTiltX = softClamp(deltaBeta * TILT_DAMPING, MAX_TILT_X) * activationAlpha
+		const targetTiltY = softClamp(-deltaGamma * TILT_DAMPING, MAX_TILT_Y) * activationAlpha
+		const targetTiltZ = softClamp(deltaGamma * TILT_Z_DAMPING, MAX_TILT_Z) * activationAlpha
 
 		state.motionX += (targetMotionX - state.motionX) * 0.18
 		state.motionY += (targetMotionY - state.motionY) * 0.18
@@ -435,17 +451,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 
 		categoryLabel.textContent = theme.label
-		questionNode.textContent = getCardQuestion(card)
+		if (frontQuestionNode) frontQuestionNode.textContent = getCardQuestion(card)
+		if (backQuestionNode) backQuestionNode.textContent = getCardQuestion(card)
 		activeCard.style.setProperty('--card-top', theme.top)
 		activeCard.style.setProperty('--card-bottom', theme.bottom)
 		activeCard.style.setProperty('--accent', theme.accent)
-		questionNode.style.color = theme.text
+		if (frontQuestionNode) frontQuestionNode.style.color = theme.text
+		if (backQuestionNode) backQuestionNode.style.color = theme.text
 
 		setTheme(card)
 		updateLanguageButton()
 		updateDeckLabels()
 		setPreviewCards()
 		fitQuestionText()
+		// reset flip when showing a new card
+		setFlipClass(false)
 	}
 
 	const toggleLanguage = () => {
@@ -633,13 +653,46 @@ document.addEventListener('DOMContentLoaded', () => {
 		const velocityY = Math.abs(deltaY) / elapsed
 		const isUpwardSwipe = deltaY < -SWIPE_DISTANCE && Math.abs(deltaY) > Math.abs(deltaX) * SWIPE_RATIO
 		const isFastFlick = deltaY < -40 && velocityY > SWIPE_VELOCITY
+		const isHorizontalLeft = deltaX < -SWIPE_DISTANCE && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO
+		const isHorizontalRight = deltaX > SWIPE_DISTANCE && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO
 
 		if (isUpwardSwipe || isFastFlick) {
 			advanceCard()
 			return
 		}
 
+		if (isHorizontalLeft || isHorizontalRight) {
+			flipCard(isHorizontalLeft ? 'left' : 'right')
+			return
+		}
+
 		resetCardPosition()
+	}
+
+	const flipCard = (direction) => {
+		if (state.isAnimating) return
+
+		const motionWasActive = suspendMotionForTransition()
+		state.isAnimating = true
+
+		// toggle flipped state
+		setFlipClass(!state.isFlipped)
+
+		const faces = facesEl || activeCard.querySelector('.active-card__faces')
+		if (!faces) {
+			state.isAnimating = false
+			if (motionWasActive) resumeMotionAfterTransition()
+			return
+		}
+
+		const onFlipEnd = (ev) => {
+			if (ev.target !== faces || ev.propertyName !== 'transform') return
+			faces.removeEventListener('transitionend', onFlipEnd)
+			state.isAnimating = false
+			if (motionWasActive) resumeMotionAfterTransition()
+		}
+
+		faces.addEventListener('transitionend', onFlipEnd)
 	}
 
 	const onKeyDown = (event) => {

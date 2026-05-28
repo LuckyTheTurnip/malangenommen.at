@@ -33,18 +33,38 @@
 
             <article class="active-card" data-active-card>
                 <div class="active-card__tilt">
-                    <div class="active-card__content">
-                    <div class="active-card__topline">
-                        <span class="card-badge" data-category-label>...</span>
-                    </div>
+                    <div class="active-card__faces">
+                        <div class="card-face card-face--front">
+                            <div class="active-card__content">
+                                <div class="active-card__topline">
+                                    <span class="card-badge" data-category-label>...</span>
+                                </div>
 
-                    <div class="card-question-shell">
-                        <p class="card-question" data-question></p>
-                    </div>
+                                <div class="card-question-shell">
+                                    <p class="card-question" data-front-question></p>
+                                </div>
 
-                    <div class="card-footer">
-                        <span>Mit einem Swipe nach oben geht es weiter</span>
-                    </div>
+                                <div class="card-footer">
+                                    <span>Mit einem Swipe nach oben geht es weiter</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-face card-face--back">
+                            <div class="active-card__content">
+                                <div class="active-card__topline">
+                                    <span class="card-badge">&nbsp;</span>
+                                </div>
+
+                                <div class="card-question-shell">
+                                    <p class="card-question" data-back-question></p>
+                                </div>
+
+                                <div class="card-footer">
+                                    <span>&nbsp;</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </article>
