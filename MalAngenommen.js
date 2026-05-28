@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		motionY: 0,
 		tiltX: 0,
 		tiltY: 0,
+		tiltZ: 0,
 		fitFrame: 0
 	}
 
@@ -88,9 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 11
 	const MAX_TILT_Y = 13
+	const MAX_TILT_Z = 8
 	const MAX_MOTION_X = 20
 	const MAX_MOTION_Y = 22
 	const TILT_DAMPING = 0.16
+	const TILT_Z_DAMPING = 0.08
 
 	const normalizeCategory = (value) => {
 		const normalized = String(value || '')
@@ -229,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--motion-y', `${state.motionY}px`)
 		target.style.setProperty('--tilt-x', `${state.tiltX}`)
 		target.style.setProperty('--tilt-y', `${state.tiltY}`)
+		target.style.setProperty('--tilt-z', `${state.tiltZ}`)
 	}
 
 	const updateTiltFromOrientation = (event) => {
@@ -255,11 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetMotionY = Math.max(-MAX_MOTION_Y, Math.min(MAX_MOTION_Y, -deltaGamma * 0.28)) * activationAlpha
 		const targetTiltX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, deltaBeta * TILT_DAMPING)) * activationAlpha
 		const targetTiltY = Math.max(-MAX_TILT_Y, Math.min(MAX_TILT_Y, -deltaGamma * TILT_DAMPING)) * activationAlpha
+		const targetTiltZ = Math.max(-MAX_TILT_Z, Math.min(MAX_TILT_Z, deltaGamma * TILT_Z_DAMPING)) * activationAlpha
 
 		state.motionX += (targetMotionX - state.motionX) * 0.18
 		state.motionY += (targetMotionY - state.motionY) * 0.18
 		state.tiltX += (targetTiltX - state.tiltX) * 0.18
 		state.tiltY += (targetTiltY - state.tiltY) * 0.18
+		state.tiltZ += (targetTiltZ - state.tiltZ) * 0.18
 		applyMotionTransform()
 	}
 
@@ -275,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionY = 0
 		state.tiltX = 0
 		state.tiltY = 0
+		state.tiltZ = 0
 		applyMotionTransform()
 		updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
 		statusNode.textContent = '3D Motion wurde deaktiviert.'
@@ -301,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionY = 0
 		state.tiltX = 0
 		state.tiltY = 0
+		state.tiltZ = 0
 		applyMotionTransform()
 		updateMotionButton('3D Motion', '', false)
 		return true

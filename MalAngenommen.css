@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #f7ff0a;
+	background: #ff220a;
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -367,7 +367,8 @@ body::before {
 	--motion-y: 0px;
 	--tilt-x: 0deg;
 	--tilt-y: 0deg;
-	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(calc(var(--tilt-y) * 1deg)) rotateY(calc(var(--tilt-x) * 1deg)) rotate(var(--drag-rot));
+	--tilt-z: 0deg;
+	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(calc(var(--tilt-y) * 1deg)) rotateY(calc(var(--tilt-x) * 1deg)) rotateZ(calc(var(--tilt-z) * 1deg)) rotate(var(--drag-rot));
 	transition: none;
 	will-change: transform;
 }
