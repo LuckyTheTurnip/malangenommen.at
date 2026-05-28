@@ -63,6 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		isMotionEnabled: false,
 		isMotionSuspended: false,
 		motionPermissionState: 'idle',
+		motionBaselineBeta: null,
+		motionBaselineGamma: null,
+		motionBaselinePending: false,
+		motionActivatedAt: 0,
+		lastOrientationBeta: null,
+		lastOrientationGamma: null,
 		touchStartX: 0,
 		touchStartY: 0,
 		lastTouchY: 0,
@@ -193,6 +199,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		motionToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false')
 	}
 
+	const setMotionBaseline = (beta, gamma) => {
+		if (!Number.isFinite(beta) || !Number.isFinite(gamma)) {
+			state.motionBaselineBeta = null
+			state.motionBaselineGamma = null
+			state.motionBaselinePending = true
+			return
+		}
+
+		state.motionBaselineBeta = beta
+		state.motionBaselineGamma = gamma
+		state.motionBaselinePending = false
+	}
+
 	const updateLanguageButton = () => {
 		if (!languageToggle) {
 			return
@@ -213,16 +232,29 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const updateTiltFromOrientation = (event) => {
+		const beta = Number(event.beta ?? 0)
+		const gamma = Number(event.gamma ?? 0)
+		state.lastOrientationBeta = beta
+		state.lastOrientationGamma = gamma
+
 		if (!state.isMotionEnabled || state.isMotionSuspended) {
 			return
 		}
 
-		const beta = Number(event.beta ?? 0)
-		const gamma = Number(event.gamma ?? 0)
-		const targetMotionX = Math.max(-MAX_MOTION_X, Math.min(MAX_MOTION_X, beta * 0.24))
-		const targetMotionY = Math.max(-MAX_MOTION_Y, Math.min(MAX_MOTION_Y, -gamma * 0.28))
-		const targetTiltX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, beta * TILT_DAMPING))
-		const targetTiltY = Math.max(-MAX_TILT_Y, Math.min(MAX_TILT_Y, -gamma * TILT_DAMPING))
+		if (state.motionBaselinePending) {
+			setMotionBaseline(beta, gamma)
+			return
+		}
+
+		const baselineBeta = Number.isFinite(state.motionBaselineBeta) ? state.motionBaselineBeta : beta
+		const baselineGamma = Number.isFinite(state.motionBaselineGamma) ? state.motionBaselineGamma : gamma
+		const deltaBeta = beta - baselineBeta
+		const deltaGamma = gamma - baselineGamma
+		const activationAlpha = Math.min(1, Math.max(0, (performance.now() - state.motionActivatedAt) / 260))
+		const targetMotionX = Math.max(-MAX_MOTION_X, Math.min(MAX_MOTION_X, deltaBeta * 0.24)) * activationAlpha
+		const targetMotionY = Math.max(-MAX_MOTION_Y, Math.min(MAX_MOTION_Y, -deltaGamma * 0.28)) * activationAlpha
+		const targetTiltX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, deltaBeta * TILT_DAMPING)) * activationAlpha
+		const targetTiltY = Math.max(-MAX_TILT_Y, Math.min(MAX_TILT_Y, -deltaGamma * TILT_DAMPING)) * activationAlpha
 
 		state.motionX += (targetMotionX - state.motionX) * 0.18
 		state.motionY += (targetMotionY - state.motionY) * 0.18
@@ -235,6 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.isMotionEnabled = false
 		state.isMotionSuspended = false
 		state.motionPermissionState = 'denied'
+		state.motionBaselineBeta = null
+		state.motionBaselineGamma = null
+		state.motionBaselinePending = false
+		state.motionActivatedAt = 0
 		state.motionX = 0
 		state.motionY = 0
 		state.tiltX = 0
@@ -248,6 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.isMotionEnabled = true
 		state.isMotionSuspended = false
 		state.motionPermissionState = 'granted'
+		state.motionActivatedAt = performance.now()
+		setMotionBaseline(state.lastOrientationBeta, state.lastOrientationGamma)
 		statusNode.textContent = '3D Motion ist aktiv.'
 		updateMotionButton('3D Motion aktiv', 'is-active', true)
 	}
