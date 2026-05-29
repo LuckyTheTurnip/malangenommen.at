@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			bindEvents()
 			updateMotionButton('3D Motion', '', false)
 			updateLanguageButton()
-			statusNode.textContent = 'Swipe hoch, um eine neue Karte zu ziehen.'
+			statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)
 			statusNode.textContent = 'Die Karten konnten nicht geladen werden.'
