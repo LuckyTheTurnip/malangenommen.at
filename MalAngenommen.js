@@ -540,50 +540,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			activeCard.classList.add('is-entering')
 			activeCard.classList.remove('is-leaving')
+			activeCard.style.visibility = 'hidden'
 			activeCard.style.transition = 'none'
 			activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
 			activeCard.style.opacity = '0'
-			const target = activeCard
-			target.style.setProperty('--drag-x', '0px')
-			target.style.setProperty('--drag-y', '0px')
-			target.style.setProperty('--drag-rot', '0deg')
 			activeCard.style.filter = ''
+			activeCard.style.setProperty('--drag-x', '0px')
+			activeCard.style.setProperty('--drag-y', '0px')
+			activeCard.style.setProperty('--drag-rot', '0deg')
 			applyMotionTransform()
 			activeCard.getBoundingClientRect()
 
 			state.currentCard = nextCard
 			renderCard(state.currentCard)
 
-			if (typeof activeCard.animate === 'function') {
-				enterAnimation = activeCard.animate(
-					[
-						{
-							transform: 'translate3d(0, 150vh, 0) scale(0.98)',
-							opacity: 0
-						},
-						{
-							transform: 'translate3d(0px, 0px, 0) rotateX(0deg) rotateY(0deg) rotate(0deg)',
-							opacity: 1
-						}
-					],
-					{
-						duration: 420,
-						easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
-						fill: 'both'
-					}
-				)
-
-				enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
-				return
-			}
-
-			activeCard.addEventListener('transitionend', onEnterTransitionEnd)
-
 			requestAnimationFrame(() => {
+				if (typeof activeCard.animate === 'function') {
+					enterAnimation = activeCard.animate(
+						[
+							{
+								transform: 'translate3d(0, 150vh, 0) scale(0.98)',
+								opacity: 0
+							},
+							{
+								transform: 'translate3d(0px, 0px, 0) rotateX(0deg) rotateY(0deg) rotate(0deg)',
+								opacity: 1
+							}
+						],
+						{
+							duration: 420,
+							easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+							fill: 'both'
+						}
+					)
+
+					enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
+					requestAnimationFrame(() => {
+						activeCard.style.visibility = 'visible'
+					})
+					return
+				}
+
+				activeCard.addEventListener('transitionend', onEnterTransitionEnd)
+
 				requestAnimationFrame(() => {
 					activeCard.style.transition = ''
 					activeCard.style.transform = ''
 					activeCard.style.opacity = ''
+					requestAnimationFrame(() => {
+						activeCard.style.visibility = 'visible'
+					})
 					window.setTimeout(finishEnterTransition, 500)
 				})
 			})
@@ -613,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.style.transform = ''
 				activeCard.style.opacity = ''
 				activeCard.style.filter = ''
+				activeCard.style.visibility = ''
 				activeCard.classList.remove('is-entering')
 				activeCard.style.removeProperty('transition')
 				state.isAnimating = false
