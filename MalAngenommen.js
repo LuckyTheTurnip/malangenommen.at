@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		isDragging: false,
 		isMotionEnabled: false,
 		isMotionSuspended: false,
-		spawnMotionMode: 'auto',
+		spawnMotionMode: 'on',
 		motionPermissionState: 'idle',
 		isFlipped: false,
 		motionBaselineBeta: null,
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_RATIO = 1.2
 	const SWIPE_VELOCITY = 0.72
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
-	const SPAWN_MOTION_MODES = ['auto', 'on', 'off']
+	const SPAWN_MOTION_MODES = ['on', 'off']
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 11
 	const MAX_TILT_Y = 13
@@ -111,11 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const normalizeSpawnMotionMode = (value) => {
 		const normalized = String(value || '').toLowerCase()
-		if (normalized === 'on' || normalized === 'off' || normalized === 'auto') {
+		if (normalized === 'on' || normalized === 'off') {
 			return normalized
 		}
 
-		return 'auto'
+		return 'on'
 	}
 
 	const normalizeCategory = (value) => {
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const mode = normalizeSpawnMotionMode(state.spawnMotionMode)
-		const label = mode === 'on' ? 'Spawn: On' : mode === 'off' ? 'Spawn: Off' : 'Spawn: Auto'
+		const label = mode === 'on' ? 'Spawn: On' : 'Spawn: Off'
 		spawnMotionToggle.textContent = label
 		spawnMotionToggle.classList.toggle('is-active', mode === 'on')
 		spawnMotionToggle.setAttribute('aria-pressed', mode === 'on' ? 'true' : 'false')
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const currentIndex = SPAWN_MOTION_MODES.indexOf(currentMode)
 		const nextMode = SPAWN_MOTION_MODES[(currentIndex + 1) % SPAWN_MOTION_MODES.length]
 		applySpawnMotionMode(nextMode, true)
-		statusNode.textContent = `Spawn-Animation: ${nextMode === 'on' ? 'An' : nextMode === 'off' ? 'Aus' : 'Auto'}`
+		statusNode.textContent = `Spawn-Animation: ${nextMode === 'on' ? 'An' : 'Aus'}`
 	}
 
 	const applyMotionTransform = () => {
@@ -806,13 +806,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const initialize = async () => {
 		try {
-			let storedSpawnMotionMode = 'auto'
+			let storedSpawnMotionMode = 'on'
 			try {
-				storedSpawnMotionMode = normalizeSpawnMotionMode(window.localStorage.getItem(SPAWN_MOTION_STORAGE_KEY))
+				const rawSpawnMotionMode = window.localStorage.getItem(SPAWN_MOTION_STORAGE_KEY)
+				storedSpawnMotionMode = rawSpawnMotionMode === 'auto'
+					? 'on'
+					: normalizeSpawnMotionMode(rawSpawnMotionMode)
 			} catch (error) {
-				storedSpawnMotionMode = 'auto'
+				storedSpawnMotionMode = 'on'
 			}
-			applySpawnMotionMode(storedSpawnMotionMode, false)
+			applySpawnMotionMode(storedSpawnMotionMode, true)
 
 			const data = await getData()
 			state.cards = toCards(Array.isArray(data.cards) ? data.cards : [])
