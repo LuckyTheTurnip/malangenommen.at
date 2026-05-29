@@ -540,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			activeCard.classList.add('is-entering')
 			activeCard.classList.remove('is-leaving')
-			activeCard.style.visibility = 'hidden'
 			activeCard.style.transition = 'none'
 			activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
 			activeCard.style.opacity = '0'
@@ -575,11 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					)
 
 					enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
-					enterAnimation.ready.then(() => {
-						requestAnimationFrame(() => {
-							activeCard.style.visibility = 'visible'
-						})
-					})
 					return
 				}
 
@@ -589,9 +583,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					activeCard.style.transition = ''
 					activeCard.style.transform = ''
 					activeCard.style.opacity = ''
-					requestAnimationFrame(() => {
-						activeCard.style.visibility = 'visible'
-					})
 					window.setTimeout(finishEnterTransition, 500)
 				})
 			})
@@ -621,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.style.transform = ''
 				activeCard.style.opacity = ''
 				activeCard.style.filter = ''
-				activeCard.style.visibility = ''
 				activeCard.classList.remove('is-entering')
 				activeCard.style.removeProperty('transition')
 				state.isAnimating = false
