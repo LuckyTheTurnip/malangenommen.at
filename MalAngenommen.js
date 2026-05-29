@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.removeEventListener('transitionend', activeEnterListener)
 				activeEnterListener = null
 			}
-			activeCard.style.transition = 'none'
+			activeCard.style.removeProperty('transition')
 			activeCard.style.transform = ''
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
