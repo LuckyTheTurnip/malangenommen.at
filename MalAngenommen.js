@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
 	const activeCard = document.querySelector('[data-active-card]')
-	const tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
-	const facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
 	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
@@ -296,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const setFlipClass = (flipped) => {
+		// Flip contract: only class state here. Rotation is owned by `.active-card__faces` in CSS.
 		state.isFlipped = !!flipped
 		if (state.isFlipped) {
 			activeCard.classList.add('is-flipped')
@@ -559,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const triggerSpawnAnimation = () => {
+		// Spawn contract: animation runs on `.active-card__tilt` so it does not fight card movement transforms.
 		clearSpawnAnimation()
 		activeCard.classList.add('is-spawning')
 
