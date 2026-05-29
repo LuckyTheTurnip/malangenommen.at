@@ -530,6 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				enterTransitionFinished = true
 				activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
+				if (enterAnimation?.commitStyles) {
+					enterAnimation.commitStyles()
+				}
 				enterAnimation?.cancel()
 				/* Freeze final frame without re-enabling CSS transitions that could re-run */
 				activeCard.style.transition = 'none'
