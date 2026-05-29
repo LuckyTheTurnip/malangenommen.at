@@ -558,9 +558,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		window.setTimeout(() => {
-			state.currentCard = nextCard
-			renderCard(state.currentCard)
-
 			activeCard.classList.add('is-entering')
 			activeCard.classList.remove('is-leaving')
 			activeCard.style.transition = 'none'
@@ -573,6 +570,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.filter = ''
 			applyMotionTransform()
 			activeCard.getBoundingClientRect()
+
+			state.currentCard = nextCard
+			renderCard(state.currentCard)
 
 			if (typeof activeCard.animate === 'function') {
 				enterAnimation = activeCard.animate(
