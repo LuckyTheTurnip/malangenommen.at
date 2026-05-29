@@ -575,8 +575,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					)
 
 					enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
-					requestAnimationFrame(() => {
-						activeCard.style.visibility = 'visible'
+					enterAnimation.ready.then(() => {
+						requestAnimationFrame(() => {
+							activeCard.style.visibility = 'visible'
+						})
 					})
 					return
 				}
