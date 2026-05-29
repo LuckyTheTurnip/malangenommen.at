@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		tiltY: 0,
 		tiltZ: 0,
 		fitFrame: 0
+		,enterAnimationActive: false
 	}
 
 	const SWIPE_DISTANCE = 88
@@ -497,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const advanceCard = () => {
-		if (state.isAnimating) {
+		if (state.isAnimating || state.enterAnimationActive) {
 			return
 		}
 
@@ -518,25 +519,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.classList.add('is-leaving')
 		activeCard.classList.remove('is-dragging')
 
-		let enterTransitionFinished = false
-		let enterAnimation = null
+			let enterTransitionFinished = false
+			let enterAnimation = null
+			// mark that an enter animation is in-flight to prevent re-entrancy
+			state.enterAnimationActive = true
 		const finishEnterTransition = () => {
 			if (enterTransitionFinished) {
 				return
 			}
 
-			enterTransitionFinished = true
-			activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
-			enterAnimation?.cancel()
-			activeCard.style.transition = ''
-			activeCard.style.transform = ''
-			activeCard.style.opacity = ''
-			activeCard.style.filter = ''
-			activeCard.classList.remove('is-entering')
-			state.isAnimating = false
-			if (motionWasActive) {
-				resumeMotionAfterTransition()
-			}
+				enterTransitionFinished = true
+				activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
+				enterAnimation?.cancel()
+				/* Freeze final frame without re-enabling CSS transitions that could re-run */
+				activeCard.style.transition = 'none'
+				activeCard.style.transform = ''
+				activeCard.style.opacity = ''
+				activeCard.style.filter = ''
+				activeCard.classList.remove('is-entering')
+				state.isAnimating = false
+				state.enterAnimationActive = false
+				if (motionWasActive) {
+					// resume after a small delay to avoid instant motion jumps
+					setTimeout(() => resumeMotionAfterTransition(), 40)
+				}
 		}
 
 		const onEnterTransitionEnd = (event) => {
@@ -698,6 +704,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (event.key === 'ArrowUp' || event.key === 'PageUp' || event.key === ' ') {
 			event.preventDefault()
 			advanceCard()
+			return
+		}
+
+		// Left / Right to flip the card
+		if (event.key === 'ArrowLeft') {
+			event.preventDefault()
+			flipCard('left')
+			return
+		}
+
+		if (event.key === 'ArrowRight') {
+			event.preventDefault()
+			flipCard('right')
+			return
 		}
 	}
 
