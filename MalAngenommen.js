@@ -1,21 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
-		const cardShells = Array.from(document.querySelectorAll('[data-card-shell]'))
-		let activeCard = cardShells.find((shell) => shell.dataset.cardShell === 'active') || cardShells[0] || null
-		let standbyCard = cardShells.find((shell) => shell.dataset.cardShell === 'standby') || cardShells[1] || null
-		let tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
-		let facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
-		let frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
-		let backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
-		let questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
-		let categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
+	const activeCard = document.querySelector('[data-active-card]')
+	const tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
+	const facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
+	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
+	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
+	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
+	const categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
 	const statusNode = document.querySelector('[data-status]')
 	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
 
-		if (!app || !activeCard || !standbyCard || !categoryLabel || !questionNode || stackCards.length === 0) {
+	if (!app || !activeCard || !categoryLabel || !questionNode || stackCards.length === 0) {
 		return
 	}
 
@@ -187,23 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return response.json()
 	}
 
-		const syncActiveCardRefs = (shell) => {
-			activeCard = shell
-			tiltEl = shell ? shell.querySelector('.active-card__tilt') : null
-			facesEl = shell ? shell.querySelector('.active-card__faces') : null
-			frontQuestionNode = shell ? shell.querySelector('[data-front-question]') : null
-			backQuestionNode = shell ? shell.querySelector('[data-back-question]') : null
-			questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
-			categoryLabel = shell ? shell.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
-		}
-
-		const setShellRole = (shell, role) => {
-			if (!shell) return
-			shell.dataset.cardShell = role
-			shell.setAttribute('aria-hidden', role === 'standby' ? 'true' : 'false')
-		}
-
-		const setTheme = (card, shell = activeCard) => {
+	const setTheme = (card) => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 
 		app.classList.remove(...Object.values(CATEGORY_STYLES).map((entry) => entry.className))
@@ -213,9 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.style.setProperty('--card-top', theme.top)
 		app.style.setProperty('--card-bottom', theme.bottom)
 
-			if (shell) {
-				shell.style.setProperty('--card-text', theme.text)
-			}
+		activeCard.style.setProperty('--card-text', theme.text)
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -469,35 +449,24 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-		const renderCard = (card, targetCard = activeCard) => {
+		const renderCard = (card) => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
-			const targetCategoryLabel = targetCard ? targetCard.querySelector('[data-category-label]') : null
-			const targetFrontQuestionNode = targetCard ? targetCard.querySelector('[data-front-question]') : null
+			categoryLabel.textContent = theme.label
+			if (frontQuestionNode) {
+				frontQuestionNode.textContent = getCardQuestion(card)
+				frontQuestionNode.style.color = theme.text
+			}
+			activeCard.style.setProperty('--card-top', theme.top)
+			activeCard.style.setProperty('--card-bottom', theme.bottom)
+			activeCard.style.setProperty('--accent', theme.accent)
+			activeCard.style.setProperty('--card-text', theme.text)
 
-			if (targetCategoryLabel) targetCategoryLabel.textContent = theme.label
-			if (targetFrontQuestionNode) {
-				targetFrontQuestionNode.textContent = getCardQuestion(card)
-				targetFrontQuestionNode.style.color = theme.text
-			}
-			if (targetCard) {
-				targetCard.style.setProperty('--card-top', theme.top)
-				targetCard.style.setProperty('--card-bottom', theme.bottom)
-				targetCard.style.setProperty('--accent', theme.accent)
-				targetCard.style.setProperty('--card-text', theme.text)
-			}
-
-			setTheme(card, targetCard)
-			if (targetCard === activeCard) {
-				updateLanguageButton()
-				updateDeckLabels()
-				setPreviewCards()
-				fitQuestionText()
-				// reset flip when showing a new card
-				setFlipClass(false)
-			} else if (targetCard) {
-				targetCard.classList.remove('is-flipped', 'is-leaving')
-				targetCard.style.setProperty('--flip-deg', '0deg')
-			}
+			setTheme(card)
+			updateLanguageButton()
+			updateDeckLabels()
+			setPreviewCards()
+			fitQuestionText()
+			setFlipClass(false)
 	}
 
 	const toggleLanguage = () => {
@@ -505,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateLanguageButton()
 
 		if (state.currentCard) {
-				renderCard(state.currentCard, activeCard)
+			renderCard(state.currentCard)
 		}
 	}
 
@@ -513,10 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const randomIndex = Math.floor(Math.random() * state.cards.length)
 		state.currentCard = state.cards[randomIndex]
 		buildDrawPile(state.currentCard.id)
-			renderCard(state.currentCard, activeCard)
-			if (standbyCard && state.drawPile[0]) {
-				renderCard(state.drawPile[0], standbyCard)
-			}
+		renderCard(state.currentCard)
 	}
 
 	const resetCardPosition = () => {
@@ -551,82 +517,32 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		state.isAnimating = true
-		const leavingCard = activeCard
-		const enteringCard = standbyCard
-		let enterTransitionFinished = false
-		let enterAnimation = null
-		let leaveTransitionFinished = false
-		let leaveFallbackTimer = null
 		state.enterAnimationActive = true
+		const deckStage = document.querySelector('[data-deck-stage]') || app
+		const leavingClone = activeCard.cloneNode(true)
+		let enterTransitionFinished = false
+		let enterFallbackTimer = null
+		let activeEnterListener = null
 
-		const beginEnterTransition = () => {
-			if (leaveTransitionFinished) {
-				return
-			}
+		leavingClone.removeAttribute('data-active-card')
+		leavingClone.removeAttribute('data-card-shell')
+		leavingClone.setAttribute('aria-hidden', 'true')
+		leavingClone.classList.add('card-transition-clone')
+		deckStage.appendChild(leavingClone)
 
-			leaveTransitionFinished = true
-			leavingCard.removeEventListener('transitionend', onLeaveTransitionEnd)
-			if (leaveFallbackTimer) {
-				clearTimeout(leaveFallbackTimer)
-				leaveFallbackTimer = null
-			}
+		activeCard.classList.add('is-entering')
+		activeCard.style.visibility = 'hidden'
+		activeCard.style.transition = 'none'
+		activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
+		activeCard.style.opacity = '0'
+		activeCard.style.filter = ''
+		activeCard.style.setProperty('--drag-x', '0px')
+		activeCard.style.setProperty('--drag-y', '0px')
+		activeCard.style.setProperty('--drag-rot', '0deg')
+		activeCard.style.setProperty('--flip-deg', '0deg')
 
-			setShellRole(enteringCard, 'active')
-			enteringCard.classList.add('is-entering')
-			enteringCard.style.transition = 'none'
-			enteringCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
-			enteringCard.style.opacity = '0'
-			enteringCard.style.filter = ''
-			enteringCard.style.setProperty('--drag-x', '0px')
-			enteringCard.style.setProperty('--drag-y', '0px')
-			enteringCard.style.setProperty('--drag-rot', '0deg')
-			enteringCard.style.setProperty('--flip-deg', '0deg')
-			enteringCard.getBoundingClientRect()
-
-			renderCard(nextCard, enteringCard)
-
-			requestAnimationFrame(() => {
-				if (typeof enteringCard.animate === 'function') {
-					enterAnimation = enteringCard.animate(
-						[
-							{
-								transform: 'translate3d(0, 150vh, 0) scale(0.98)',
-								opacity: 0
-							},
-							{
-								transform: 'translate3d(0px, 0px, 0) rotateX(0deg) rotateY(0deg) rotate(0deg)',
-								opacity: 1
-							}
-						],
-						{
-							duration: 420,
-							easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
-							fill: 'both'
-						}
-					)
-
-					enterAnimation.finished.then(finishEnterTransition).catch(finishEnterTransition)
-					return
-				}
-
-				enteringCard.addEventListener('transitionend', onEnterTransitionEnd)
-
-				requestAnimationFrame(() => {
-					enteringCard.style.transition = ''
-					enteringCard.style.transform = ''
-					enteringCard.style.opacity = ''
-					window.setTimeout(finishEnterTransition, 500)
-				})
-			})
-		}
-
-		const onLeaveTransitionEnd = (event) => {
-			if (event.currentTarget !== leavingCard || event.propertyName !== 'transform') {
-				return
-			}
-
-			beginEnterTransition()
-		}
+		renderCard(nextCard)
+		setFlipClass(false)
 
 		const finishEnterTransition = () => {
 			if (enterTransitionFinished) {
@@ -634,34 +550,22 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			enterTransitionFinished = true
-			enteringCard.removeEventListener('transitionend', onEnterTransitionEnd)
-			if (enterAnimation?.commitStyles) {
-				enterAnimation.commitStyles()
+			if (enterFallbackTimer) {
+				clearTimeout(enterFallbackTimer)
+				enterFallbackTimer = null
 			}
-			enterAnimation?.cancel()
-			enteringCard.style.transition = 'none'
-			enteringCard.style.transform = ''
-			enteringCard.style.opacity = ''
-			enteringCard.style.filter = ''
-			enteringCard.classList.remove('is-entering')
-			enteringCard.style.removeProperty('transition')
-
-			setShellRole(enteringCard, 'active')
-			setShellRole(leavingCard, 'standby')
-			leavingCard.classList.remove('is-leaving', 'is-entering', 'is-flipped', 'is-dragging')
-			leavingCard.style.transition = 'none'
-			leavingCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
-			leavingCard.style.opacity = '0'
-			leavingCard.style.filter = ''
-			leavingCard.style.setProperty('--drag-x', '0px')
-			leavingCard.style.setProperty('--drag-y', '0px')
-			leavingCard.style.setProperty('--drag-rot', '0deg')
-			leavingCard.style.setProperty('--flip-deg', '0deg')
-
-			standbyCard = leavingCard
-			syncActiveCardRefs(enteringCard)
+			if (activeEnterListener) {
+				activeCard.removeEventListener('transitionend', activeEnterListener)
+				activeEnterListener = null
+			}
+			activeCard.style.transition = 'none'
+			activeCard.style.transform = ''
+			activeCard.style.opacity = ''
+			activeCard.style.filter = ''
+			activeCard.classList.remove('is-entering')
+			activeCard.style.visibility = ''
+			leavingClone.remove()
 			state.currentCard = nextCard
-			setFlipClass(false)
 			updateLanguageButton()
 			updateDeckLabels()
 			setPreviewCards()
@@ -674,21 +578,25 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const onEnterTransitionEnd = (event) => {
-			if (event.currentTarget !== enteringCard || event.propertyName !== 'transform') {
+			if (event.currentTarget !== activeCard || event.propertyName !== 'transform') {
 				return
 			}
 
 			finishEnterTransition()
 		}
 
-		leavingCard.classList.add('is-leaving')
-		leavingCard.classList.remove('is-dragging')
-		setShellRole(enteringCard, 'standby')
-		leavingCard.addEventListener('transitionend', onLeaveTransitionEnd)
+		leavingClone.getBoundingClientRect()
+		leavingClone.classList.add('is-leaving')
+		activeCard.style.visibility = ''
+		activeCard.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
-			window.requestAnimationFrame(beginEnterTransition)
+			activeCard.style.transition = ''
+			activeCard.style.transform = ''
+			activeCard.style.opacity = ''
+			activeEnterListener = onEnterTransitionEnd
+			activeCard.addEventListener('transitionend', activeEnterListener)
 		})
-		leaveFallbackTimer = window.setTimeout(beginEnterTransition, 520)
+		enterFallbackTimer = window.setTimeout(finishEnterTransition, 520)
 	}
 
 	const onTouchStart = (event) => {
@@ -817,7 +725,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const bindEvents = () => {
 		bindCardShell(activeCard)
-		bindCardShell(standbyCard)
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
 		window.addEventListener('keydown', onKeyDown)

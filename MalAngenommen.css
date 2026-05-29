@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #0011ff;
+	background: #ff0000;
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -376,15 +376,6 @@ body::before {
 	will-change: transform;
 }
 
-.active-card[data-card-shell="standby"] {
-	visibility: hidden;
-	opacity: 0;
-	pointer-events: none;
-	transform: translate3d(0, 150vh, 0) scale(0.98);
-	filter: none;
-	transition: none;
-}
-
 /* Inner element is structural only. */
 .active-card__tilt {
 	width: 100%;
@@ -464,6 +455,7 @@ body::before {
 }
 
 .active-card.is-entering {
+	display: block;
 	transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 420ms ease, filter 420ms ease;
 	visibility: visible;
 	opacity: 0;
@@ -474,6 +466,25 @@ body::before {
 .active-card.is-dragging {
 	transition: none !important;
 	will-change: transform, opacity, filter;
+}
+
+.card-transition-clone {
+	position: absolute;
+	inset: auto;
+	z-index: 4;
+	pointer-events: none;
+	will-change: transform, opacity, filter;
+	transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 420ms ease, filter 420ms ease;
+	transform-origin: center center;
+	transform: translate3d(0, 0, 0);
+	opacity: 1;
+	filter: none;
+}
+
+.card-transition-clone.is-leaving {
+	opacity: 0;
+	transform: translate3d(0, -150vh, 0) rotate(-12deg) scale(0.92);
+	filter: blur(1px);
 }
 
 .active-card__content {
