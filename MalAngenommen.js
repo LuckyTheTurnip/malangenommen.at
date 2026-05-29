@@ -521,43 +521,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			let enterTransitionFinished = false
 			let enterAnimation = null
+			let leaveTransitionFinished = false
+			let leaveFallbackTimer = null
 			// mark that an enter animation is in-flight to prevent re-entrancy
 			state.enterAnimationActive = true
-		const finishEnterTransition = () => {
-			if (enterTransitionFinished) {
+
+		const beginEnterTransition = () => {
+			if (leaveTransitionFinished) {
 				return
 			}
 
-				enterTransitionFinished = true
-				activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
-				if (enterAnimation?.commitStyles) {
-					enterAnimation.commitStyles()
-				}
-				enterAnimation?.cancel()
-				/* Freeze final frame without re-enabling CSS transitions that could re-run */
-				activeCard.style.transition = 'none'
-				activeCard.style.transform = ''
-				activeCard.style.opacity = ''
-				activeCard.style.filter = ''
-				activeCard.classList.remove('is-entering')
-				activeCard.style.removeProperty('transition')
-				state.isAnimating = false
-				state.enterAnimationActive = false
-				if (motionWasActive) {
-					// resume after a small delay to avoid instant motion jumps
-					setTimeout(() => resumeMotionAfterTransition(), 40)
-				}
-		}
-
-		const onEnterTransitionEnd = (event) => {
-			if (event.target !== activeCard || event.propertyName !== 'transform') {
-				return
+			leaveTransitionFinished = true
+			activeCard.removeEventListener('transitionend', onLeaveTransitionEnd)
+			if (leaveFallbackTimer) {
+				clearTimeout(leaveFallbackTimer)
+				leaveFallbackTimer = null
 			}
 
-			finishEnterTransition()
-		}
-
-		window.setTimeout(() => {
 			activeCard.classList.add('is-entering')
 			activeCard.classList.remove('is-leaving')
 			activeCard.style.transition = 'none'
@@ -607,7 +587,52 @@ document.addEventListener('DOMContentLoaded', () => {
 					window.setTimeout(finishEnterTransition, 500)
 				})
 			})
-		}, 420)
+		}
+
+		const onLeaveTransitionEnd = (event) => {
+			if (event.target !== activeCard || event.propertyName !== 'transform') {
+				return
+			}
+
+			beginEnterTransition()
+		}
+
+		const finishEnterTransition = () => {
+			if (enterTransitionFinished) {
+				return
+			}
+
+				enterTransitionFinished = true
+				activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
+				if (enterAnimation?.commitStyles) {
+					enterAnimation.commitStyles()
+				}
+				enterAnimation?.cancel()
+				/* Freeze final frame without re-enabling CSS transitions that could re-run */
+				activeCard.style.transition = 'none'
+				activeCard.style.transform = ''
+				activeCard.style.opacity = ''
+				activeCard.style.filter = ''
+				activeCard.classList.remove('is-entering')
+				activeCard.style.removeProperty('transition')
+				state.isAnimating = false
+				state.enterAnimationActive = false
+				if (motionWasActive) {
+					// resume after a small delay to avoid instant motion jumps
+					setTimeout(() => resumeMotionAfterTransition(), 40)
+				}
+		}
+
+		const onEnterTransitionEnd = (event) => {
+			if (event.target !== activeCard || event.propertyName !== 'transform') {
+				return
+			}
+
+			finishEnterTransition()
+		}
+
+		activeCard.addEventListener('transitionend', onLeaveTransitionEnd)
+		leaveFallbackTimer = window.setTimeout(beginEnterTransition, 520)
 	}
 
 	const onTouchStart = (event) => {
@@ -646,8 +671,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--drag-x', `${deltaX * 0.08}px`)
 		target.style.setProperty('--drag-y', `${deltaY}px`)
 		target.style.setProperty('--drag-rot', `${rotation}deg`)
-		activeCard.style.opacity = `${Math.max(0.72, 1 - dragDistance / 420)}`
-		activeCard.style.filter = `brightness(${Math.max(0.92, 1 - dragDistance / 1200)})`
 		applyMotionTransform()
 	}
 
