@@ -31,7 +31,7 @@
                 <article class="stack-card" data-stack-card="2"></article>
             </div>
 
-            <article class="active-card" data-active-card>
+            <article class="active-card" data-card-shell="active" aria-hidden="false">
                 <div class="active-card__tilt">
                     <div class="active-card__faces">
                         <div class="card-face card-face--front">
@@ -58,6 +58,46 @@
                                             </defs>
                                             <text class="card-back-orbit-text">
                                                 <textPath href="#card-back-ellipse-path" xlink:href="#card-back-ellipse-path">HYPOTHETICAL • HYPOTHETICAL • HYPOTHETICAL • HYPOTHETICAL • </textPath>
+                                            </text>
+                                        </svg>
+                                    </div>
+                                    <div class="card-back-logo-wrap">
+                                        <img class="card-back-logo" src="Media/Hypothetical_Logo.svg" alt="Hypothetical logo">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="active-card" data-card-shell="standby" aria-hidden="true">
+                <div class="active-card__tilt">
+                    <div class="active-card__faces">
+                        <div class="card-face card-face--front">
+                            <div class="active-card__content">
+                                <div class="active-card__topline">
+                                    <span class="card-badge" data-category-label>...</span>
+                                </div>
+
+                                <div class="card-question-shell">
+                                    <p class="card-question" data-front-question></p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="card-face card-face--back">
+                            <div class="active-card__content active-card__content--back">
+                                <div class="card-back-design" aria-hidden="true">
+                                    <div class="card-back-orbit">
+                                        <svg class="card-back-orbit-svg" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false">
+                                            <defs>
+                                                <!-- Circle path (center 160,110 radius 88) -->
+                                                <path id="card-back-ellipse-path-standby" d="M 248 110 A 88 88 0 1 0 72 110 A 88 88 0 1 0 248 110"/>
+                                            </defs>
+                                            <text class="card-back-orbit-text">
+                                                <textPath href="#card-back-ellipse-path-standby" xlink:href="#card-back-ellipse-path-standby">HYPOTHETICAL • HYPOTHETICAL • HYPOTHETICAL • HYPOTHETICAL • </textPath>
                                             </text>
                                         </svg>
                                     </div>

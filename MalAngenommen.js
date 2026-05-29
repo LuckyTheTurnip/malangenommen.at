@@ -1,19 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
-	const activeCard = document.querySelector('[data-active-card]')
-	const tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
-	const facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
-	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
-	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
-	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
-	const categoryLabel = document.querySelector('[data-category-label]')
+		const cardShells = Array.from(document.querySelectorAll('[data-card-shell]'))
+		let activeCard = cardShells.find((shell) => shell.dataset.cardShell === 'active') || cardShells[0] || null
+		let standbyCard = cardShells.find((shell) => shell.dataset.cardShell === 'standby') || cardShells[1] || null
+		let tiltEl = activeCard ? activeCard.querySelector('.active-card__tilt') : null
+		let facesEl = activeCard ? activeCard.querySelector('.active-card__faces') : null
+		let frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
+		let backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
+		let questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
+		let categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
 	const statusNode = document.querySelector('[data-status]')
 	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
 
-	if (!app || !activeCard || !categoryLabel || !questionNode || stackCards.length === 0) {
+		if (!app || !activeCard || !standbyCard || !categoryLabel || !questionNode || stackCards.length === 0) {
 		return
 	}
 
@@ -185,7 +187,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		return response.json()
 	}
 
-	const setTheme = (card) => {
+		const syncActiveCardRefs = (shell) => {
+			activeCard = shell
+			tiltEl = shell ? shell.querySelector('.active-card__tilt') : null
+			facesEl = shell ? shell.querySelector('.active-card__faces') : null
+			frontQuestionNode = shell ? shell.querySelector('[data-front-question]') : null
+			backQuestionNode = shell ? shell.querySelector('[data-back-question]') : null
+			questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
+			categoryLabel = shell ? shell.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
+		}
+
+		const setShellRole = (shell, role) => {
+			if (!shell) return
+			shell.dataset.cardShell = role
+			shell.setAttribute('aria-hidden', role === 'standby' ? 'true' : 'false')
+		}
+
+		const setTheme = (card, shell = activeCard) => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 
 		app.classList.remove(...Object.values(CATEGORY_STYLES).map((entry) => entry.className))
@@ -195,7 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.style.setProperty('--card-top', theme.top)
 		app.style.setProperty('--card-bottom', theme.bottom)
 
-		activeCard.style.setProperty('--card-text', theme.text)
+			if (shell) {
+				shell.style.setProperty('--card-text', theme.text)
+			}
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -449,23 +469,35 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-	const renderCard = (card) => {
+		const renderCard = (card, targetCard = activeCard) => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+			const targetCategoryLabel = targetCard ? targetCard.querySelector('[data-category-label]') : null
+			const targetFrontQuestionNode = targetCard ? targetCard.querySelector('[data-front-question]') : null
 
-		categoryLabel.textContent = theme.label
-		if (frontQuestionNode) frontQuestionNode.textContent = getCardQuestion(card)
-		activeCard.style.setProperty('--card-top', theme.top)
-		activeCard.style.setProperty('--card-bottom', theme.bottom)
-		activeCard.style.setProperty('--accent', theme.accent)
-		if (frontQuestionNode) frontQuestionNode.style.color = theme.text
+			if (targetCategoryLabel) targetCategoryLabel.textContent = theme.label
+			if (targetFrontQuestionNode) {
+				targetFrontQuestionNode.textContent = getCardQuestion(card)
+				targetFrontQuestionNode.style.color = theme.text
+			}
+			if (targetCard) {
+				targetCard.style.setProperty('--card-top', theme.top)
+				targetCard.style.setProperty('--card-bottom', theme.bottom)
+				targetCard.style.setProperty('--accent', theme.accent)
+				targetCard.style.setProperty('--card-text', theme.text)
+			}
 
-		setTheme(card)
-		updateLanguageButton()
-		updateDeckLabels()
-		setPreviewCards()
-		fitQuestionText()
-		// reset flip when showing a new card
-		setFlipClass(false)
+			setTheme(card, targetCard)
+			if (targetCard === activeCard) {
+				updateLanguageButton()
+				updateDeckLabels()
+				setPreviewCards()
+				fitQuestionText()
+				// reset flip when showing a new card
+				setFlipClass(false)
+			} else if (targetCard) {
+				targetCard.classList.remove('is-flipped', 'is-leaving')
+				targetCard.style.setProperty('--flip-deg', '0deg')
+			}
 	}
 
 	const toggleLanguage = () => {
@@ -473,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateLanguageButton()
 
 		if (state.currentCard) {
-			renderCard(state.currentCard)
+				renderCard(state.currentCard, activeCard)
 		}
 	}
 
@@ -481,7 +513,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		const randomIndex = Math.floor(Math.random() * state.cards.length)
 		state.currentCard = state.cards[randomIndex]
 		buildDrawPile(state.currentCard.id)
-		renderCard(state.currentCard)
+			renderCard(state.currentCard, activeCard)
+			if (standbyCard && state.drawPile[0]) {
+				renderCard(state.drawPile[0], standbyCard)
+			}
 	}
 
 	const resetCardPosition = () => {
@@ -516,15 +551,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		state.isAnimating = true
-		activeCard.classList.add('is-leaving')
-		activeCard.classList.remove('is-dragging')
-
-			let enterTransitionFinished = false
-			let enterAnimation = null
-			let leaveTransitionFinished = false
-			let leaveFallbackTimer = null
-			// mark that an enter animation is in-flight to prevent re-entrancy
-			state.enterAnimationActive = true
+		const leavingCard = activeCard
+		const enteringCard = standbyCard
+		let enterTransitionFinished = false
+		let enterAnimation = null
+		let leaveTransitionFinished = false
+		let leaveFallbackTimer = null
+		state.enterAnimationActive = true
 
 		const beginEnterTransition = () => {
 			if (leaveTransitionFinished) {
@@ -532,30 +565,29 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			leaveTransitionFinished = true
-			activeCard.removeEventListener('transitionend', onLeaveTransitionEnd)
+			leavingCard.removeEventListener('transitionend', onLeaveTransitionEnd)
 			if (leaveFallbackTimer) {
 				clearTimeout(leaveFallbackTimer)
 				leaveFallbackTimer = null
 			}
 
-			activeCard.classList.add('is-entering')
-			activeCard.classList.remove('is-leaving')
-			activeCard.style.transition = 'none'
-			activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
-			activeCard.style.opacity = '0'
-			activeCard.style.filter = ''
-			activeCard.style.setProperty('--drag-x', '0px')
-			activeCard.style.setProperty('--drag-y', '0px')
-			activeCard.style.setProperty('--drag-rot', '0deg')
-			applyMotionTransform()
-			activeCard.getBoundingClientRect()
+			setShellRole(enteringCard, 'active')
+			enteringCard.classList.add('is-entering')
+			enteringCard.style.transition = 'none'
+			enteringCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
+			enteringCard.style.opacity = '0'
+			enteringCard.style.filter = ''
+			enteringCard.style.setProperty('--drag-x', '0px')
+			enteringCard.style.setProperty('--drag-y', '0px')
+			enteringCard.style.setProperty('--drag-rot', '0deg')
+			enteringCard.style.setProperty('--flip-deg', '0deg')
+			enteringCard.getBoundingClientRect()
 
-			state.currentCard = nextCard
-			renderCard(state.currentCard)
+			renderCard(nextCard, enteringCard)
 
 			requestAnimationFrame(() => {
-				if (typeof activeCard.animate === 'function') {
-					enterAnimation = activeCard.animate(
+				if (typeof enteringCard.animate === 'function') {
+					enterAnimation = enteringCard.animate(
 						[
 							{
 								transform: 'translate3d(0, 150vh, 0) scale(0.98)',
@@ -577,19 +609,19 @@ document.addEventListener('DOMContentLoaded', () => {
 					return
 				}
 
-				activeCard.addEventListener('transitionend', onEnterTransitionEnd)
+				enteringCard.addEventListener('transitionend', onEnterTransitionEnd)
 
 				requestAnimationFrame(() => {
-					activeCard.style.transition = ''
-					activeCard.style.transform = ''
-					activeCard.style.opacity = ''
+					enteringCard.style.transition = ''
+					enteringCard.style.transform = ''
+					enteringCard.style.opacity = ''
 					window.setTimeout(finishEnterTransition, 500)
 				})
 			})
 		}
 
 		const onLeaveTransitionEnd = (event) => {
-			if (event.target !== activeCard || event.propertyName !== 'transform') {
+			if (event.currentTarget !== leavingCard || event.propertyName !== 'transform') {
 				return
 			}
 
@@ -601,41 +633,66 @@ document.addEventListener('DOMContentLoaded', () => {
 				return
 			}
 
-				enterTransitionFinished = true
-				activeCard.removeEventListener('transitionend', onEnterTransitionEnd)
-				if (enterAnimation?.commitStyles) {
-					enterAnimation.commitStyles()
-				}
-				enterAnimation?.cancel()
-				/* Freeze final frame without re-enabling CSS transitions that could re-run */
-				activeCard.style.transition = 'none'
-				activeCard.style.transform = ''
-				activeCard.style.opacity = ''
-				activeCard.style.filter = ''
-				activeCard.classList.remove('is-entering')
-				activeCard.style.removeProperty('transition')
-				state.isAnimating = false
-				state.enterAnimationActive = false
-				if (motionWasActive) {
-					// resume after a small delay to avoid instant motion jumps
-					setTimeout(() => resumeMotionAfterTransition(), 40)
-				}
+			enterTransitionFinished = true
+			enteringCard.removeEventListener('transitionend', onEnterTransitionEnd)
+			if (enterAnimation?.commitStyles) {
+				enterAnimation.commitStyles()
+			}
+			enterAnimation?.cancel()
+			enteringCard.style.transition = 'none'
+			enteringCard.style.transform = ''
+			enteringCard.style.opacity = ''
+			enteringCard.style.filter = ''
+			enteringCard.classList.remove('is-entering')
+			enteringCard.style.removeProperty('transition')
+
+			setShellRole(enteringCard, 'active')
+			setShellRole(leavingCard, 'standby')
+			leavingCard.classList.remove('is-leaving', 'is-entering', 'is-flipped', 'is-dragging')
+			leavingCard.style.transition = 'none'
+			leavingCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
+			leavingCard.style.opacity = '0'
+			leavingCard.style.filter = ''
+			leavingCard.style.setProperty('--drag-x', '0px')
+			leavingCard.style.setProperty('--drag-y', '0px')
+			leavingCard.style.setProperty('--drag-rot', '0deg')
+			leavingCard.style.setProperty('--flip-deg', '0deg')
+
+			standbyCard = leavingCard
+			syncActiveCardRefs(enteringCard)
+			state.currentCard = nextCard
+			setFlipClass(false)
+			updateLanguageButton()
+			updateDeckLabels()
+			setPreviewCards()
+			fitQuestionText()
+			state.isAnimating = false
+			state.enterAnimationActive = false
+			if (motionWasActive) {
+				setTimeout(() => resumeMotionAfterTransition(), 40)
+			}
 		}
 
 		const onEnterTransitionEnd = (event) => {
-			if (event.target !== activeCard || event.propertyName !== 'transform') {
+			if (event.currentTarget !== enteringCard || event.propertyName !== 'transform') {
 				return
 			}
 
 			finishEnterTransition()
 		}
 
-		activeCard.addEventListener('transitionend', onLeaveTransitionEnd)
+		leavingCard.classList.add('is-leaving')
+		leavingCard.classList.remove('is-dragging')
+		setShellRole(enteringCard, 'standby')
+		leavingCard.addEventListener('transitionend', onLeaveTransitionEnd)
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(beginEnterTransition)
+		})
 		leaveFallbackTimer = window.setTimeout(beginEnterTransition, 520)
 	}
 
 	const onTouchStart = (event) => {
-		if (state.isAnimating || !event.touches || event.touches.length !== 1) {
+		if (event.currentTarget !== activeCard || state.isAnimating || !event.touches || event.touches.length !== 1) {
 			return
 		}
 
@@ -650,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const onTouchMove = (event) => {
-		if (!state.isDragging || state.isAnimating || !event.touches || event.touches.length !== 1) {
+		if (event.currentTarget !== activeCard || !state.isDragging || state.isAnimating || !event.touches || event.touches.length !== 1) {
 			return
 		}
 
@@ -671,6 +728,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--drag-y', `${deltaY}px`)
 		target.style.setProperty('--drag-rot', `${rotation}deg`)
 		applyMotionTransform()
+	}
+
+	const bindCardShell = (shell) => {
+		if (!shell) {
+			return
+		}
+
+		shell.addEventListener('touchstart', onTouchStart, { passive: true })
+		shell.addEventListener('touchmove', onTouchMove, { passive: false })
+		shell.addEventListener('touchend', onTouchEnd)
+		shell.addEventListener('touchcancel', resetCardPosition)
 	}
 
 	const onTouchEnd = () => {
@@ -748,10 +816,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const bindEvents = () => {
-		activeCard.addEventListener('touchstart', onTouchStart, { passive: true })
-		activeCard.addEventListener('touchmove', onTouchMove, { passive: false })
-		activeCard.addEventListener('touchend', onTouchEnd)
-		activeCard.addEventListener('touchcancel', resetCardPosition)
+		bindCardShell(activeCard)
+		bindCardShell(standbyCard)
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
 		window.addEventListener('keydown', onKeyDown)
