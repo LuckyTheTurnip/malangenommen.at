@@ -619,7 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--drag-x', '0px')
 		activeCard.style.setProperty('--drag-y', '0px')
 		activeCard.style.setProperty('--drag-rot', '0deg')
-		activeCard.style.setProperty('--flip-deg', '0deg')
 
 		renderCard(nextCard)
 		setFlipClass(false)
