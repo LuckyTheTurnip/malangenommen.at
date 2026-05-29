@@ -680,26 +680,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (state.isAnimating) return
 
 		const motionWasActive = suspendMotionForTransition()
-		state.isAnimating = true
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
 
-		const faces = facesEl || activeCard.querySelector('.active-card__faces')
-		if (!faces) {
-			state.isAnimating = false
-			if (motionWasActive) resumeMotionAfterTransition()
-			return
+		if (motionWasActive) {
+			window.setTimeout(() => resumeMotionAfterTransition(), 420)
 		}
-
-		const onFlipEnd = (ev) => {
-			if (ev.target !== activeCard || ev.propertyName !== 'transform') return
-			activeCard.removeEventListener('transitionend', onFlipEnd)
-			state.isAnimating = false
-			if (motionWasActive) resumeMotionAfterTransition()
-		}
-
-		activeCard.addEventListener('transitionend', onFlipEnd, { once: true })
 	}
 
 	const onKeyDown = (event) => {
