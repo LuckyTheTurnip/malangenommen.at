@@ -669,7 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (isHorizontalLeft || isHorizontalRight) {
-			flipCard(isHorizontalLeft ? 'left' : 'right')
+			const direction = isHorizontalLeft ? 'left' : 'right'
+			resetCardPosition()
+			window.requestAnimationFrame(() => flipCard(direction))
 			return
 		}
 
