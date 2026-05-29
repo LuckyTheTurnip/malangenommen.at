@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		tiltZ: 0,
 		fitFrame: 0
 		,enterAnimationActive: false
+		,spawnAnimationTimer: null
 	}
 
 	const SWIPE_DISTANCE = 88
@@ -483,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.currentCard = state.cards[randomIndex]
 		buildDrawPile(state.currentCard.id)
 		renderCard(state.currentCard)
+		triggerSpawnAnimation()
 	}
 
 	const resetCardPosition = () => {
@@ -496,6 +498,34 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.dragOffsetY = 0
 		state.isDragging = false
 		applyMotionTransform()
+	}
+
+	const clearSpawnAnimation = () => {
+		activeCard.classList.remove('is-spawning')
+		if (state.spawnAnimationTimer) {
+			clearTimeout(state.spawnAnimationTimer)
+			state.spawnAnimationTimer = null
+		}
+	}
+
+	const triggerSpawnAnimation = () => {
+		clearSpawnAnimation()
+		activeCard.classList.add('is-spawning')
+
+		const onSpawnAnimationEnd = (event) => {
+			if (event.currentTarget !== activeCard || event.animationName !== 'card-spawn-fly') {
+				return
+			}
+
+			activeCard.removeEventListener('animationend', onSpawnAnimationEnd)
+			clearSpawnAnimation()
+		}
+
+		activeCard.addEventListener('animationend', onSpawnAnimationEnd)
+		state.spawnAnimationTimer = window.setTimeout(() => {
+			activeCard.removeEventListener('animationend', onSpawnAnimationEnd)
+			clearSpawnAnimation()
+		}, 920)
 	}
 
 	const advanceCard = () => {
@@ -532,11 +562,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		activeCard.classList.add('is-entering')
 		activeCard.style.visibility = 'hidden'
+		activeCard.style.transition = 'none'
+		activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
 		activeCard.style.opacity = '0'
 		activeCard.style.filter = ''
 		activeCard.style.setProperty('--drag-x', '0px')
-		activeCard.style.setProperty('--drag-y', '130vh')
-		activeCard.style.setProperty('--drag-rot', '4deg')
+		activeCard.style.setProperty('--drag-y', '0px')
+		activeCard.style.setProperty('--drag-rot', '0deg')
 		activeCard.style.setProperty('--flip-deg', '0deg')
 
 		renderCard(nextCard)
@@ -556,11 +588,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.removeEventListener('transitionend', activeEnterListener)
 				activeEnterListener = null
 			}
+			activeCard.style.removeProperty('transition')
+			activeCard.style.transform = ''
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
-			activeCard.style.setProperty('--drag-x', '0px')
-			activeCard.style.setProperty('--drag-y', '0px')
-			activeCard.style.setProperty('--drag-rot', '0deg')
 			activeCard.classList.remove('is-entering')
 			activeCard.style.visibility = ''
 			leavingClone.remove()
@@ -589,9 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.visibility = ''
 		activeCard.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
-			activeCard.style.setProperty('--drag-y', '0px')
-			activeCard.style.setProperty('--drag-rot', '0deg')
+			activeCard.style.transition = ''
+			activeCard.style.transform = ''
 			activeCard.style.opacity = ''
+			triggerSpawnAnimation()
 			activeEnterListener = onEnterTransitionEnd
 			activeCard.addEventListener('transitionend', activeEnterListener)
 		})
@@ -610,6 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.lastTouchX = touch.clientX
 		state.lastTouchY = touch.clientY
 		state.touchStartTime = performance.now()
+		clearSpawnAnimation()
 		activeCard.classList.add('is-dragging')
 	}
 
