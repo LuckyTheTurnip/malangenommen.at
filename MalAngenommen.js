@@ -537,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.style.opacity = ''
 				activeCard.style.filter = ''
 				activeCard.classList.remove('is-entering')
+				activeCard.style.removeProperty('transition')
 				state.isAnimating = false
 				state.enterAnimationActive = false
 				if (motionWasActive) {
