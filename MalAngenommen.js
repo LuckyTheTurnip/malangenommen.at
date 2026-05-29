@@ -303,6 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const setFlipDirectionClass = (direction) => {
+		activeCard.classList.remove('flip-dir-left', 'flip-dir-right')
+		if (direction === 'left') {
+			activeCard.classList.add('flip-dir-left')
+			return
+		}
+		if (direction === 'right') {
+			activeCard.classList.add('flip-dir-right')
+		}
+	}
+
 	const updateTiltFromOrientation = (event) => {
 		const beta = Number(event.beta ?? 0)
 		const gamma = Number(event.gamma ?? 0)
@@ -517,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			setPreviewCards()
 			fitQuestionText()
 			setFlipClass(false)
+			setFlipDirectionClass('right')
 	}
 
 	const toggleLanguage = () => {
@@ -763,6 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (state.isAnimating) return
 
 		const motionWasActive = suspendMotionForTransition()
+		setFlipDirectionClass(direction)
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
