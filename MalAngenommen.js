@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
+	const spawnMotionToggle = document.querySelector('[data-spawn-motion-toggle]')
 	const statusNode = document.querySelector('[data-status]')
 	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
 
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		isDragging: false,
 		isMotionEnabled: false,
 		isMotionSuspended: false,
+		spawnMotionMode: 'auto',
 		motionPermissionState: 'idle',
 		isFlipped: false,
 		motionBaselineBeta: null,
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_DISTANCE = 88
 	const SWIPE_RATIO = 1.2
 	const SWIPE_VELOCITY = 0.72
+	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
+	const SPAWN_MOTION_MODES = ['auto', 'on', 'off']
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 11
 	const MAX_TILT_Y = 13
@@ -103,6 +107,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
+	}
+
+	const normalizeSpawnMotionMode = (value) => {
+		const normalized = String(value || '').toLowerCase()
+		if (normalized === 'on' || normalized === 'off' || normalized === 'auto') {
+			return normalized
+		}
+
+		return 'auto'
 	}
 
 	const normalizeCategory = (value) => {
@@ -234,6 +247,43 @@ document.addEventListener('DOMContentLoaded', () => {
 		languageToggle.textContent = isEnglish ? 'Deutsch' : 'English'
 		languageToggle.classList.toggle('is-active', isEnglish)
 		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
+	}
+
+	const updateSpawnMotionButton = () => {
+		if (!spawnMotionToggle) {
+			return
+		}
+
+		const mode = normalizeSpawnMotionMode(state.spawnMotionMode)
+		const label = mode === 'on' ? 'Spawn: On' : mode === 'off' ? 'Spawn: Off' : 'Spawn: Auto'
+		spawnMotionToggle.textContent = label
+		spawnMotionToggle.classList.toggle('is-active', mode === 'on')
+		spawnMotionToggle.setAttribute('aria-pressed', mode === 'on' ? 'true' : 'false')
+	}
+
+	const applySpawnMotionMode = (mode, persist = true) => {
+		const nextMode = normalizeSpawnMotionMode(mode)
+		state.spawnMotionMode = nextMode
+		app.setAttribute('data-spawn-motion', nextMode)
+		updateSpawnMotionButton()
+
+		if (!persist) {
+			return
+		}
+
+		try {
+			window.localStorage.setItem(SPAWN_MOTION_STORAGE_KEY, nextMode)
+		} catch (error) {
+			console.warn('Spawn-Motion-Einstellung konnte nicht gespeichert werden.', error)
+		}
+	}
+
+	const cycleSpawnMotionMode = () => {
+		const currentMode = normalizeSpawnMotionMode(state.spawnMotionMode)
+		const currentIndex = SPAWN_MOTION_MODES.indexOf(currentMode)
+		const nextMode = SPAWN_MOTION_MODES[(currentIndex + 1) % SPAWN_MOTION_MODES.length]
+		applySpawnMotionMode(nextMode, true)
+		statusNode.textContent = `Spawn-Animation: ${nextMode === 'on' ? 'An' : nextMode === 'off' ? 'Aus' : 'Auto'}`
 	}
 
 	const applyMotionTransform = () => {
@@ -748,6 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		bindCardShell(activeCard)
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
+		spawnMotionToggle?.addEventListener('click', cycleSpawnMotionMode)
 		window.addEventListener('keydown', onKeyDown)
 		window.addEventListener('resize', fitQuestionText)
 		window.addEventListener('deviceorientation', updateTiltFromOrientation)
@@ -755,6 +806,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const initialize = async () => {
 		try {
+			let storedSpawnMotionMode = 'auto'
+			try {
+				storedSpawnMotionMode = normalizeSpawnMotionMode(window.localStorage.getItem(SPAWN_MOTION_STORAGE_KEY))
+			} catch (error) {
+				storedSpawnMotionMode = 'auto'
+			}
+			applySpawnMotionMode(storedSpawnMotionMode, false)
+
 			const data = await getData()
 			state.cards = toCards(Array.isArray(data.cards) ? data.cards : [])
 
@@ -766,6 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			bindEvents()
 			updateMotionButton('3D Motion', '', false)
 			updateLanguageButton()
+			updateSpawnMotionButton()
 			statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)
@@ -773,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			questionNode.textContent = 'Die Karten konnten nicht geladen werden.'
 			categoryLabel.textContent = 'Fehler'
 			updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
+			updateSpawnMotionButton()
 		}
 	}
 
