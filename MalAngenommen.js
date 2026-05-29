@@ -532,13 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		activeCard.classList.add('is-entering')
 		activeCard.style.visibility = 'hidden'
-		activeCard.style.transition = 'none'
-		activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
 		activeCard.style.opacity = '0'
 		activeCard.style.filter = ''
 		activeCard.style.setProperty('--drag-x', '0px')
-		activeCard.style.setProperty('--drag-y', '0px')
-		activeCard.style.setProperty('--drag-rot', '0deg')
+		activeCard.style.setProperty('--drag-y', '130vh')
+		activeCard.style.setProperty('--drag-rot', '4deg')
 		activeCard.style.setProperty('--flip-deg', '0deg')
 
 		renderCard(nextCard)
@@ -558,10 +556,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				activeCard.removeEventListener('transitionend', activeEnterListener)
 				activeEnterListener = null
 			}
-			activeCard.style.removeProperty('transition')
-			activeCard.style.transform = ''
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
+			activeCard.style.setProperty('--drag-x', '0px')
+			activeCard.style.setProperty('--drag-y', '0px')
+			activeCard.style.setProperty('--drag-rot', '0deg')
 			activeCard.classList.remove('is-entering')
 			activeCard.style.visibility = ''
 			leavingClone.remove()
@@ -590,8 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.visibility = ''
 		activeCard.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
-			activeCard.style.transition = ''
-			activeCard.style.transform = ''
+			activeCard.style.setProperty('--drag-y', '0px')
+			activeCard.style.setProperty('--drag-rot', '0deg')
 			activeCard.style.opacity = ''
 			activeEnterListener = onEnterTransitionEnd
 			activeCard.addEventListener('transitionend', activeEnterListener)
