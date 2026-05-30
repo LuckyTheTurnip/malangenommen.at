@@ -1310,10 +1310,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
-		const blockSwipePropagation = (event) => {
-			event.stopPropagation()
-		}
-
 		const onVariationDismissTouchStart = (event) => {
 			if (!state.canDismissVariation || !event.touches || event.touches.length !== 1) {
 				return
@@ -1335,10 +1331,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 
-		variationCardNode.addEventListener('touchstart', blockSwipePropagation, { passive: true })
-		variationCardNode.addEventListener('touchmove', blockSwipePropagation, { passive: true })
-		variationCardNode.addEventListener('pointerdown', blockSwipePropagation)
-		variationCardNode.addEventListener('pointermove', blockSwipePropagation)
 		variationCardNode.addEventListener('touchstart', onVariationDismissTouchStart, { passive: true })
 		variationCardNode.addEventListener('touchend', onVariationDismissTouchEnd)
 		variationCardNode.addEventListener('click', (event) => {
