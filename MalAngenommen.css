@@ -543,9 +543,6 @@ body::before {
 	justify-content: center;
 	align-items: center;
 	padding: clamp(14px, 4vw, 24px);
-	/* un-mirror back artwork/text when back face is presented */
-	transform: scaleX(-1);
-	-webkit-transform: scaleX(-1);
 	transform-style: preserve-3d;
 	-webkit-transform-style: preserve-3d;
 }
