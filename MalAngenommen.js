@@ -701,6 +701,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			let brushSize = 28
 			let didComplete = false
 			let sampleTicker = 0
+			let lastScratchX = null
+			let lastScratchY = null
 
 			const parsePercentValue = (raw, fallback) => {
 				const numeric = Number.parseFloat(String(raw || '').replace('%', '').trim())
@@ -787,19 +789,59 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 
+			const scratchLine = (x, y, previousX = null, previousY = null) => {
+				const fromX = Number.isFinite(previousX) ? previousX : x
+				const fromY = Number.isFinite(previousY) ? previousY : y
+				p.line(fromX, fromY, x, y)
+				evaluateReveal()
+			}
+
 			p.setup = () => {
 				const bounds = host.getBoundingClientRect()
 				const canvas = p.createCanvas(bounds.width, bounds.height)
 				canvas.parent(host)
 				if (canvas?.elt) {
+					const toLocalPoint = (touch) => {
+						const rect = canvas.elt.getBoundingClientRect()
+						return {
+							x: touch.clientX - rect.left,
+							y: touch.clientY - rect.top
+						}
+					}
+
 					const preventTouchDefaults = (event) => {
 						event.preventDefault()
+					}
+					const onNativeTouchStart = (event) => {
+						preventTouchDefaults(event)
+						if (!event.touches || event.touches.length === 0) return
+						const point = toLocalPoint(event.touches[0])
+						lastScratchX = point.x
+						lastScratchY = point.y
+						scratchLine(point.x, point.y, point.x, point.y)
+					}
+					const onNativeTouchMove = (event) => {
+						preventTouchDefaults(event)
+						if (!event.touches || event.touches.length === 0) return
+						const point = toLocalPoint(event.touches[0])
+						scratchLine(point.x, point.y, lastScratchX, lastScratchY)
+						lastScratchX = point.x
+						lastScratchY = point.y
+					}
+					const onNativeTouchEnd = (event) => {
+						preventTouchDefaults(event)
+						lastScratchX = null
+						lastScratchY = null
 					}
 					canvas.elt.addEventListener('touchstart', preventTouchDefaults, { passive: false })
 					canvas.elt.addEventListener('touchmove', preventTouchDefaults, { passive: false })
 					canvas.elt.addEventListener('touchend', preventTouchDefaults, { passive: false })
 					canvas.elt.addEventListener('pointerdown', preventTouchDefaults, { passive: false })
 					canvas.elt.addEventListener('pointermove', preventTouchDefaults, { passive: false })
+					canvas.elt.addEventListener('touchstart', onNativeTouchStart, { passive: false })
+					canvas.elt.addEventListener('touchmove', onNativeTouchMove, { passive: false })
+					canvas.elt.addEventListener('touchend', onNativeTouchEnd, { passive: false })
+					canvas.elt.addEventListener('touchcancel', onNativeTouchEnd, { passive: false })
 				}
 				p.pixelDensity(1)
 				p.noLoop()
