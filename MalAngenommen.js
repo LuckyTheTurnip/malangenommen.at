@@ -609,7 +609,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		const leavingClone = activeCard.cloneNode(true)
 		let enterTransitionFinished = false
 		let enterFallbackTimer = null
-		let activeEnterListener = null
 
 		leavingClone.removeAttribute('data-active-card')
 		leavingClone.removeAttribute('data-card-shell')
@@ -617,11 +616,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		leavingClone.classList.add('card-transition-clone')
 		deckStage.appendChild(leavingClone)
 
-		activeCard.classList.add('is-entering')
 		activeCard.style.visibility = 'hidden'
-		activeCard.style.transition = 'none'
-		activeCard.style.transform = 'translate3d(0, 150vh, 0) scale(0.98)'
-		activeCard.style.opacity = '0'
+		activeCard.style.opacity = ''
 		activeCard.style.filter = ''
 		activeCard.style.setProperty('--drag-x', '0px')
 		activeCard.style.setProperty('--drag-y', '0px')
@@ -640,15 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				clearTimeout(enterFallbackTimer)
 				enterFallbackTimer = null
 			}
-			if (activeEnterListener) {
-				activeCard.removeEventListener('transitionend', activeEnterListener)
-				activeEnterListener = null
-			}
-			activeCard.style.removeProperty('transition')
-			activeCard.style.transform = ''
 			activeCard.style.opacity = ''
 			activeCard.style.filter = ''
-			activeCard.classList.remove('is-entering')
 			activeCard.style.visibility = ''
 			leavingClone.remove()
 			state.currentCard = nextCard
@@ -663,25 +652,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 
-		const onEnterTransitionEnd = (event) => {
-			if (event.currentTarget !== activeCard || event.propertyName !== 'transform') {
-				return
-			}
-
-			finishEnterTransition()
-		}
-
 		leavingClone.getBoundingClientRect()
 		leavingClone.classList.add('is-leaving')
 		activeCard.style.visibility = ''
 		activeCard.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
-			activeCard.style.transition = ''
-			activeCard.style.transform = ''
-			activeCard.style.opacity = ''
 			triggerSpawnAnimation()
-			activeEnterListener = onEnterTransitionEnd
-			activeCard.addEventListener('transitionend', activeEnterListener)
 		})
 		enterFallbackTimer = window.setTimeout(finishEnterTransition, 520)
 	}
