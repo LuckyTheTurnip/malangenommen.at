@@ -703,6 +703,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			let sampleTicker = 0
 			let lastScratchX = null
 			let lastScratchY = null
+			let nativeScratchCtx = null
+			let pointerScratchActive = false
 
 			const parsePercentValue = (raw, fallback) => {
 				const numeric = Number.parseFloat(String(raw || '').replace('%', '').trim())
@@ -796,11 +798,34 @@ document.addEventListener('DOMContentLoaded', () => {
 				evaluateReveal()
 			}
 
+			const nativeScratchLine = (x, y, previousX = null, previousY = null) => {
+				if (!nativeScratchCtx) {
+					scratchLine(x, y, previousX, previousY)
+					return
+				}
+				const fromX = Number.isFinite(previousX) ? previousX : x
+				const fromY = Number.isFinite(previousY) ? previousY : y
+				nativeScratchCtx.save()
+				nativeScratchCtx.globalCompositeOperation = 'destination-out'
+				nativeScratchCtx.lineCap = 'round'
+				nativeScratchCtx.lineJoin = 'round'
+				nativeScratchCtx.lineWidth = brushSize
+				nativeScratchCtx.strokeStyle = 'rgba(0,0,0,1)'
+				nativeScratchCtx.beginPath()
+				nativeScratchCtx.moveTo(fromX, fromY)
+				nativeScratchCtx.lineTo(x, y)
+				nativeScratchCtx.stroke()
+				nativeScratchCtx.restore()
+				evaluateReveal()
+			}
+
 			p.setup = () => {
 				const bounds = host.getBoundingClientRect()
 				const canvas = p.createCanvas(bounds.width, bounds.height)
 				canvas.parent(host)
 				if (canvas?.elt) {
+					nativeScratchCtx = canvas.elt.getContext('2d')
+					const supportsPointer = typeof window.PointerEvent === 'function'
 					const toLocalPoint = (touch) => {
 						const rect = canvas.elt.getBoundingClientRect()
 						return {
@@ -818,13 +843,13 @@ document.addEventListener('DOMContentLoaded', () => {
 						const point = toLocalPoint(event.touches[0])
 						lastScratchX = point.x
 						lastScratchY = point.y
-						scratchLine(point.x, point.y, point.x, point.y)
+						nativeScratchLine(point.x, point.y, point.x, point.y)
 					}
 					const onNativeTouchMove = (event) => {
 						preventTouchDefaults(event)
 						if (!event.touches || event.touches.length === 0) return
 						const point = toLocalPoint(event.touches[0])
-						scratchLine(point.x, point.y, lastScratchX, lastScratchY)
+						nativeScratchLine(point.x, point.y, lastScratchX, lastScratchY)
 						lastScratchX = point.x
 						lastScratchY = point.y
 					}
@@ -833,15 +858,65 @@ document.addEventListener('DOMContentLoaded', () => {
 						lastScratchX = null
 						lastScratchY = null
 					}
-					canvas.elt.addEventListener('touchstart', preventTouchDefaults, { passive: false })
-					canvas.elt.addEventListener('touchmove', preventTouchDefaults, { passive: false })
-					canvas.elt.addEventListener('touchend', preventTouchDefaults, { passive: false })
-					canvas.elt.addEventListener('pointerdown', preventTouchDefaults, { passive: false })
-					canvas.elt.addEventListener('pointermove', preventTouchDefaults, { passive: false })
+
+					const onPointerStart = (event) => {
+						if (!supportsPointer || !event.isPrimary) {
+							return
+						}
+						if (event.pointerType === 'mouse' && event.buttons !== 1) {
+							return
+						}
+						preventTouchDefaults(event)
+						pointerScratchActive = true
+						const point = toLocalPoint(event)
+						lastScratchX = point.x
+						lastScratchY = point.y
+						nativeScratchLine(point.x, point.y, point.x, point.y)
+						if (typeof canvas.elt.setPointerCapture === 'function') {
+							try {
+								canvas.elt.setPointerCapture(event.pointerId)
+							} catch (_error) {
+								// no-op
+							}
+						}
+					}
+
+					const onPointerMove = (event) => {
+						if (!supportsPointer || !pointerScratchActive || !event.isPrimary) {
+							return
+						}
+						preventTouchDefaults(event)
+						const point = toLocalPoint(event)
+						nativeScratchLine(point.x, point.y, lastScratchX, lastScratchY)
+						lastScratchX = point.x
+						lastScratchY = point.y
+					}
+
+					const onPointerEnd = (event) => {
+						if (!supportsPointer || !event.isPrimary) {
+							return
+						}
+						preventTouchDefaults(event)
+						pointerScratchActive = false
+						lastScratchX = null
+						lastScratchY = null
+						if (typeof canvas.elt.releasePointerCapture === 'function') {
+							try {
+								canvas.elt.releasePointerCapture(event.pointerId)
+							} catch (_error) {
+								// no-op
+							}
+						}
+					}
+
 					canvas.elt.addEventListener('touchstart', onNativeTouchStart, { passive: false })
 					canvas.elt.addEventListener('touchmove', onNativeTouchMove, { passive: false })
 					canvas.elt.addEventListener('touchend', onNativeTouchEnd, { passive: false })
 					canvas.elt.addEventListener('touchcancel', onNativeTouchEnd, { passive: false })
+					canvas.elt.addEventListener('pointerdown', onPointerStart, { passive: false })
+					canvas.elt.addEventListener('pointermove', onPointerMove, { passive: false })
+					canvas.elt.addEventListener('pointerup', onPointerEnd, { passive: false })
+					canvas.elt.addEventListener('pointercancel', onPointerEnd, { passive: false })
 				}
 				p.pixelDensity(1)
 				p.noLoop()
