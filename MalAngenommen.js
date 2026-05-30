@@ -272,9 +272,33 @@ document.addEventListener('DOMContentLoaded', () => {
 		const target = activeCard
 		target.style.setProperty('--motion-x', `${state.motionX}px`)
 		target.style.setProperty('--motion-y', `${state.motionY}px`)
-		target.style.setProperty('--tilt-x', `${state.tiltX}`)
-		target.style.setProperty('--tilt-y', `${state.tiltY}`)
-		target.style.setProperty('--tilt-z', `${state.tiltZ}`)
+		target.style.setProperty('--tilt-x', `${state.tiltX}deg`)
+		target.style.setProperty('--tilt-y', `${state.tiltY}deg`)
+		target.style.setProperty('--tilt-z', `${state.tiltZ}deg`)
+	}
+
+	const updateTiltFromPointer = (event) => {
+		if (!state.isMotionEnabled || state.isMotionSuspended || !event || event.pointerType !== 'mouse') {
+			return
+		}
+
+		const viewportWidth = Math.max(1, window.innerWidth || 1)
+		const viewportHeight = Math.max(1, window.innerHeight || 1)
+		const normalizedX = ((event.clientX / viewportWidth) - 0.5) * 2
+		const normalizedY = ((event.clientY / viewportHeight) - 0.5) * 2
+
+		const targetMotionX = softClamp(normalizedX * MAX_MOTION_X * 0.9, MAX_MOTION_X)
+		const targetMotionY = softClamp(normalizedY * MAX_MOTION_Y * 0.9, MAX_MOTION_Y)
+		const targetTiltX = softClamp(normalizedX * MAX_TILT_X * 0.9, MAX_TILT_X)
+		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 0.9, MAX_TILT_Y)
+		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.28, MAX_TILT_Z)
+
+		state.motionX += (targetMotionX - state.motionX) * 0.18
+		state.motionY += (targetMotionY - state.motionY) * 0.18
+		state.tiltX += (targetTiltX - state.tiltX) * 0.18
+		state.tiltY += (targetTiltY - state.tiltY) * 0.18
+		state.tiltZ += (targetTiltZ - state.tiltZ) * 0.18
+		applyMotionTransform()
 	}
 
 	const setFlipClass = (flipped) => {
@@ -789,6 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		window.addEventListener('keydown', onKeyDown)
 		window.addEventListener('resize', fitQuestionText)
 		window.addEventListener('deviceorientation', updateTiltFromOrientation)
+		window.addEventListener('pointermove', updateTiltFromPointer)
 	}
 
 	const initialize = async () => {

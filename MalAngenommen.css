@@ -16,7 +16,7 @@
 	--card-bottom: rgba(10, 14, 25, 0.96);
 	--stack-shadow: 0 28px 60px rgba(0, 0, 0, 0.36);
 	--card-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
-	--card-radius: 32px;
+	--card-radius: 44px;
 	--deck-width: min(92vw, 430px);
 	--deck-height: clamp(470px, 74dvh, 720px);
 }
@@ -735,7 +735,7 @@ body::before {
 
 @media (max-width: 520px) {
 	:root {
-		--card-radius: 28px;
+		--card-radius: 36px;
 		--deck-height: clamp(460px, 73dvh, 660px);
 	}
 
