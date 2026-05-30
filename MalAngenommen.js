@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
-	const spawnMotionToggle = document.querySelector('[data-spawn-motion-toggle]')
 	const statusNode = document.querySelector('[data-status]')
 	const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'))
 
@@ -94,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_RATIO = 1.2
 	const SWIPE_VELOCITY = 0.72
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
-	const SPAWN_MOTION_MODES = ['on', 'off']
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 11
 	const MAX_TILT_Y = 13
@@ -248,23 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
 	}
 
-	const updateSpawnMotionButton = () => {
-		if (!spawnMotionToggle) {
-			return
-		}
-
-		const mode = normalizeSpawnMotionMode(state.spawnMotionMode)
-		const label = mode === 'on' ? 'Spawn: On' : 'Spawn: Off'
-		spawnMotionToggle.textContent = label
-		spawnMotionToggle.classList.toggle('is-active', mode === 'on')
-		spawnMotionToggle.setAttribute('aria-pressed', mode === 'on' ? 'true' : 'false')
-	}
-
 	const applySpawnMotionMode = (mode, persist = true) => {
 		const nextMode = normalizeSpawnMotionMode(mode)
 		state.spawnMotionMode = nextMode
 		app.setAttribute('data-spawn-motion', nextMode)
-		updateSpawnMotionButton()
 
 		if (!persist) {
 			return
@@ -275,14 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (error) {
 			console.warn('Spawn-Motion-Einstellung konnte nicht gespeichert werden.', error)
 		}
-	}
-
-	const cycleSpawnMotionMode = () => {
-		const currentMode = normalizeSpawnMotionMode(state.spawnMotionMode)
-		const currentIndex = SPAWN_MOTION_MODES.indexOf(currentMode)
-		const nextMode = SPAWN_MOTION_MODES[(currentIndex + 1) % SPAWN_MOTION_MODES.length]
-		applySpawnMotionMode(nextMode, true)
-		statusNode.textContent = `Spawn-Animation: ${nextMode === 'on' ? 'An' : 'Aus'}`
 	}
 
 	const applyMotionTransform = () => {
@@ -582,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.spawnAnimationTimer = window.setTimeout(() => {
 			activeCard.removeEventListener('animationend', onSpawnAnimationEnd)
 			clearSpawnAnimation()
-		}, 920)
+		}, 1100)
 	}
 
 	const advanceCard = () => {
@@ -659,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		window.requestAnimationFrame(() => {
 			triggerSpawnAnimation()
 		})
-		enterFallbackTimer = window.setTimeout(finishEnterTransition, 520)
+		enterFallbackTimer = window.setTimeout(finishEnterTransition, 660)
 	}
 
 	const onTouchStart = (event) => {
@@ -791,7 +768,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		bindCardShell(activeCard)
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
-		spawnMotionToggle?.addEventListener('click', cycleSpawnMotionMode)
 		window.addEventListener('keydown', onKeyDown)
 		window.addEventListener('resize', fitQuestionText)
 		window.addEventListener('deviceorientation', updateTiltFromOrientation)
@@ -821,7 +797,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			bindEvents()
 			updateMotionButton('3D Motion', '', false)
 			updateLanguageButton()
-			updateSpawnMotionButton()
 			statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)
@@ -829,7 +804,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			questionNode.textContent = 'Die Karten konnten nicht geladen werden.'
 			categoryLabel.textContent = 'Fehler'
 			updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
-			updateSpawnMotionButton()
 		}
 	}
 
