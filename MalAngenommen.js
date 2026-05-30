@@ -129,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
 	const VARIATION_FLY_MS = 420
+	const SCRATCH_GRAIN_DOT_COUNT = 9600
+	const SCRATCH_GRAIN_FLAKE_COUNT = 540
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 40
@@ -431,6 +433,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationCardNode.style.setProperty('--facet-alpha', `${(facetAlpha * 0.72).toFixed(3)}`)
 			variationCardNode.style.setProperty('--facet-shift-x', `${facetShiftX}%`)
 			variationCardNode.style.setProperty('--facet-shift-y', `${facetShiftY}%`)
+			variationCardNode.style.setProperty('--v-tilt-x', `${(state.tiltX * 0.78).toFixed(3)}deg`)
+			variationCardNode.style.setProperty('--v-tilt-y', `${(state.tiltY * 0.78).toFixed(3)}deg`)
+			variationCardNode.style.setProperty('--v-tilt-z', `${(state.tiltZ * 0.7).toFixed(3)}deg`)
 		}
 	}
 
@@ -697,6 +702,91 @@ document.addEventListener('DOMContentLoaded', () => {
 			let didComplete = false
 			let sampleTicker = 0
 
+			const parsePercentValue = (raw, fallback) => {
+				const numeric = Number.parseFloat(String(raw || '').replace('%', '').trim())
+				return Number.isFinite(numeric) ? numeric : fallback
+			}
+
+			const resolveScratchLight = () => {
+				const styles = window.getComputedStyle(variationCardNode)
+				return {
+					shineX: parsePercentValue(styles.getPropertyValue('--shine-x'), 50),
+					shineY: parsePercentValue(styles.getPropertyValue('--shine-y'), 36),
+					shineAlpha: parsePercentValue(styles.getPropertyValue('--shine-alpha'), 0.28)
+				}
+			}
+
+			const drawIridescentScratchCover = () => {
+				const light = resolveScratchLight()
+				const hotspotX = (light.shineX / 100) * p.width
+				const hotspotY = (light.shineY / 100) * p.height
+				const maxDistance = Math.hypot(p.width, p.height)
+
+				p.clear()
+				p.noStroke()
+				p.fill(12, 16, 28, 242)
+				p.rect(0, 0, p.width, p.height)
+
+				const anchors = [
+					[112, 236, 255], // vivid cyan
+					[255, 148, 242], // vivid magenta
+					[255, 222, 108], // vivid gold
+					[154, 255, 196], // vivid mint
+					[170, 156, 255], // violet
+					[255, 174, 128] // warm coral
+				]
+
+				const pickIridescentTone = () => {
+					const index = Math.floor(Math.random() * anchors.length)
+					const base = anchors[index]
+					const whiteMix = 0.16 + Math.random() * 0.44
+					const hueJitter = (Math.random() - 0.5) * 44
+					const red = Math.round(base[0] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.75)
+					const green = Math.round(base[1] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.24)
+					const blue = Math.round(base[2] * (1 - whiteMix) + 255 * whiteMix - hueJitter * 0.66)
+					return [
+						Math.max(110, Math.min(255, red)),
+						Math.max(110, Math.min(255, green)),
+						Math.max(110, Math.min(255, blue))
+					]
+				}
+
+				for (let dot = 0; dot < SCRATCH_GRAIN_DOT_COUNT; dot += 1) {
+					const x = Math.random() * p.width
+					const y = Math.random() * p.height
+					const distance = Math.hypot(x - hotspotX, y - hotspotY)
+					const hit = Math.max(0, 1 - distance / maxDistance)
+					const directionalBoost = Math.pow(hit, 2.8)
+					const randomBias = Math.pow(Math.random(), 1.9)
+					const alpha = 0.012 + randomBias * 0.1 + directionalBoost * (0.22 + light.shineAlpha * 0.18)
+					const size = 0.32 + Math.pow(Math.random(), 1.6) * 1.15
+					const color = pickIridescentTone()
+					p.fill(color[0], color[1], color[2], Math.min(255, Math.round(alpha * 255)))
+					p.circle(x, y, size)
+				}
+
+				for (let flake = 0; flake < SCRATCH_GRAIN_FLAKE_COUNT; flake += 1) {
+					const centerX = Math.random() * p.width
+					const centerY = Math.random() * p.height
+					const distance = Math.hypot(centerX - hotspotX, centerY - hotspotY)
+					const hit = Math.max(0, 1 - distance / maxDistance)
+					const directionalBoost = Math.pow(hit, 3)
+					const points = Math.random() < 0.62 ? 3 : 4
+					const radius = 0.34 + Math.random() * 1.02
+					const spin = Math.random() * Math.PI * 2
+					const alpha = 0.045 + Math.random() * 0.15 + directionalBoost * (0.2 + light.shineAlpha * 0.2)
+					const color = pickIridescentTone()
+					p.fill(color[0], color[1], color[2], Math.min(255, Math.round(alpha * 255)))
+					p.beginShape()
+					for (let vertex = 0; vertex < points; vertex += 1) {
+						const angle = spin + (Math.PI * 2 * vertex) / points + (Math.random() - 0.5) * 0.2
+						const radial = radius * (0.62 + Math.random() * 0.55)
+						p.vertex(centerX + Math.cos(angle) * radial, centerY + Math.sin(angle) * radial)
+					}
+					p.endShape(p.CLOSE)
+				}
+			}
+
 			p.setup = () => {
 				const bounds = host.getBoundingClientRect()
 				const canvas = p.createCanvas(bounds.width, bounds.height)
@@ -713,15 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				p.pixelDensity(1)
 				p.noLoop()
-				p.clear()
-				p.noStroke()
-				p.fill(14, 19, 30, 244)
-				p.rect(0, 0, p.width, p.height)
-				p.stroke(255, 255, 255, 26)
-				for (let line = 0; line < 18; line += 1) {
-					const y = ((line + 1) * p.height) / 19
-					p.line(0, y, p.width, y)
-				}
+				drawIridescentScratchCover()
 				p.strokeWeight(brushSize)
 				p.strokeCap(p.ROUND)
 				p.erase(255, 255)

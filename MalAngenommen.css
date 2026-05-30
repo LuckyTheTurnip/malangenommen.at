@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: hsl(161, 100%, 50%);
+	background: hsl(290, 100%, 50%);
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -846,6 +846,9 @@ body::before {
 	top: 50%;
 	width: min(62%, 230px);
 	aspect-ratio: 4 / 5;
+	--v-tilt-x: 0deg;
+	--v-tilt-y: 0deg;
+	--v-tilt-z: 0deg;
 	--shine-x: 50%;
 	--shine-y: 36%;
 	--shine-alpha: 0.34;
@@ -855,11 +858,6 @@ body::before {
 	--facet-alpha: 0.06;
 	--facet-shift-x: 50%;
 	--facet-shift-y: 50%;
-	border-radius: 20px;
-	background: linear-gradient(180deg, rgba(19, 25, 40, 0.97), rgba(10, 14, 25, 0.98));
-	border: 1px solid rgba(255, 255, 255, 0.16);
-	box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
-	overflow: hidden;
 	z-index: 16;
 	opacity: 0;
 	transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
@@ -868,6 +866,21 @@ body::before {
 	-webkit-transform-origin: center center;
 	pointer-events: none;
 	transition: transform 420ms cubic-bezier(0.2, 0.8, 0.22, 1), opacity 260ms ease;
+}
+
+.variation-mini-card__motion {
+	position: absolute;
+	inset: 0;
+	border-radius: 20px;
+	background: linear-gradient(180deg, rgba(19, 25, 40, 0.97), rgba(10, 14, 25, 0.98));
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+	overflow: hidden;
+	transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(var(--v-tilt-z));
+	-webkit-transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(var(--v-tilt-z));
+	transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
+	transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .variation-mini-card.is-peek {
