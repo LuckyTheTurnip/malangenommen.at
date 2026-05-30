@@ -143,8 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MAX_MOTION_STEP = 0.9
 	const MAX_TILT_STEP = 0.7
 	const MOTION_SMOOTHING = 0.14
-	const SHINE_SHIFT_X_MAX = 26
-	const SHINE_SHIFT_Y_MAX = 22
+	const SHINE_SHIFT_X_MAX = 34
+	const SHINE_SHIFT_Y_MAX = 28
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -400,15 +400,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const combinedTiltX = state.tiltX + state.dragOffsetX * 0.05
 		const combinedTiltY = state.tiltY + state.dragOffsetY * 0.045
-		const shineX = Math.max(18, Math.min(82, 50 + (combinedTiltX / MAX_TILT_X) * SHINE_SHIFT_X_MAX))
-		const shineY = Math.max(14, Math.min(86, 38 + (combinedTiltY / MAX_TILT_Y) * SHINE_SHIFT_Y_MAX))
-		const motionEnergy = Math.min(1, (Math.abs(combinedTiltX) + Math.abs(combinedTiltY) + Math.abs(state.tiltZ)) / 38)
-		const shineAlpha = 0.16 + motionEnergy * 0.2
-		const shineEdgeAlpha = 0.08 + motionEnergy * 0.1
+		const shineX = Math.max(12, Math.min(88, 50 + (combinedTiltX / MAX_TILT_X) * SHINE_SHIFT_X_MAX))
+		const shineY = Math.max(10, Math.min(90, 36 + (combinedTiltY / MAX_TILT_Y) * SHINE_SHIFT_Y_MAX))
+		const motionEnergy = Math.min(1, (Math.abs(combinedTiltX) + Math.abs(combinedTiltY) + Math.abs(state.tiltZ)) / 32)
+		const shineAlpha = 0.26 + motionEnergy * 0.33
+		const shineEdgeAlpha = 0.16 + motionEnergy * 0.2
+		const shineRimAlpha = 0.16 + motionEnergy * 0.22
+		const shineSpeckleAlpha = 0.08 + motionEnergy * 0.16
 		target.style.setProperty('--shine-x', `${shineX}%`)
 		target.style.setProperty('--shine-y', `${shineY}%`)
 		target.style.setProperty('--shine-alpha', `${shineAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
+		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
+		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
 	}
 
 	const updateTiltFromPointer = (event) => {
