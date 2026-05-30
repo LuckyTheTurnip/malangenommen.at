@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const activeCard = document.querySelector('[data-active-card]')
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
+	const cardBackLogoNode = activeCard ? activeCard.querySelector('.card-back-logo') : null
+	const cardBackOrbitTextNodes = activeCard ? Array.from(activeCard.querySelectorAll('.card-back-orbit-text textPath')) : []
 	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
 	const categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
 	
@@ -20,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Hypothetical',
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
+			logoSrc: 'Media/Hypothetical_Logo.svg',
 			accent: '#ff8a5b',
 			accentSoft: 'rgba(255, 138, 91, 0.18)',
 			top: 'rgba(38, 23, 31, 0.96)',
@@ -29,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Showstopper',
 			className: 'theme-showstopper',
 			text: '#f4fbff',
+			logoSrc: 'Media/Showstopper Logo.svg',
 			accent: '#6fc4ff',
 			accentSoft: 'rgba(111, 196, 255, 0.16)',
 			top: 'rgba(17, 28, 44, 0.96)',
@@ -38,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Kombichaos',
 			className: 'theme-kombichaos',
 			text: '#f7fff1',
+			logoSrc: 'Media/Kombichaos Logo.svg',
 			accent: '#9eff7a',
 			accentSoft: 'rgba(158, 255, 122, 0.16)',
 			top: 'rgba(20, 30, 18, 0.96)',
@@ -47,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Monkey’s Paw',
 			className: 'theme-monkeyspaw',
 			text: '#fff7e9',
+			logoSrc: 'Media/Monkeys Paw Logo.svg',
 			accent: '#ffc45c',
 			accentSoft: 'rgba(255, 196, 92, 0.16)',
 			top: 'rgba(35, 27, 17, 0.96)',
@@ -482,12 +488,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	}
 
-		const renderCard = (card) => {
+		const renderCard = (card, options = {}) => {
+		const { resetFlip = true } = options
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 			categoryLabel.textContent = theme.label
 			if (frontQuestionNode) {
 				frontQuestionNode.textContent = getCardQuestion(card)
 				frontQuestionNode.style.color = theme.text
+			}
+			if (cardBackLogoNode) {
+				cardBackLogoNode.src = theme.logoSrc
+				cardBackLogoNode.alt = `${theme.label} logo`
+			}
+			if (cardBackOrbitTextNodes.length > 0) {
+				cardBackOrbitTextNodes.forEach((node) => {
+					node.textContent = theme.label
+				})
 			}
 			activeCard.style.setProperty('--card-top', theme.top)
 			activeCard.style.setProperty('--card-bottom', theme.bottom)
@@ -499,8 +515,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			updateDeckLabels()
 			setPreviewCards()
 			fitQuestionText()
-			setFlipClass(false)
-			setFlipRotation(0)
+			if (resetFlip) {
+				// New cards start on the logo side ("back side"), then flip to reveal the question side.
+				setFlipClass(true)
+				setFlipRotation(180)
+			}
 	}
 
 	const toggleLanguage = () => {
@@ -508,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateLanguageButton()
 
 		if (state.currentCard) {
-			renderCard(state.currentCard)
+			renderCard(state.currentCard, { resetFlip: false })
 		}
 	}
 
@@ -601,7 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--drag-rot', '0deg')
 
 		renderCard(nextCard)
-		setFlipClass(false)
 
 		const finishEnterTransition = () => {
 			if (enterTransitionFinished) {
