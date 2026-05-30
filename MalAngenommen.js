@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const dismissVariationCard = () => {
-		if (!variationCardNode || !state.miniCardOpen || !state.canDismissVariation) {
+		if (!variationCardNode || !state.miniCardOpen) {
 			return
 		}
 
@@ -946,7 +946,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					didComplete = true
 					state.scratchRevealed = true
 					state.canDismissVariation = true
-					variationCardNode.classList.add('is-revealed')
 				}
 			}
 
@@ -1001,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.currentVariationText = nextText
 		state.miniCardOpen = true
 		state.scratchRevealed = false
-		state.canDismissVariation = false
+		state.canDismissVariation = true
 		variationTextNode.textContent = nextText
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
@@ -1510,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const onVariationDismissTouchStart = (event) => {
-			if (!state.canDismissVariation || !event.touches || event.touches.length !== 1) {
+			if (!event.touches || event.touches.length !== 1) {
 				return
 			}
 			state.variationDismissStartX = event.touches[0].clientX
@@ -1518,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const onVariationDismissTouchEnd = (event) => {
-			if (!state.canDismissVariation || !event.changedTouches || event.changedTouches.length !== 1) {
+			if (!event.changedTouches || event.changedTouches.length !== 1) {
 				return
 			}
 			const deltaX = event.changedTouches[0].clientX - state.variationDismissStartX
@@ -1539,9 +1538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				openVariationCard()
 				return
 			}
-			if (state.canDismissVariation) {
-				dismissVariationCard()
-			}
+			dismissVariationCard()
 		})
 		// Do not stop propagation on the scratch host itself:
 		// p5 touch callbacks rely on bubbling in Safari/Chrome mobile.
