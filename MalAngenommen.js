@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		tiltX: 0,
 		tiltY: 0,
 		tiltZ: 0,
+		flipRotationDeg: 0,
 		fitFrame: 0
 		,enterAnimationActive: false
 		,spawnAnimationTimer: null
@@ -303,15 +304,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	const setFlipDirectionClass = (direction) => {
-		activeCard.classList.remove('flip-dir-left', 'flip-dir-right')
-		if (direction === 'left') {
-			activeCard.classList.add('flip-dir-left')
-			return
-		}
-		if (direction === 'right') {
-			activeCard.classList.add('flip-dir-right')
-		}
+	const setFlipRotation = (degrees) => {
+		state.flipRotationDeg = degrees
+		activeCard.style.setProperty('--flip-rot', `${degrees}deg`)
 	}
 
 	const updateTiltFromOrientation = (event) => {
@@ -528,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			setPreviewCards()
 			fitQuestionText()
 			setFlipClass(false)
-			setFlipDirectionClass('right')
+			setFlipRotation(0)
 	}
 
 	const toggleLanguage = () => {
@@ -775,7 +770,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (state.isAnimating) return
 
 		const motionWasActive = suspendMotionForTransition()
-		setFlipDirectionClass(direction)
+		const normalizedDirection = direction === 'left' ? 'left' : 'right'
+		const nextRotation = state.flipRotationDeg + (normalizedDirection === 'left' ? -180 : 180)
+		setFlipRotation(nextRotation)
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
