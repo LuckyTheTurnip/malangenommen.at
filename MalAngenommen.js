@@ -145,6 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MOTION_SMOOTHING = 0.14
 	const SHINE_SHIFT_X_MAX = 38
 	const SHINE_SHIFT_Y_MAX = 32
+	const FACET_TEX_WIDTH = 256
+	const FACET_TEX_HEIGHT = 320
+	const FACET_POLYGON_COUNT = 170
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -413,6 +416,65 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
+		const facetAlpha = 0.07 + motionEnergy * 0.2
+		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
+		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
+		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
+		target.style.setProperty('--facet-shift-x', `${facetShiftX}%`)
+		target.style.setProperty('--facet-shift-y', `${facetShiftY}%`)
+	}
+
+	const generateMicrofacetTexture = () => {
+		const canvas = document.createElement('canvas')
+		canvas.width = FACET_TEX_WIDTH
+		canvas.height = FACET_TEX_HEIGHT
+		const ctx = canvas.getContext('2d')
+		if (!ctx) {
+			return null
+		}
+
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		for (let index = 0; index < FACET_POLYGON_COUNT; index += 1) {
+			const centerX = Math.random() * canvas.width
+			const centerY = Math.random() * canvas.height
+			const radius = 1.3 + Math.random() * 4.3
+			const points = Math.random() < 0.52 ? 3 : 4
+			const spin = Math.random() * Math.PI * 2
+			const alpha = 0.03 + Math.random() * 0.22
+			ctx.beginPath()
+			for (let point = 0; point < points; point += 1) {
+				const angle = spin + (Math.PI * 2 * point) / points + (Math.random() - 0.5) * 0.3
+				const variance = radius * (0.64 + Math.random() * 0.58)
+				const px = centerX + Math.cos(angle) * variance
+				const py = centerY + Math.sin(angle) * variance
+				if (point === 0) {
+					ctx.moveTo(px, py)
+				} else {
+					ctx.lineTo(px, py)
+				}
+			}
+			ctx.closePath()
+			ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(4)})`
+			ctx.fill()
+		}
+
+		for (let sparkle = 0; sparkle < 90; sparkle += 1) {
+			const x = Math.random() * canvas.width
+			const y = Math.random() * canvas.height
+			const dotAlpha = 0.02 + Math.random() * 0.13
+			ctx.fillStyle = `rgba(255,255,255,${dotAlpha.toFixed(4)})`
+			ctx.fillRect(x, y, 1, 1)
+		}
+
+		return canvas.toDataURL('image/png')
+	}
+
+	const applyMicrofacetTexture = () => {
+		const textureDataUrl = generateMicrofacetTexture()
+		if (!textureDataUrl) {
+			return
+		}
+		activeCard.style.setProperty('--facet-map', `url("${textureDataUrl}")`)
 	}
 
 	const updateTiltFromPointer = (event) => {
@@ -959,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			setVariationTabVisibility(hasVariations)
 			closeVariationCard()
 			if (resetFlip) {
+				applyMicrofacetTexture()
 				// New cards start on the logo side ("back side"), then flip to reveal the question side.
 				setFlipClass(true)
 				setFlipRotation(180)
