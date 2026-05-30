@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 256
 	const FACET_TEX_HEIGHT = 320
-	const FACET_POLYGON_COUNT = 360
+	const FACET_POLYGON_COUNT = 980
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
-		const facetAlpha = 0.12 + motionEnergy * 0.3
+		const facetAlpha = 0.012 + motionEnergy * 0.34
 		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
 		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
@@ -437,10 +437,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		for (let index = 0; index < FACET_POLYGON_COUNT; index += 1) {
 			const centerX = Math.random() * canvas.width
 			const centerY = Math.random() * canvas.height
-			const radius = 0.7 + Math.random() * 2.1
+			const radius = 0.45 + Math.random() * 1.35
 			const points = Math.random() < 0.52 ? 3 : 4
 			const spin = Math.random() * Math.PI * 2
-			const alpha = 0.08 + Math.random() * 0.36
+			const alpha = 0.14 + Math.random() * 0.52
 			ctx.beginPath()
 			for (let point = 0; point < points; point += 1) {
 				const angle = spin + (Math.PI * 2 * point) / points + (Math.random() - 0.5) * 0.3
@@ -458,10 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			ctx.fill()
 		}
 
-		for (let sparkle = 0; sparkle < 240; sparkle += 1) {
+		for (let sparkle = 0; sparkle < 760; sparkle += 1) {
 			const x = Math.random() * canvas.width
 			const y = Math.random() * canvas.height
-			const dotAlpha = 0.08 + Math.random() * 0.26
+			const dotAlpha = 0.14 + Math.random() * 0.42
 			ctx.fillStyle = `rgba(255,255,255,${dotAlpha.toFixed(4)})`
 			ctx.fillRect(x, y, 1, 1)
 		}
