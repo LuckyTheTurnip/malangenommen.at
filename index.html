@@ -19,10 +19,36 @@
                 <h1 class="game__title">Für die nächste Karte</h1>
             </div>
             <div class="game__header-actions">
+                <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu">Filter</button>
                 <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false">3D Motion</button>
                 <button class="game__language-toggle" type="button" data-language-toggle aria-pressed="false">English</button>
             </div>
         </header>
+
+        <aside class="filter-menu" id="filter-menu" data-filter-menu hidden aria-hidden="true">
+            <p class="filter-menu__title">Kategorien</p>
+            <label class="filter-menu__option">
+                <input type="checkbox" data-filter-category="hypothetical" checked>
+                <span>Hypothetical</span>
+            </label>
+            <label class="filter-menu__option">
+                <input type="checkbox" data-filter-category="showstopper" checked>
+                <span>Showstopper</span>
+            </label>
+            <label class="filter-menu__option">
+                <input type="checkbox" data-filter-category="kombichaos" checked>
+                <span>Kombichaos</span>
+            </label>
+            <label class="filter-menu__option">
+                <input type="checkbox" data-filter-category="monkeyspaw" checked>
+                <span>Monkey’s Paw</span>
+            </label>
+            <hr class="filter-menu__divider">
+            <label class="filter-menu__option">
+                <input type="checkbox" data-filter-variations-only>
+                <span>Nur Karten mit Variation</span>
+            </label>
+        </aside>
 
         <section class="deck-stage" data-deck-stage>
             <div class="deck-stack" aria-hidden="true">
@@ -44,6 +70,9 @@
                                     <p class="card-question" data-front-question></p>
                                 </div>
 
+                                <div class="swipe-up-cue" data-swipe-up-cue hidden aria-hidden="true">
+                                    <span class="swipe-up-cue__asset" aria-hidden="true">↑</span>
+                                </div>
                             </div>
                         </div>
 
@@ -71,11 +100,21 @@
                                         <img class="card-back-logo" src="Media/Hypothetical_Logo.svg" alt="Hypothetical logo">
                                     </div>
                                 </div>
+                                <div class="flip-cue" data-flip-cue hidden aria-hidden="true">
+                                    <span class="flip-cue__asset" aria-hidden="true">↔</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </article>
+
+            <section class="variation-mini-card" data-variation-card hidden aria-hidden="true">
+                <div class="variation-mini-card__inner">
+                    <p class="variation-mini-card__text" data-variation-text></p>
+                    <div class="variation-mini-card__scratch" data-variation-scratch></div>
+                </div>
+            </section>
 
         </section>
 
@@ -83,6 +122,7 @@
     </main>
 
     <script src="MalAngenommen-data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js" defer></script>
     <script src="MalAngenommen.js"></script>
 </body>
 </html>
