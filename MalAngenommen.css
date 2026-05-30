@@ -409,7 +409,6 @@ body::before {
 	position: absolute;
 	inset: 0;
 	border-radius: inherit;
-	overflow: hidden;
 	background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	box-shadow: var(--card-shadow);
@@ -426,6 +425,8 @@ body::before {
 .card-face {
 	position: absolute;
 	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
 	background-color: #0b0f19;
 	background: linear-gradient(
 		180deg,
