@@ -16,9 +16,9 @@
 	--card-bottom: rgba(10, 14, 25, 0.96);
 	--stack-shadow: 0 28px 60px rgba(0, 0, 0, 0.36);
 	--card-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
-	--card-radius: 44px;
+	--card-radius: 52px;
 	--deck-width: min(92vw, 430px);
-	--deck-height: clamp(470px, 74dvh, 720px);
+	--card-aspect: 1 / 1.4;
 }
 
 * {
@@ -325,7 +325,8 @@ body::before {
 .active-card {
 	position: absolute;
 	width: var(--deck-width);
-	height: var(--deck-height);
+	height: auto;
+	aspect-ratio: var(--card-aspect);
 	border-radius: var(--card-radius);
 	overflow: hidden;
 	transform-origin: center center;
@@ -358,6 +359,7 @@ body::before {
 }
 
 .active-card__faces::before {
+	border-radius: inherit;
 	background: none;
 }
 
@@ -368,6 +370,10 @@ body::before {
 	inset: 0;
 	background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
 	pointer-events: none;
+}
+
+.active-card__faces::after {
+	border-radius: inherit;
 }
 
 .stack-card__inner {
@@ -449,6 +455,9 @@ body::before {
 	--facet-alpha: 0.03;
 	--facet-shift-x: 50%;
 	--facet-shift-y: 50%;
+	--card-pattern-url: none;
+	--back-circle-a: #ffffff;
+	--back-circle-b: #9aa4be;
 	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)) rotateZ(var(--tilt-z)) rotate(var(--drag-rot));
 	-webkit-transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)) rotateZ(var(--tilt-z)) rotate(var(--drag-rot));
 	transition: transform 420ms cubic-bezier(0.2,0.7,0.2,1);
@@ -467,6 +476,10 @@ body::before {
 	display: flex;
 	align-items: stretch;
 	justify-content: stretch;
+	border-radius: inherit;
+	overflow: hidden;
+	clip-path: inset(0 round var(--card-radius));
+	-webkit-clip-path: inset(0 round var(--card-radius));
 	transform-style: preserve-3d;
 	-webkit-transform-style: preserve-3d;
 	perspective: 1200px;
@@ -504,12 +517,33 @@ body::before {
 		color-mix(in srgb, var(--card-top) 90%, #0a0d16),
 		color-mix(in srgb, var(--card-bottom) 94%, #05070c)
 	);
+	background-image:
+		var(--card-pattern-url),
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--card-top) 82%, #0a0d16),
+			color-mix(in srgb, var(--card-bottom) 88%, #05070c)
+		);
+	background-size: 148px 148px, 100% 100%;
+	background-repeat: repeat, no-repeat;
+	background-position: 0% 0%, 50% 50%;
+	background-blend-mode: normal, normal;
 	backface-visibility: hidden;
 	-webkit-backface-visibility: hidden;
 	transform-style: preserve-3d;
 	-webkit-transform-style: preserve-3d;
 	transform: translateZ(0);
 	-webkit-transform: translateZ(0);
+	animation: card-pattern-drift 26s linear infinite;
+}
+
+@keyframes card-pattern-drift {
+	0% {
+		background-position: 0% 0%, 50% 50%;
+	}
+	100% {
+		background-position: 148px 148px, 50% 50%;
+	}
 }
 
 .card-face::before {
@@ -745,6 +779,7 @@ body::before {
 	position: absolute;
 	left: 50%;
 	top: 50%;
+	z-index: 3;
 	width: min(88%, 360px);
 	aspect-ratio: 1 / 1; /* make the orbit container square so path renders as circle */
 	transform: translate(-50%, -50%);
@@ -764,28 +799,30 @@ body::before {
 	font-weight: 800;
 	letter-spacing: 0.22em;
 	text-transform: uppercase;
-	fill: #f2f5ff;
-	fill: color-mix(in srgb, var(--text) 84%, var(--accent) 16%);
+	fill: color-mix(in srgb, var(--back-circle-a) 56%, var(--back-circle-b) 44%);
 	opacity: 0.9;
-	text-shadow: 0 0 10px rgba(255, 255, 255, 0.22);
+	text-shadow: 0 0 10px color-mix(in srgb, var(--back-circle-a) 56%, var(--back-circle-b) 44%);
 }
 
 .card-back-logo-wrap {
 	position: relative;
 	z-index: 2;
-	width: clamp(106px, 30vw, 154px);
+	width: clamp(170px, 52vw, 270px);
 	aspect-ratio: 1 / 1;
 	display: grid;
 	place-items: center;
 	border-radius: 999px;
-	background: radial-gradient(circle at 35% 28%, #f8d6be, #151926);
-	background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--accent) 26%, white), color-mix(in srgb, var(--card-bottom) 70%, black));
-	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+	background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--back-circle-a) 72%, white), color-mix(in srgb, var(--back-circle-b) 88%, black) 72%);
+	border: 8px solid color-mix(in srgb, var(--back-circle-a) 56%, var(--back-circle-b) 44%);
+	box-shadow:
+		0 12px 34px rgba(0, 0, 0, 0.32),
+		inset 0 0 0 1px color-mix(in srgb, white 30%, var(--back-circle-a) 70%),
+		inset 0 -8px 18px color-mix(in srgb, var(--back-circle-b) 65%, black 35%);
 }
 
 .card-back-logo {
-	width: 72%;
-	height: 72%;
+	width: 82%;
+	height: 82%;
 	object-fit: contain;
 	filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.26)) brightness(1.08);
 }
@@ -858,10 +895,13 @@ body::before {
 	--facet-alpha: 0.06;
 	--facet-shift-x: 50%;
 	--facet-shift-y: 50%;
+	--variation-purple-a: #caa2ff;
+	--variation-purple-b: #7f4dcb;
+	--variation-purple-c: #3b215f;
 	z-index: 16;
 	opacity: 0;
-	transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
-	-webkit-transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
+	transform: translate3d(calc(50vw - 56px), 34vh, 0) scale(0.9) rotate(5deg);
+	-webkit-transform: translate3d(calc(50vw - 56px), 34vh, 0) scale(0.9) rotate(5deg);
 	transform-origin: center center;
 	-webkit-transform-origin: center center;
 	pointer-events: none;
@@ -872,9 +912,11 @@ body::before {
 	position: absolute;
 	inset: 0;
 	border-radius: 20px;
-	background: linear-gradient(180deg, rgba(19, 25, 40, 0.97), rgba(10, 14, 25, 0.98));
-	border: 1px solid rgba(255, 255, 255, 0.16);
-	box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+	background:
+		radial-gradient(140% 120% at 24% 12%, color-mix(in srgb, var(--variation-purple-a) 42%, white), transparent 46%),
+		linear-gradient(180deg, color-mix(in srgb, var(--variation-purple-b) 60%, #121222), color-mix(in srgb, var(--variation-purple-c) 84%, #090812));
+	border: 1px solid color-mix(in srgb, var(--variation-purple-a) 58%, rgba(255, 255, 255, 0.16));
+	box-shadow: 0 16px 38px rgba(24, 8, 44, 0.5);
 	overflow: hidden;
 	transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(var(--v-tilt-z));
 	-webkit-transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(var(--v-tilt-z));
@@ -884,12 +926,14 @@ body::before {
 }
 
 .variation-mini-card.is-peek {
-	top: 84%;
 	opacity: 1;
-	transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
-	-webkit-transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
-	animation: variation-peek-shake 6.4s ease-in-out infinite;
+	transform: translate3d(calc(50vw - 56px), 34vh, 0) scale(0.9) rotate(5deg);
+	-webkit-transform: translate3d(calc(50vw - 56px), 34vh, 0) scale(0.9) rotate(5deg);
 	pointer-events: auto;
+}
+
+.variation-mini-card.is-peek .variation-mini-card__motion {
+	animation: variation-peek-shake-inner 6.4s ease-in-out infinite;
 }
 
 .variation-mini-card.is-flying-in,
@@ -902,8 +946,8 @@ body::before {
 
 .variation-mini-card.is-flying-out {
 	opacity: 0;
-	transform: translate3d(calc(50vw + 24px), -50%, 0) scale(0.9) rotate(5deg);
-	-webkit-transform: translate3d(calc(50vw + 24px), -50%, 0) scale(0.9) rotate(5deg);
+	transform: translate3d(calc(50vw + 24px), 34vh, 0) scale(0.9) rotate(5deg);
+	-webkit-transform: translate3d(calc(50vw + 24px), 34vh, 0) scale(0.9) rotate(5deg);
 	pointer-events: none;
 }
 
@@ -958,47 +1002,66 @@ body::before {
 	font-size: clamp(1rem, 2.9vw, 1.28rem);
 	line-height: 1.2;
 	letter-spacing: -0.02em;
-	color: var(--text);
+	color: color-mix(in srgb, #ffffff 88%, var(--variation-purple-a) 12%);
 	text-wrap: balance;
 }
 
 .variation-mini-card__scratch {
 	position: absolute;
-	inset: 0;
+	inset: 12px;
+	border-radius: 14px;
 	z-index: 7;
 	touch-action: none;
 	-webkit-user-select: none;
 	user-select: none;
 	-webkit-touch-callout: none;
+	overflow: hidden;
+}
+
+.variation-mini-card__scratch::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	background:
+		radial-gradient(190% 140% at var(--shine-x) var(--shine-y), rgba(255, 255, 255, calc(var(--shine-alpha) * 0.92)), rgba(255, 255, 255, calc(var(--shine-alpha) * 0.24)) 34%, rgba(255, 255, 255, 0) 72%),
+		linear-gradient(160deg, rgba(255, 255, 255, calc(var(--shine-edge-alpha) * 0.9)) 0%, rgba(255, 255, 255, 0) 58%),
+		linear-gradient(342deg, rgba(255, 255, 255, calc(var(--shine-rim-alpha) * 0.8)) 0%, rgba(255, 255, 255, 0) 24%);
+	mix-blend-mode: screen;
+	opacity: 0.92;
+	z-index: 2;
 }
 
 .variation-mini-card__scratch canvas {
+	position: relative;
+	z-index: 1;
 	touch-action: none;
 	-webkit-user-select: none;
 	user-select: none;
 	-webkit-touch-callout: none;
 }
 
-@keyframes variation-peek-shake {
+@keyframes variation-peek-shake-inner {
 	0%, 80%, 100% {
-		transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
-		-webkit-transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
+		transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 0deg));
+		-webkit-transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 0deg));
 	}
 	84% {
-		transform: translate3d(calc(50vw - 60px), -50%, 0) scale(0.9) rotate(4deg);
-		-webkit-transform: translate3d(calc(50vw - 60px), -50%, 0) scale(0.9) rotate(4deg);
+		transform: translateX(-4px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) - 1deg));
+		-webkit-transform: translateX(-4px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) - 1deg));
 	}
 	88% {
-		transform: translate3d(calc(50vw - 54px), -50%, 0) scale(0.9) rotate(6deg);
-		-webkit-transform: translate3d(calc(50vw - 54px), -50%, 0) scale(0.9) rotate(6deg);
+		transform: translateX(3px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 1.2deg));
+		-webkit-transform: translateX(3px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 1.2deg));
 	}
 	92% {
-		transform: translate3d(calc(50vw - 59px), -50%, 0) scale(0.9) rotate(4.6deg);
-		-webkit-transform: translate3d(calc(50vw - 59px), -50%, 0) scale(0.9) rotate(4.6deg);
+		transform: translateX(-2px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) - 0.6deg));
+		-webkit-transform: translateX(-2px) rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) - 0.6deg));
 	}
 	96% {
-		transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
-		-webkit-transform: translate3d(calc(50vw - 56px), -50%, 0) scale(0.9) rotate(5deg);
+		transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 0deg));
+		-webkit-transform: rotateX(var(--v-tilt-y)) rotateY(var(--v-tilt-x)) rotateZ(calc(var(--v-tilt-z) + 0deg));
 	}
 }
 
@@ -1092,7 +1155,6 @@ body::before {
 @media (max-width: 520px) {
 	:root {
 		--card-radius: 36px;
-		--deck-height: clamp(460px, 73dvh, 660px);
 	}
 
 	.game {
@@ -1173,6 +1235,11 @@ body::before {
 
 	.variation-mini-card.is-peek {
 		animation: none !important;
+	}
+
+	.card-face {
+		animation: none !important;
+		background-position: 0% 0%, 50% 50% !important;
 	}
 
 	*,

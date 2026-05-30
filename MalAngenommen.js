@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
 			logoSrc: 'Media/Hypothetical_Logo.svg',
+			patternSrc: "Media/Hypothetical Muster8.svg",
+			patternColorA: '#f7e971',
+			patternColorB: '#e0b326',
 			accent: '#ff8a5b',
 			accentSoft: 'rgba(255, 138, 91, 0.18)',
 			top: 'rgba(38, 23, 31, 0.96)',
@@ -42,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-showstopper',
 			text: '#f4fbff',
 			logoSrc: 'Media/Showstopper Logo.svg',
+			patternSrc: "Media/Showstopper Muster8.svg",
+			patternColorA: '#90af31',
+			patternColorB: '#c6d977',
 			accent: '#6fc4ff',
 			accentSoft: 'rgba(111, 196, 255, 0.16)',
 			top: 'rgba(17, 28, 44, 0.96)',
@@ -52,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-kombichaos',
 			text: '#f7fff1',
 			logoSrc: 'Media/Kombichaos Logo.svg',
+			patternSrc: "Media/Kombichaos Muster8.svg",
+			patternColorA: '#cd652e',
+			patternColorB: '#dda0c4',
 			accent: '#9eff7a',
 			accentSoft: 'rgba(158, 255, 122, 0.16)',
 			top: 'rgba(20, 30, 18, 0.96)',
@@ -62,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-monkeyspaw',
 			text: '#fff7e9',
 			logoSrc: 'Media/Monkeys Paw Logo.svg',
+			patternSrc: "Media/Monkey's Paw Muster8.svg",
+			patternColorA: '#2f56a8',
+			patternColorB: '#9d87bf',
 			accent: '#ffc45c',
 			accentSoft: 'rgba(255, 196, 92, 0.16)',
 			top: 'rgba(35, 27, 17, 0.96)',
@@ -228,6 +240,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		return next
 	}
 
+	const getRelativeLuminance = (hexColor) => {
+		const match = String(hexColor || '').trim().match(/^#([0-9a-f]{6})$/i)
+		if (!match) {
+			return 1
+		}
+		const hex = match[1]
+		const channels = [
+			parseInt(hex.slice(0, 2), 16),
+			parseInt(hex.slice(2, 4), 16),
+			parseInt(hex.slice(4, 6), 16)
+		].map((value) => {
+			const srgb = value / 255
+			return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
+		})
+		return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+	}
+
+	const getDarkerHexColor = (first, second) => {
+		return getRelativeLuminance(first) <= getRelativeLuminance(second) ? first : second
+	}
+
 	const toCards = (rawCards) => {
 		const sanitizeVariationList = (value) => {
 			if (!Array.isArray(value)) {
@@ -327,6 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.style.setProperty('--card-bottom', theme.bottom)
 
 		activeCard.style.setProperty('--card-text', theme.text)
+		activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
+		activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
+		activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
+		activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -418,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
-		const facetAlpha = 0.012 + motionEnergy * 0.34
+		const facetAlpha = 0.038 + motionEnergy * 0.48
 		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
 		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
@@ -430,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationCardNode.style.setProperty('--shine-alpha', `${(shineAlpha * 0.86).toFixed(3)}`)
 			variationCardNode.style.setProperty('--shine-edge-alpha', `${(shineEdgeAlpha * 0.9).toFixed(3)}`)
 			variationCardNode.style.setProperty('--shine-rim-alpha', `${(shineRimAlpha * 0.86).toFixed(3)}`)
-			variationCardNode.style.setProperty('--facet-alpha', `${(facetAlpha * 0.72).toFixed(3)}`)
+			variationCardNode.style.setProperty('--facet-alpha', `${(facetAlpha * 0.86).toFixed(3)}`)
 			variationCardNode.style.setProperty('--facet-shift-x', `${facetShiftX}%`)
 			variationCardNode.style.setProperty('--facet-shift-y', `${facetShiftY}%`)
 			variationCardNode.style.setProperty('--v-tilt-x', `${(state.tiltX * 0.78).toFixed(3)}deg`)
@@ -728,30 +765,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				p.clear()
 				p.noStroke()
-				p.fill(12, 16, 28, 242)
+				p.fill(120, 62, 170, 252)
 				p.rect(0, 0, p.width, p.height)
 
 				const anchors = [
-					[112, 236, 255], // vivid cyan
-					[255, 148, 242], // vivid magenta
-					[255, 222, 108], // vivid gold
-					[154, 255, 196], // vivid mint
-					[170, 156, 255], // violet
-					[255, 174, 128] // warm coral
+					[98, 245, 255], // electric cyan
+					[255, 108, 230], // hot magenta
+					[255, 224, 92], // bright gold
+					[120, 255, 178], // neon mint
+					[132, 182, 255], // azure
+					[255, 132, 120], // coral
+					[196, 128, 255], // purple
+					[255, 168, 76] // orange
 				]
 
 				const pickIridescentTone = () => {
 					const index = Math.floor(Math.random() * anchors.length)
 					const base = anchors[index]
-					const whiteMix = 0.16 + Math.random() * 0.44
-					const hueJitter = (Math.random() - 0.5) * 44
-					const red = Math.round(base[0] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.75)
-					const green = Math.round(base[1] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.24)
-					const blue = Math.round(base[2] * (1 - whiteMix) + 255 * whiteMix - hueJitter * 0.66)
+					const whiteMix = 0.12 + Math.random() * 0.36
+					const hueJitter = (Math.random() - 0.5) * 58
+					const red = Math.round(base[0] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.82)
+					const green = Math.round(base[1] * (1 - whiteMix) + 255 * whiteMix + hueJitter * 0.3)
+					const blue = Math.round(base[2] * (1 - whiteMix) + 255 * whiteMix - hueJitter * 0.76)
 					return [
-						Math.max(110, Math.min(255, red)),
-						Math.max(110, Math.min(255, green)),
-						Math.max(110, Math.min(255, blue))
+						Math.max(92, Math.min(255, red)),
+						Math.max(92, Math.min(255, green)),
+						Math.max(92, Math.min(255, blue))
 					]
 				}
 
@@ -1006,14 +1045,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		variationCardNode.setAttribute('aria-hidden', 'false')
 		variationCardNode.classList.remove('is-revealed', 'is-flying-out')
 		setVariationVisualState('peek')
-		window.requestAnimationFrame(() => {
+		// Force a committed "peek" frame before entering, so Safari/Chromium
+		// don't skip the transform transition and snap to center.
+		variationCardNode.getBoundingClientRect()
+		window.setTimeout(() => {
 			setVariationVisualState('flying-in')
 			window.setTimeout(() => {
 				if (state.miniCardOpen) {
 					setVariationVisualState('open-center')
 				}
 			}, VARIATION_FLY_MS)
-		})
+		}, 28)
 
 		createVariationScratch()
 	}
@@ -1242,6 +1284,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.setProperty('--card-bottom', theme.bottom)
 			activeCard.style.setProperty('--accent', theme.accent)
 			activeCard.style.setProperty('--card-text', theme.text)
+			activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
+			activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
+			activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
+			activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
 
 			setTheme(card)
 			updateLanguageButton()
