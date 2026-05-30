@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #eaff00;
+	background: hsl(136, 100%, 33%);
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -560,7 +560,18 @@ body::before {
 	-webkit-transform-style: preserve-3d;
 }
 
-.card-back-debug-dot {
+.card-back-design {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	border-radius: inherit;
+}
+
+.card-face--back::after {
+	content: '';
 	position: absolute;
 	left: 50%;
 	top: 50%;
@@ -570,18 +581,8 @@ body::before {
 	-webkit-transform: translate(-50%, -50%);
 	border-radius: 999px;
 	background: #ff2d2d;
-	z-index: 4;
+	z-index: 20;
 	pointer-events: none;
-}
-
-.card-back-design {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	display: grid;
-	place-items: center;
-	overflow: hidden;
-	border-radius: inherit;
 }
 
 .card-back-orbit {
