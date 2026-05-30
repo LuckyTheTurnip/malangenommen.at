@@ -107,9 +107,45 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MAX_MOTION_Y = 22
 	const TILT_DAMPING = 0.16
 	const TILT_Z_DAMPING = 0.08
+	const MOTION_DEADZONE = 0.55
+	const TILT_DEADZONE = 0.45
+	const MAX_MOTION_STEP = 0.9
+	const MAX_TILT_STEP = 0.7
+	const MOTION_SMOOTHING = 0.14
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
+	}
+
+	const applyDeadzone = (value, threshold) => {
+		return Math.abs(value) < threshold ? 0 : value
+	}
+
+	const stepToward = (current, target, maxStep) => {
+		const delta = target - current
+		const boundedDelta = Math.max(-maxStep, Math.min(maxStep, delta))
+		return current + boundedDelta
+	}
+
+	const applySmoothedMotionTargets = (targets) => {
+		const targetMotionX = applyDeadzone(targets.motionX, MOTION_DEADZONE)
+		const targetMotionY = applyDeadzone(targets.motionY, MOTION_DEADZONE)
+		const targetTiltX = applyDeadzone(targets.tiltX, TILT_DEADZONE)
+		const targetTiltY = applyDeadzone(targets.tiltY, TILT_DEADZONE)
+		const targetTiltZ = applyDeadzone(targets.tiltZ, TILT_DEADZONE)
+
+		const easedMotionX = state.motionX + (targetMotionX - state.motionX) * MOTION_SMOOTHING
+		const easedMotionY = state.motionY + (targetMotionY - state.motionY) * MOTION_SMOOTHING
+		const easedTiltX = state.tiltX + (targetTiltX - state.tiltX) * MOTION_SMOOTHING
+		const easedTiltY = state.tiltY + (targetTiltY - state.tiltY) * MOTION_SMOOTHING
+		const easedTiltZ = state.tiltZ + (targetTiltZ - state.tiltZ) * MOTION_SMOOTHING
+
+		state.motionX = stepToward(state.motionX, easedMotionX, MAX_MOTION_STEP)
+		state.motionY = stepToward(state.motionY, easedMotionY, MAX_MOTION_STEP)
+		state.tiltX = stepToward(state.tiltX, easedTiltX, MAX_TILT_STEP)
+		state.tiltY = stepToward(state.tiltY, easedTiltY, MAX_TILT_STEP)
+		state.tiltZ = stepToward(state.tiltZ, easedTiltZ, MAX_TILT_STEP)
+		applyMotionTransform()
 	}
 
 	const normalizeSpawnMotionMode = (value) => {
@@ -293,12 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 0.9, MAX_TILT_Y)
 		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.28, MAX_TILT_Z)
 
-		state.motionX += (targetMotionX - state.motionX) * 0.18
-		state.motionY += (targetMotionY - state.motionY) * 0.18
-		state.tiltX += (targetTiltX - state.tiltX) * 0.18
-		state.tiltY += (targetTiltY - state.tiltY) * 0.18
-		state.tiltZ += (targetTiltZ - state.tiltZ) * 0.18
-		applyMotionTransform()
+		applySmoothedMotionTargets({
+			motionX: targetMotionX,
+			motionY: targetMotionY,
+			tiltX: targetTiltX,
+			tiltY: targetTiltY,
+			tiltZ: targetTiltZ
+		})
 	}
 
 	const setFlipClass = (flipped) => {
@@ -342,12 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetTiltY = softClamp(-deltaGamma * TILT_DAMPING, MAX_TILT_Y) * activationAlpha
 		const targetTiltZ = softClamp(deltaGamma * TILT_Z_DAMPING, MAX_TILT_Z) * activationAlpha
 
-		state.motionX += (targetMotionX - state.motionX) * 0.18
-		state.motionY += (targetMotionY - state.motionY) * 0.18
-		state.tiltX += (targetTiltX - state.tiltX) * 0.18
-		state.tiltY += (targetTiltY - state.tiltY) * 0.18
-		state.tiltZ += (targetTiltZ - state.tiltZ) * 0.18
-		applyMotionTransform()
+		applySmoothedMotionTargets({
+			motionX: targetMotionX,
+			motionY: targetMotionY,
+			tiltX: targetTiltX,
+			tiltY: targetTiltY,
+			tiltZ: targetTiltZ
+		})
 	}
 
 	const disableMotion = () => {
