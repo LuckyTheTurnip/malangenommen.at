@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: hsl(114, 100%, 50%);
+	background: hsl(26, 100%, 50%);
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -446,7 +446,7 @@ body::before {
 	--shine-rim-alpha: 0.28;
 	--shine-speckle-alpha: 0.1;
 	--facet-map: none;
-	--facet-alpha: 0.14;
+	--facet-alpha: 0.2;
 	--facet-shift-x: 50%;
 	--facet-shift-y: 50%;
 	transform: translate3d(calc(var(--drag-x) + var(--motion-x)), calc(var(--drag-y) + var(--motion-y)), 0) rotateX(var(--tilt-y)) rotateY(var(--tilt-x)) rotateZ(var(--tilt-z)) rotate(var(--drag-rot));
@@ -536,7 +536,7 @@ body::before {
 	border-radius: inherit;
 	pointer-events: none;
 	background:
-		radial-gradient(120% 92% at var(--facet-shift-x) var(--facet-shift-y), rgba(255, 255, 255, calc(var(--facet-alpha) * 0.75)) 0%, rgba(255, 255, 255, 0) 62%),
+		radial-gradient(120% 92% at var(--facet-shift-x) var(--facet-shift-y), rgba(255, 255, 255, calc(var(--facet-alpha) * 0.95)) 0%, rgba(255, 255, 255, 0) 62%),
 		var(--facet-map);
 	background-size: 100% 100%, cover;
 	background-repeat: no-repeat, repeat;
@@ -1081,7 +1081,7 @@ body::before {
 		--shine-edge-alpha: 0.1;
 		--shine-rim-alpha: 0.1;
 		--shine-speckle-alpha: 0.04;
-		--facet-alpha: 0.07;
+		--facet-alpha: 0.09;
 	}
 
 	.card-back-orbit {
