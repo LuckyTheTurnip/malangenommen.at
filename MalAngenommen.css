@@ -560,14 +560,14 @@ body::before {
 	-webkit-transform-style: preserve-3d;
 }
 
-.active-card__content--back::before {
-	content: '';
+.card-back-debug-dot {
 	position: absolute;
 	left: 50%;
 	top: 50%;
 	width: 120px;
 	height: 120px;
 	transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
 	border-radius: 999px;
 	background: #ff2d2d;
 	z-index: 4;
