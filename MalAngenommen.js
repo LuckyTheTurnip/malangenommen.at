@@ -145,8 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MOTION_SMOOTHING = 0.14
 	const SHINE_SHIFT_X_MAX = 38
 	const SHINE_SHIFT_Y_MAX = 32
-	const FACET_TEX_WIDTH = 256
-	const FACET_TEX_HEIGHT = 320
+	const FACET_TEX_WIDTH = 512
+	const FACET_TEX_HEIGHT = 640
 	const FACET_POLYGON_COUNT = 980
 
 	const softClamp = (value, max) => {
@@ -422,6 +422,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
 		target.style.setProperty('--facet-shift-x', `${facetShiftX}%`)
 		target.style.setProperty('--facet-shift-y', `${facetShiftY}%`)
+		if (variationCardNode) {
+			variationCardNode.style.setProperty('--shine-x', `${shineX}%`)
+			variationCardNode.style.setProperty('--shine-y', `${shineY}%`)
+			variationCardNode.style.setProperty('--shine-alpha', `${(shineAlpha * 0.86).toFixed(3)}`)
+			variationCardNode.style.setProperty('--shine-edge-alpha', `${(shineEdgeAlpha * 0.9).toFixed(3)}`)
+			variationCardNode.style.setProperty('--shine-rim-alpha', `${(shineRimAlpha * 0.86).toFixed(3)}`)
+			variationCardNode.style.setProperty('--facet-alpha', `${(facetAlpha * 0.72).toFixed(3)}`)
+			variationCardNode.style.setProperty('--facet-shift-x', `${facetShiftX}%`)
+			variationCardNode.style.setProperty('--facet-shift-y', `${facetShiftY}%`)
+		}
 	}
 
 	const generateMicrofacetTexture = () => {
@@ -432,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!ctx) {
 			return null
 		}
+		ctx.imageSmoothingEnabled = false
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height)
 		for (let index = 0; index < FACET_POLYGON_COUNT; index += 1) {
@@ -440,7 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			const radius = 0.45 + Math.random() * 1.35
 			const points = Math.random() < 0.52 ? 3 : 4
 			const spin = Math.random() * Math.PI * 2
-			const alpha = 0.14 + Math.random() * 0.52
+			const alphaBias = Math.random()
+			const alpha = 0.06 + Math.pow(alphaBias, 1.7) * 0.72
 			ctx.beginPath()
 			for (let point = 0; point < points; point += 1) {
 				const angle = spin + (Math.PI * 2 * point) / points + (Math.random() - 0.5) * 0.3
@@ -454,15 +466,24 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 			ctx.closePath()
-			ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(4)})`
+			const toneShift = (Math.random() - 0.5) * 20
+			const red = Math.max(232, Math.min(255, Math.round(248 + toneShift * 0.9)))
+			const green = Math.max(232, Math.min(255, Math.round(246 + toneShift * 0.5)))
+			const blue = Math.max(232, Math.min(255, Math.round(250 - toneShift * 0.7)))
+			ctx.fillStyle = `rgba(${red},${green},${blue},${alpha.toFixed(4)})`
 			ctx.fill()
 		}
 
 		for (let sparkle = 0; sparkle < 760; sparkle += 1) {
 			const x = Math.random() * canvas.width
 			const y = Math.random() * canvas.height
-			const dotAlpha = 0.14 + Math.random() * 0.42
-			ctx.fillStyle = `rgba(255,255,255,${dotAlpha.toFixed(4)})`
+			const dotBias = Math.random()
+			const dotAlpha = 0.05 + Math.pow(dotBias, 1.55) * 0.62
+			const dotTone = (Math.random() - 0.5) * 24
+			const dotRed = Math.max(230, Math.min(255, Math.round(249 + dotTone * 0.8)))
+			const dotGreen = Math.max(230, Math.min(255, Math.round(247 + dotTone * 0.45)))
+			const dotBlue = Math.max(230, Math.min(255, Math.round(251 - dotTone * 0.75)))
+			ctx.fillStyle = `rgba(${dotRed},${dotGreen},${dotBlue},${dotAlpha.toFixed(4)})`
 			ctx.fillRect(x, y, 1, 1)
 		}
 
@@ -475,6 +496,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 		activeCard.style.setProperty('--facet-map', `url("${textureDataUrl}")`)
+		if (variationCardNode) {
+			variationCardNode.style.setProperty('--facet-map', `url("${textureDataUrl}")`)
+		}
 	}
 
 	const updateTiltFromPointer = (event) => {
