@@ -704,7 +704,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (canvas?.elt) {
 					const preventTouchDefaults = (event) => {
 						event.preventDefault()
-						event.stopPropagation()
 					}
 					canvas.elt.addEventListener('touchstart', preventTouchDefaults, { passive: false })
 					canvas.elt.addEventListener('touchmove', preventTouchDefaults, { passive: false })
@@ -1353,10 +1352,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				dismissVariationCard()
 			}
 		})
-		variationScratchNode?.addEventListener('touchstart', blockSwipePropagation, { passive: true })
-		variationScratchNode?.addEventListener('touchmove', blockSwipePropagation, { passive: true })
-		variationScratchNode?.addEventListener('pointerdown', blockSwipePropagation)
-		variationScratchNode?.addEventListener('pointermove', blockSwipePropagation)
+		// Do not stop propagation on the scratch host itself:
+		// p5 touch callbacks rely on bubbling in Safari/Chrome mobile.
 	}
 
 	const onTouchEnd = (event) => {
