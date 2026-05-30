@@ -701,6 +701,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				const bounds = host.getBoundingClientRect()
 				const canvas = p.createCanvas(bounds.width, bounds.height)
 				canvas.parent(host)
+				if (canvas?.elt) {
+					const preventTouchDefaults = (event) => {
+						event.preventDefault()
+						event.stopPropagation()
+					}
+					canvas.elt.addEventListener('touchstart', preventTouchDefaults, { passive: false })
+					canvas.elt.addEventListener('touchmove', preventTouchDefaults, { passive: false })
+					canvas.elt.addEventListener('touchend', preventTouchDefaults, { passive: false })
+					canvas.elt.addEventListener('pointerdown', preventTouchDefaults, { passive: false })
+					canvas.elt.addEventListener('pointermove', preventTouchDefaults, { passive: false })
+				}
 				p.pixelDensity(1)
 				p.noLoop()
 				p.clear()
