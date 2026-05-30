@@ -100,13 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_VELOCITY = 0.72
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
 	const MAX_DRAG_ROTATION = 6
-	const MAX_TILT_X = 11
-	const MAX_TILT_Y = 13
-	const MAX_TILT_Z = 8
+	const MAX_TILT_X = 14
+	const MAX_TILT_Y = 16
+	const MAX_TILT_Z = 3.2
 	const MAX_MOTION_X = 20
 	const MAX_MOTION_Y = 22
-	const TILT_DAMPING = 0.16
-	const TILT_Z_DAMPING = 0.08
+	const TILT_DAMPING = 0.22
+	const TILT_Z_DAMPING = 0.035
 	const MOTION_DEADZONE = 0.55
 	const TILT_DEADZONE = 0.45
 	const MAX_MOTION_STEP = 0.9
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetMotionY = softClamp(normalizedY * MAX_MOTION_Y * 0.9, MAX_MOTION_Y)
 		const targetTiltX = softClamp(normalizedX * MAX_TILT_X * 0.9, MAX_TILT_X)
 		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 0.9, MAX_TILT_Y)
-		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.28, MAX_TILT_Z)
+		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.12, MAX_TILT_Z)
 
 		applySmoothedMotionTargets({
 			motionX: targetMotionX,
