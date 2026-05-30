@@ -102,7 +102,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: #8400ff;
+	background: #ff0000;
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -540,11 +540,26 @@ body::before {
 }
 
 .active-card__content--back {
+	position: relative;
 	justify-content: center;
 	align-items: center;
 	padding: clamp(14px, 4vw, 24px);
 	transform-style: preserve-3d;
 	-webkit-transform-style: preserve-3d;
+}
+
+.active-card__content--back::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 120px;
+	height: 120px;
+	transform: translate(-50%, -50%);
+	border-radius: 999px;
+	background: #ff2d2d;
+	z-index: 4;
+	pointer-events: none;
 }
 
 .card-back-design {
@@ -566,6 +581,7 @@ body::before {
 	transform: translate(-50%, -50%);
 	pointer-events: none;
 	animation: orbit-spin 13s linear infinite;
+	display: none;
 }
 
 .card-back-orbit-svg {
