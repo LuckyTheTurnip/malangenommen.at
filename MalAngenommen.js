@@ -737,27 +737,35 @@ document.addEventListener('DOMContentLoaded', () => {
 		shell.addEventListener('touchcancel', resetCardPosition)
 	}
 
-	const onTouchEnd = () => {
+	const onTouchEnd = (event) => {
 		if (!state.isDragging || state.isAnimating) {
 			return
+		}
+
+		if (event?.changedTouches && event.changedTouches.length === 1) {
+			state.lastTouchX = event.changedTouches[0].clientX
+			state.lastTouchY = event.changedTouches[0].clientY
 		}
 
 		const elapsed = Math.max(1, performance.now() - state.touchStartTime)
 		const deltaX = state.lastTouchX - state.touchStartX
 		const deltaY = state.lastTouchY - state.touchStartY
+		const velocityX = Math.abs(deltaX) / elapsed
 		const velocityY = Math.abs(deltaY) / elapsed
 		const isUpwardSwipe = deltaY < -SWIPE_DISTANCE && Math.abs(deltaY) > Math.abs(deltaX) * SWIPE_RATIO
 		const isFastFlick = deltaY < -40 && velocityY > SWIPE_VELOCITY
 		const isHorizontalLeft = deltaX < -SWIPE_DISTANCE && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO
 		const isHorizontalRight = deltaX > SWIPE_DISTANCE && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO
+		const isHorizontalFlickLeft = deltaX < -38 && velocityX > SWIPE_VELOCITY && Math.abs(deltaX) > Math.abs(deltaY) * 0.9
+		const isHorizontalFlickRight = deltaX > 38 && velocityX > SWIPE_VELOCITY && Math.abs(deltaX) > Math.abs(deltaY) * 0.9
 
 		if (isUpwardSwipe || isFastFlick) {
 			advanceCard()
 			return
 		}
 
-		if (isHorizontalLeft || isHorizontalRight) {
-			const direction = isHorizontalLeft ? 'left' : 'right'
+		if (isHorizontalLeft || isHorizontalRight || isHorizontalFlickLeft || isHorizontalFlickRight) {
+			const direction = (isHorizontalLeft || isHorizontalFlickLeft) ? 'left' : 'right'
 			resetCardPosition()
 			window.requestAnimationFrame(() => flipCard(direction))
 			return
