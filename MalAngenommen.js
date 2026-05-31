@@ -1217,10 +1217,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
 		variationCardNode.classList.remove('is-revealed', 'is-flying-out')
-		if (state.variationChoices.length <= 1) {
-			setVariationVisualState('peek')
-			variationCardNode.getBoundingClientRect()
-		}
+		setVariationVisualState('peek')
+		variationCardNode.getBoundingClientRect()
 		renderVariationFan()
 		window.setTimeout(() => {
 			setVariationVisualState('flying-in')
