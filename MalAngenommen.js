@@ -103,6 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		filteredOrientationGamma: null,
 		previousOrientationBeta: null,
 		previousOrientationGamma: null,
+		previousOrientationTimestamp: 0,
+		orientationBetaWindow: [],
+		orientationGammaWindow: [],
+		motionSignalActive: false,
 		touchStartX: 0,
 		touchStartY: 0,
 		lastTouchY: 0,
@@ -158,11 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	const TILT_Z_DAMPING = 0.024
 	const MOTION_DEADZONE = 0.7
 	const TILT_DEADZONE = 0.6
-	const MAX_MOTION_STEP = 0.72
-	const MAX_TILT_STEP = 0.58
-	const MOTION_SMOOTHING = 0.19
+	const MAX_MOTION_STEP_IDLE = 0.48
+	const MAX_MOTION_STEP_ACTIVE = 0.84
+	const MAX_TILT_STEP_IDLE = 0.38
+	const MAX_TILT_STEP_ACTIVE = 0.72
+	const MOTION_SMOOTHING_IDLE = 0.09
+	const MOTION_SMOOTHING_ACTIVE = 0.24
 	const ORIENTATION_FILTER_ALPHA = 0.22
 	const ORIENTATION_SPIKE_CAP_DEG = 5.5
+	const ORIENTATION_MEDIAN_WINDOW = 5
+	const MOTION_ACTIVITY_ON = 0.46
+	const MOTION_ACTIVITY_OFF = 0.24
+	const MOTION_BASELINE_ACTIVITY_FACTOR = 0.06
 	const SHINE_SHIFT_X_MAX = 38
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 512
@@ -183,25 +194,50 @@ document.addEventListener('DOMContentLoaded', () => {
 		return current + boundedDelta
 	}
 
-	const applySmoothedMotionTargets = (targets) => {
+	const applySmoothedMotionTargets = (targets, options = {}) => {
 		const targetMotionX = applyDeadzone(targets.motionX, MOTION_DEADZONE)
 		const targetMotionY = applyDeadzone(targets.motionY, MOTION_DEADZONE)
 		const targetTiltX = applyDeadzone(targets.tiltX, TILT_DEADZONE)
 		const targetTiltY = applyDeadzone(targets.tiltY, TILT_DEADZONE)
 		const targetTiltZ = applyDeadzone(targets.tiltZ, TILT_DEADZONE)
 
-		const easedMotionX = state.motionX + (targetMotionX - state.motionX) * MOTION_SMOOTHING
-		const easedMotionY = state.motionY + (targetMotionY - state.motionY) * MOTION_SMOOTHING
-		const easedTiltX = state.tiltX + (targetTiltX - state.tiltX) * MOTION_SMOOTHING
-		const easedTiltY = state.tiltY + (targetTiltY - state.tiltY) * MOTION_SMOOTHING
-		const easedTiltZ = state.tiltZ + (targetTiltZ - state.tiltZ) * MOTION_SMOOTHING
+		const intent = Math.max(0, Math.min(1, Number(options.intent ?? 0.7)))
+		const smoothing = MOTION_SMOOTHING_IDLE + (MOTION_SMOOTHING_ACTIVE - MOTION_SMOOTHING_IDLE) * intent
+		const motionStep = MAX_MOTION_STEP_IDLE + (MAX_MOTION_STEP_ACTIVE - MAX_MOTION_STEP_IDLE) * intent
+		const tiltStep = MAX_TILT_STEP_IDLE + (MAX_TILT_STEP_ACTIVE - MAX_TILT_STEP_IDLE) * intent
 
-		state.motionX = stepToward(state.motionX, easedMotionX, MAX_MOTION_STEP)
-		state.motionY = stepToward(state.motionY, easedMotionY, MAX_MOTION_STEP)
-		state.tiltX = stepToward(state.tiltX, easedTiltX, MAX_TILT_STEP)
-		state.tiltY = stepToward(state.tiltY, easedTiltY, MAX_TILT_STEP)
-		state.tiltZ = stepToward(state.tiltZ, easedTiltZ, MAX_TILT_STEP)
+		const easedMotionX = state.motionX + (targetMotionX - state.motionX) * smoothing
+		const easedMotionY = state.motionY + (targetMotionY - state.motionY) * smoothing
+		const easedTiltX = state.tiltX + (targetTiltX - state.tiltX) * smoothing
+		const easedTiltY = state.tiltY + (targetTiltY - state.tiltY) * smoothing
+		const easedTiltZ = state.tiltZ + (targetTiltZ - state.tiltZ) * smoothing
+
+		state.motionX = stepToward(state.motionX, easedMotionX, motionStep)
+		state.motionY = stepToward(state.motionY, easedMotionY, motionStep)
+		state.tiltX = stepToward(state.tiltX, easedTiltX, tiltStep)
+		state.tiltY = stepToward(state.tiltY, easedTiltY, tiltStep)
+		state.tiltZ = stepToward(state.tiltZ, easedTiltZ, tiltStep)
 		applyMotionTransform()
+	}
+
+	const computeMedian = (values) => {
+		if (!Array.isArray(values) || values.length === 0) {
+			return 0
+		}
+		const sorted = values.slice().sort((left, right) => left - right)
+		const middle = Math.floor(sorted.length / 2)
+		if (sorted.length % 2 === 0) {
+			return (sorted[middle - 1] + sorted[middle]) / 2
+		}
+		return sorted[middle]
+	}
+
+	const pushMedianSample = (windowValues, value) => {
+		windowValues.push(value)
+		if (windowValues.length > ORIENTATION_MEDIAN_WINDOW) {
+			windowValues.shift()
+		}
+		return computeMedian(windowValues)
 	}
 
 	const clampOrientationSpike = (currentValue, previousValue) => {
@@ -406,6 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.filteredOrientationGamma = null
 			state.previousOrientationBeta = null
 			state.previousOrientationGamma = null
+			state.previousOrientationTimestamp = 0
+			state.orientationBetaWindow = []
+			state.orientationGammaWindow = []
+			state.motionSignalActive = false
 			return
 		}
 
@@ -416,6 +456,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.filteredOrientationGamma = gamma
 		state.previousOrientationBeta = beta
 		state.previousOrientationGamma = gamma
+		state.previousOrientationTimestamp = performance.now()
+		state.orientationBetaWindow = [beta]
+		state.orientationGammaWindow = [gamma]
+		state.motionSignalActive = false
 	}
 
 	const updateLanguageButton = () => {
@@ -591,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			tiltX: targetTiltX,
 			tiltY: targetTiltY,
 			tiltZ: targetTiltZ
-		})
+		}, { intent: 0.9 })
 	}
 
 	const setFlipClass = (flipped) => {
@@ -1108,15 +1152,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const clampedBeta = clampOrientationSpike(beta, state.previousOrientationBeta)
 		const clampedGamma = clampOrientationSpike(gamma, state.previousOrientationGamma)
+		const timestamp = performance.now()
+		const elapsed = Math.max(8, timestamp - (state.previousOrientationTimestamp || timestamp))
+		const rawSpeed = Math.hypot(
+			clampedBeta - (state.previousOrientationBeta ?? clampedBeta),
+			clampedGamma - (state.previousOrientationGamma ?? clampedGamma)
+		) / (elapsed / 16.667)
 		state.previousOrientationBeta = clampedBeta
 		state.previousOrientationGamma = clampedGamma
+		state.previousOrientationTimestamp = timestamp
+
+		const medianBeta = pushMedianSample(state.orientationBetaWindow, clampedBeta)
+		const medianGamma = pushMedianSample(state.orientationGammaWindow, clampedGamma)
 
 		const nextFilteredBeta = Number.isFinite(state.filteredOrientationBeta)
-			? state.filteredOrientationBeta + (clampedBeta - state.filteredOrientationBeta) * ORIENTATION_FILTER_ALPHA
-			: clampedBeta
+			? state.filteredOrientationBeta + (medianBeta - state.filteredOrientationBeta) * ORIENTATION_FILTER_ALPHA
+			: medianBeta
 		const nextFilteredGamma = Number.isFinite(state.filteredOrientationGamma)
-			? state.filteredOrientationGamma + (clampedGamma - state.filteredOrientationGamma) * ORIENTATION_FILTER_ALPHA
-			: clampedGamma
+			? state.filteredOrientationGamma + (medianGamma - state.filteredOrientationGamma) * ORIENTATION_FILTER_ALPHA
+			: medianGamma
 		state.filteredOrientationBeta = nextFilteredBeta
 		state.filteredOrientationGamma = nextFilteredGamma
 
@@ -1124,20 +1178,29 @@ document.addEventListener('DOMContentLoaded', () => {
 		const baselineGamma = Number.isFinite(state.motionBaselineGamma) ? state.motionBaselineGamma : gamma
 		const deltaBeta = nextFilteredBeta - baselineBeta
 		const deltaGamma = nextFilteredGamma - baselineGamma
+		const baselineActivity = Math.hypot(deltaBeta, deltaGamma) * MOTION_BASELINE_ACTIVITY_FACTOR
+		const activity = Math.max(rawSpeed, baselineActivity)
+		if (state.motionSignalActive) {
+			state.motionSignalActive = activity >= MOTION_ACTIVITY_OFF
+		} else if (activity >= MOTION_ACTIVITY_ON) {
+			state.motionSignalActive = true
+		}
+		const intent = state.motionSignalActive ? Math.min(1, activity / 1.8) : 0
 		const activationAlpha = Math.min(1, Math.max(0, (performance.now() - state.motionActivatedAt) / 260))
 		const targetMotionX = softClamp(deltaBeta * 0.31, MAX_MOTION_X) * activationAlpha
 		const targetMotionY = softClamp(-deltaGamma * 0.35, MAX_MOTION_Y) * activationAlpha
 		const targetTiltX = softClamp(deltaBeta * TILT_DAMPING, MAX_TILT_X) * activationAlpha
 		const targetTiltY = softClamp(-deltaGamma * TILT_DAMPING, MAX_TILT_Y) * activationAlpha
 		const targetTiltZ = softClamp(deltaGamma * TILT_Z_DAMPING, MAX_TILT_Z) * activationAlpha
+		const gatedScale = state.motionSignalActive ? 1 : 0.2
 
 		applySmoothedMotionTargets({
-			motionX: targetMotionX,
-			motionY: targetMotionY,
-			tiltX: targetTiltX,
-			tiltY: targetTiltY,
-			tiltZ: targetTiltZ
-		})
+			motionX: targetMotionX * gatedScale,
+			motionY: targetMotionY * gatedScale,
+			tiltX: targetTiltX * gatedScale,
+			tiltY: targetTiltY * gatedScale,
+			tiltZ: targetTiltZ * gatedScale
+		}, { intent })
 	}
 
 	const disableMotion = () => {
@@ -1151,6 +1214,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.filteredOrientationGamma = null
 		state.previousOrientationBeta = null
 		state.previousOrientationGamma = null
+		state.previousOrientationTimestamp = 0
+		state.orientationBetaWindow = []
+		state.orientationGammaWindow = []
+		state.motionSignalActive = false
 		state.motionActivatedAt = 0
 		state.motionX = 0
 		state.motionY = 0
@@ -1188,6 +1255,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.filteredOrientationGamma = null
 		state.previousOrientationBeta = null
 		state.previousOrientationGamma = null
+		state.previousOrientationTimestamp = 0
+		state.orientationBetaWindow = []
+		state.orientationGammaWindow = []
+		state.motionSignalActive = false
 		applyMotionTransform()
 		updateMotionButton('3D Motion', '', false)
 		return true
