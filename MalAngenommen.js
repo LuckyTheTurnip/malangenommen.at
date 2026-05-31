@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
 	const activeCard = document.querySelector('[data-active-card]')
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
+	const frontQuestionShellNode = frontQuestionNode ? frontQuestionNode.closest('.card-question-shell') : null
 	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
 	const cardBackLogoNode = activeCard ? activeCard.querySelector('.card-back-logo') : null
 	const cardBackOrbitTextNodes = activeCard ? Array.from(activeCard.querySelectorAll('.card-back-orbit-text textPath')) : []
@@ -33,11 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
 			logoSrc: 'Media/Hypothetical_Logo.svg',
+			coreColor: '#e0b326',
 			logoColor: '#e0b326',
 			patternSrc: "Media/Hypothetical Muster8.svg",
 			patternColorA: '#f7e971',
 			patternColorB: '#e0b326',
 			circleFillColor: '#f7e971',
+			questionShellBg: '#fff7cd',
+			questionShellText: '#4a3400',
+			questionShellBorder: '#b08c00',
 			accent: '#ff8a5b',
 			accentSoft: 'rgba(255, 138, 91, 0.18)',
 			top: 'rgba(38, 23, 31, 0.96)',
@@ -48,11 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-showstopper',
 			text: '#f4fbff',
 			logoSrc: 'Media/Showstopper Logo.svg',
+			coreColor: '#90af31',
 			logoColor: '#90af31',
 			patternSrc: "Media/Showstopper Muster8.svg",
 			patternColorA: '#90af31',
 			patternColorB: '#c6d977',
 			circleFillColor: '#c6d977',
+			questionShellBg: '#f5ffd6',
+			questionShellText: '#234200',
+			questionShellBorder: '#6f8f19',
 			accent: '#6fc4ff',
 			accentSoft: 'rgba(111, 196, 255, 0.16)',
 			top: 'rgba(17, 28, 44, 0.96)',
@@ -63,11 +72,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-kombichaos',
 			text: '#f7fff1',
 			logoSrc: 'Media/Kombichaos Logo.svg',
+			coreColor: '#cd652e',
 			logoColor: '#cd652e',
 			patternSrc: "Media/Kombichaos Muster8.svg",
 			patternColorA: '#cd652e',
 			patternColorB: '#dda0c4',
 			circleFillColor: '#dda0c4',
+			questionShellBg: '#ffd7c8',
+			questionShellText: '#5a1d00',
+			questionShellBorder: '#b34d1f',
 			accent: '#9eff7a',
 			accentSoft: 'rgba(158, 255, 122, 0.16)',
 			top: 'rgba(20, 30, 18, 0.96)',
@@ -78,11 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-monkeyspaw',
 			text: '#fff7e9',
 			logoSrc: 'Media/Monkeys Paw Logo.svg',
+			coreColor: '#2f56a8',
 			logoColor: '#2f56a8',
 			patternSrc: "Media/Monkey's Paw Muster8.svg",
 			patternColorA: '#2f56a8',
 			patternColorB: '#9d87bf',
 			circleFillColor: '#9d87bf',
+			questionShellBg: '#eee6ff',
+			questionShellText: '#18114c',
+			questionShellBorder: '#5a45a0',
 			accent: '#ffc45c',
 			accentSoft: 'rgba(255, 196, 92, 0.16)',
 			top: 'rgba(35, 27, 17, 0.96)',
@@ -455,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const setTheme = (card) => {
 		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+		const unifiedColor = theme.coreColor || theme.logoColor || theme.patternColorA || theme.accent
 
 		app.classList.remove(...Object.values(CATEGORY_STYLES).map((entry) => entry.className))
 		app.classList.add(theme.className)
@@ -465,11 +483,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		activeCard.style.setProperty('--card-text', theme.text)
 		activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
-		activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
+		activeCard.style.setProperty('--back-circle-a', unifiedColor)
 		activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
-		activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
-		activeCard.style.setProperty('--back-logo-tone', theme.logoColor || theme.accent)
+		activeCard.style.setProperty('--back-orbit-color', unifiedColor)
+		activeCard.style.setProperty('--back-logo-tone', unifiedColor)
+		activeCard.style.setProperty('--back-logo-src', `url("${theme.logoSrc}")`)
 		activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
+		activeCard.style.setProperty('--question-shell-bg', theme.questionShellBg || '#ffffff')
+		activeCard.style.setProperty('--question-shell-text', theme.questionShellText || '#111111')
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -1651,16 +1672,21 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 		const renderCard = (card, options = {}) => {
-		const { resetFlip = true } = options
-		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
-			categoryLabel.textContent = theme.label
-			if (frontQuestionNode) {
-				frontQuestionNode.textContent = getCardQuestion(card)
-				frontQuestionNode.style.color = theme.text
-			}
+			const { resetFlip = true } = options
+			const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+			const unifiedColor = theme.coreColor || theme.logoColor || theme.patternColorA || theme.accent
+				categoryLabel.textContent = ''
+				categoryLabel.style.display = 'none'
+				if (frontQuestionNode) {
+					frontQuestionNode.textContent = getCardQuestion(card)
+					frontQuestionNode.style.color = theme.questionShellText || '#111111'
+				}
+				if (frontQuestionShellNode) {
+					frontQuestionShellNode.style.backgroundColor = theme.questionShellBg || '#ffffff'
+					frontQuestionShellNode.style.borderColor = theme.questionShellBorder || 'rgba(0, 0, 0, 0.22)'
+				}
 			if (cardBackLogoNode) {
-				cardBackLogoNode.src = theme.logoSrc
-				cardBackLogoNode.alt = `${theme.label} logo`
+				cardBackLogoNode.setAttribute('aria-label', `${theme.label} logo`)
 			}
 			if (cardBackOrbitTextNodes.length > 0) {
 				cardBackOrbitTextNodes.forEach((node) => {
@@ -1672,10 +1698,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.setProperty('--accent', theme.accent)
 			activeCard.style.setProperty('--card-text', theme.text)
 			activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
-			activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
+			activeCard.style.setProperty('--back-circle-a', unifiedColor)
 			activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
-			activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
-			activeCard.style.setProperty('--back-logo-tone', theme.logoColor || theme.accent)
+			activeCard.style.setProperty('--back-orbit-color', unifiedColor)
+			activeCard.style.setProperty('--back-logo-tone', unifiedColor)
+			activeCard.style.setProperty('--back-logo-src', `url("${theme.logoSrc}")`)
 			activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 
 			setTheme(card)
