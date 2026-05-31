@@ -558,6 +558,33 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const applyMotionVisualState = () => {
+		if (!app) {
+			return
+		}
+		const visualsOn = state.isMotionEnabled || state.motionPermissionState === 'granted'
+		const motionFlag = visualsOn ? '1' : '0'
+		app.style.setProperty('--motion-visual-enabled', motionFlag)
+		app.setAttribute('data-motion-active', visualsOn ? 'on' : 'off')
+		app.classList.toggle('motion-visuals-off', !visualsOn)
+
+		if (activeCard) {
+			activeCard.style.setProperty('--motion-visual-enabled', motionFlag)
+			activeCard.classList.toggle('motion-visuals-on', visualsOn)
+			activeCard.classList.toggle('motion-visuals-off', !visualsOn)
+		}
+		if (variationCardNode) {
+			variationCardNode.style.setProperty('--motion-visual-enabled', motionFlag)
+			variationCardNode.classList.toggle('motion-visuals-on', visualsOn)
+			variationCardNode.classList.toggle('motion-visuals-off', !visualsOn)
+		}
+		if (variationFanNode) {
+			variationFanNode.style.setProperty('--motion-visual-enabled', motionFlag)
+			variationFanNode.classList.toggle('motion-visuals-on', visualsOn)
+			variationFanNode.classList.toggle('motion-visuals-off', !visualsOn)
+		}
+	}
+
 	const applyMotionTransform = () => {
 		const target = activeCard
 		target.style.setProperty('--motion-x', `${state.motionX}px`)
@@ -1457,6 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.tiltY = 0
 		state.tiltZ = 0
 		applyMotionTransform()
+		applyMotionVisualState()
 		updateMotionButton('3D Motion deaktiviert', 'is-disabled', false)
 		statusNode.textContent = '3D Motion wurde deaktiviert.'
 	}
@@ -1468,6 +1496,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionActivatedAt = performance.now()
 		setMotionBaseline(state.lastOrientationBeta, state.lastOrientationGamma)
 		startMotionLoop()
+		applyMotionVisualState()
 		statusNode.textContent = '3D Motion ist aktiv.'
 		updateMotionButton('3D Motion aktiv', 'is-active', true)
 	}
@@ -1496,6 +1525,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionTargets = { motionX: 0, motionY: 0, tiltX: 0, tiltY: 0, tiltZ: 0 }
 		stopMotionLoop()
 		applyMotionTransform()
+		applyMotionVisualState()
 		updateMotionButton('3D Motion', '', false)
 		return true
 	}
@@ -1509,6 +1539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.isMotionSuspended = false
 		state.isMotionEnabled = true
 		startMotionLoop()
+		applyMotionVisualState()
 		updateMotionButton('3D Motion aktiv', 'is-active', true)
 	}
 
