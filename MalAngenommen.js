@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 512
 	const FACET_TEX_HEIGHT = 640
-	const FACET_POLYGON_COUNT = 30000
+	const FACET_POLYGON_COUNT = 10000
 	const VARIATION_VISUALS = [
 		{ patternSrc: 'Media/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
 		{ patternSrc: 'Media/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
@@ -598,17 +598,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		const shineX = Math.max(12, Math.min(88, 50 + (combinedTiltX / MAX_TILT_X) * SHINE_SHIFT_X_MAX))
 		const shineY = Math.max(10, Math.min(90, 36 + (combinedTiltY / MAX_TILT_Y) * SHINE_SHIFT_Y_MAX))
 		const motionEnergy = Math.min(1, (Math.abs(combinedTiltX) + Math.abs(combinedTiltY) + Math.abs(state.tiltZ)) / 28)
-		const shineAlpha = 0.42 + motionEnergy * 0.56
-		const shineEdgeAlpha = 0.26 + motionEnergy * 0.34
-		const shineRimAlpha = 5.88 + motionEnergy * 1.45
-		const shineSpeckleAlpha = 20.1 + motionEnergy * 7.8
+		const shineAlpha = 0.12 + motionEnergy * 0.36
+		const shineEdgeAlpha = 0.16 + motionEnergy * 0.34
+		const shineRimAlpha = 0.28 + motionEnergy * 0.45
+		const shineSpeckleAlpha = 0.9 + motionEnergy * 0.1
 		target.style.setProperty('--shine-x', `${shineX}%`)
 		target.style.setProperty('--shine-y', `${shineY}%`)
 		target.style.setProperty('--shine-alpha', `${shineAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
-		const facetAlpha = 0.5 + motionEnergy * 0.38
+		const facetAlpha = 0.2 + motionEnergy * 0.38
 		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
 		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
