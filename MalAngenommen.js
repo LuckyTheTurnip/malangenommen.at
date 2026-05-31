@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const flipCueNode = activeCard ? activeCard.querySelector('[data-flip-cue]') : null
 	const swipeUpCueNode = activeCard ? activeCard.querySelector('[data-swipe-up-cue]') : null
 	const variationCardNode = document.querySelector('[data-variation-card]')
+	const variationFanNode = document.querySelector('[data-variation-fan]')
 	const variationTextNode = document.querySelector('[data-variation-text]')
 	const variationScratchNode = document.querySelector('[data-variation-scratch]')
 	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
@@ -135,7 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			miniCardOpen: false,
 			scratchRevealed: false,
 			currentVariationText: '',
-			variationIndexByCardId: {},
+			activeVariationIndex: -1,
+			variationChoices: [],
 			variationSketch: null,
 			canDismissVariation: false,
 			variationDismissStartX: 0,
@@ -188,6 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	const FACET_TEX_WIDTH = 512
 	const FACET_TEX_HEIGHT = 640
 	const FACET_POLYGON_COUNT = 980
+	const VARIATION_VISUALS = [
+		{ patternSrc: 'Media/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
+		{ patternSrc: 'Media/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
+		{ patternSrc: 'Media/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
+		{ patternSrc: 'Media/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
+	]
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -751,6 +759,69 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const resolveVariationVisual = (index) => {
+		const fallback = VARIATION_VISUALS[0]
+		if (VARIATION_VISUALS.length === 0) {
+			return fallback
+		}
+		return VARIATION_VISUALS[((index % VARIATION_VISUALS.length) + VARIATION_VISUALS.length) % VARIATION_VISUALS.length] || fallback
+	}
+
+	const buildVariationChoices = (card) => {
+		const variationList = getCardVariations(card)
+		state.variationChoices = variationList.map((text, index) => ({
+			index,
+			text,
+			visual: resolveVariationVisual(index)
+		}))
+		state.activeVariationIndex = -1
+	}
+
+	const applyVariationVisualTheme = (visual) => {
+		if (!variationCardNode || !visual) {
+			return
+		}
+		variationCardNode.style.setProperty('--variation-purple-a', visual.colorA)
+		variationCardNode.style.setProperty('--variation-purple-b', visual.colorB)
+		variationCardNode.style.setProperty('--variation-pattern-url', `url("${visual.patternSrc}")`)
+	}
+
+	const renderVariationFan = () => {
+		if (!variationFanNode) {
+			return
+		}
+		variationFanNode.innerHTML = ''
+		const choices = state.variationChoices
+		const isVisible = state.hasVariations && choices.length > 1
+		if (!isVisible) {
+			variationFanNode.hidden = true
+			variationFanNode.setAttribute('aria-hidden', 'true')
+			variationFanNode.classList.remove('is-selection-open')
+			return
+		}
+
+		variationFanNode.hidden = false
+		variationFanNode.setAttribute('aria-hidden', 'false')
+		variationFanNode.classList.toggle('is-selection-open', state.miniCardOpen)
+		choices.forEach((choice, position) => {
+			const button = document.createElement('button')
+			button.type = 'button'
+			button.className = 'variation-fan__card'
+			button.dataset.variationIndex = String(choice.index)
+			const centeredOffset = position - (choices.length - 1) / 2
+			button.style.setProperty('--fan-offset', `${centeredOffset}`)
+			button.style.setProperty('--fan-depth', `${Math.abs(centeredOffset)}`)
+			button.style.setProperty('--fan-color-a', choice.visual.colorA)
+			button.style.setProperty('--fan-color-b', choice.visual.colorB)
+			button.style.setProperty('--fan-pattern-url', `url("${choice.visual.patternSrc}")`)
+			button.setAttribute('aria-label', `Variation ${choice.index + 1}`)
+			if (state.activeVariationIndex === choice.index && state.miniCardOpen) {
+				button.classList.add('is-selected')
+			}
+			variationFanNode.appendChild(button)
+		})
+	}
+
 	const setVariationVisualState = (visualState) => {
 		if (!variationCardNode) {
 			return
@@ -787,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.canDismissVariation = false
 		setVariationVisualState('flying-out')
 		window.setTimeout(() => {
-			if (state.hasVariations) {
+			if (state.hasVariations && state.variationChoices.length <= 1) {
 				setVariationVisualState('peek')
 				variationCardNode.hidden = false
 				variationCardNode.setAttribute('aria-hidden', 'false')
@@ -795,6 +866,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				variationCardNode.hidden = true
 				variationCardNode.setAttribute('aria-hidden', 'true')
 			}
+			state.activeVariationIndex = -1
+			renderVariationFan()
 			destroyVariationScratch()
 		}, VARIATION_FLY_MS)
 	}
@@ -803,9 +876,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.miniCardOpen = false
 		state.scratchRevealed = false
 		state.canDismissVariation = false
+		state.activeVariationIndex = -1
 		if (variationCardNode) {
 			variationCardNode.classList.remove('is-open', 'is-revealed', 'is-peek', 'is-flying-in', 'is-open-center', 'is-flying-out')
-			if (state.hasVariations) {
+			if (state.hasVariations && state.variationChoices.length <= 1) {
 				variationCardNode.hidden = false
 				variationCardNode.setAttribute('aria-hidden', 'false')
 				setVariationVisualState('peek')
@@ -814,6 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				variationCardNode.setAttribute('aria-hidden', 'true')
 			}
 		}
+		renderVariationFan()
 		destroyVariationScratch()
 	}
 
@@ -824,13 +899,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		state.hasVariations = !!visible
 		if (visible) {
-			setVariationVisualState('peek')
-			variationCardNode.hidden = false
-			variationCardNode.setAttribute('aria-hidden', 'false')
+			if (state.variationChoices.length > 1) {
+				variationCardNode.hidden = true
+				variationCardNode.setAttribute('aria-hidden', 'true')
+			} else {
+				setVariationVisualState('peek')
+				variationCardNode.hidden = false
+				variationCardNode.setAttribute('aria-hidden', 'false')
+			}
 		} else {
 			variationCardNode.hidden = true
 			variationCardNode.setAttribute('aria-hidden', 'true')
 		}
+		renderVariationFan()
 	}
 
 	const createVariationScratch = () => {
@@ -1116,45 +1197,31 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.variationSketch = p5Instance
 	}
 
-	const getNextVariationText = (card) => {
-		const variationList = getCardVariations(card)
-		if (variationList.length === 0) {
-			return ''
-		}
-
-		if (variationList.length === 1) {
-			state.variationIndexByCardId[card.id] = 0
-			return variationList[0]
-		}
-
-		const currentIndex = Number.isInteger(state.variationIndexByCardId[card.id]) ? state.variationIndexByCardId[card.id] : -1
-		const nextIndex = (currentIndex + 1) % variationList.length
-		state.variationIndexByCardId[card.id] = nextIndex
-		return variationList[nextIndex]
-	}
-
-	const openVariationCard = () => {
+	const openVariationCard = (selectedIndex = 0) => {
 		if (!state.currentCard || !variationCardNode || !variationTextNode || state.isAnimating || !state.hasVariations) {
 			return
 		}
 
-		const nextText = getNextVariationText(state.currentCard)
-		if (!nextText) {
+		const choice = state.variationChoices[selectedIndex]
+		if (!choice?.text) {
 			return
 		}
 
-		state.currentVariationText = nextText
+		state.currentVariationText = choice.text
+		state.activeVariationIndex = choice.index
 		state.miniCardOpen = true
 		state.scratchRevealed = false
 		state.canDismissVariation = true
-		variationTextNode.textContent = nextText
+		variationTextNode.textContent = choice.text
+		applyVariationVisualTheme(choice.visual)
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
 		variationCardNode.classList.remove('is-revealed', 'is-flying-out')
-		setVariationVisualState('peek')
-		// Force a committed "peek" frame before entering, so Safari/Chromium
-		// don't skip the transform transition and snap to center.
-		variationCardNode.getBoundingClientRect()
+		if (state.variationChoices.length <= 1) {
+			setVariationVisualState('peek')
+			variationCardNode.getBoundingClientRect()
+		}
+		renderVariationFan()
 		window.setTimeout(() => {
 			setVariationVisualState('flying-in')
 			window.setTimeout(() => {
@@ -1459,6 +1526,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			setPreviewCards()
 			fitQuestionText()
 			const cardVariations = getCardVariations(card)
+			buildVariationChoices(card)
 			const hasVariations = cardVariations.length > 0
 			setVariationTabVisibility(hasVariations)
 			closeVariationCard()
@@ -1745,10 +1813,23 @@ document.addEventListener('DOMContentLoaded', () => {
 			event.preventDefault()
 			event.stopPropagation()
 			if (!state.miniCardOpen) {
-				openVariationCard()
+				openVariationCard(0)
 				return
 			}
 			dismissVariationCard()
+		})
+		variationFanNode?.addEventListener('click', (event) => {
+			const target = event.target instanceof Element ? event.target.closest('[data-variation-index]') : null
+			if (!target) {
+				return
+			}
+			event.preventDefault()
+			event.stopPropagation()
+			const selectedIndex = Number.parseInt(target.getAttribute('data-variation-index') || '-1', 10)
+			if (!Number.isInteger(selectedIndex) || selectedIndex < 0) {
+				return
+			}
+			openVariationCard(selectedIndex)
 		})
 		// Do not stop propagation on the scratch host itself:
 		// p5 touch callbacks rely on bubbling in Safari/Chrome mobile.
