@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 512
 	const FACET_TEX_HEIGHT = 640
-	const FACET_POLYGON_COUNT = 980
+	const FACET_POLYGON_COUNT = 4000
 	const VARIATION_VISUALS = [
 		{ patternSrc: 'Media/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
 		{ patternSrc: 'Media/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
@@ -560,17 +560,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		const shineX = Math.max(12, Math.min(88, 50 + (combinedTiltX / MAX_TILT_X) * SHINE_SHIFT_X_MAX))
 		const shineY = Math.max(10, Math.min(90, 36 + (combinedTiltY / MAX_TILT_Y) * SHINE_SHIFT_Y_MAX))
 		const motionEnergy = Math.min(1, (Math.abs(combinedTiltX) + Math.abs(combinedTiltY) + Math.abs(state.tiltZ)) / 28)
-		const shineAlpha = 0.32 + motionEnergy * 0.4
+		const shineAlpha = 0.2 + motionEnergy * 0.4
 		const shineEdgeAlpha = 0.2 + motionEnergy * 0.26
 		const shineRimAlpha = 0.22 + motionEnergy * 0.3
-		const shineSpeckleAlpha = 0.09 + motionEnergy * 0.18
+		const shineSpeckleAlpha = 0.91 + motionEnergy * 0.98
 		target.style.setProperty('--shine-x', `${shineX}%`)
 		target.style.setProperty('--shine-y', `${shineY}%`)
 		target.style.setProperty('--shine-alpha', `${shineAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
-		const facetAlpha = 0.038 + motionEnergy * 0.48
+		const facetAlpha = 0.018 + motionEnergy * 0.48
 		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
 		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
@@ -588,6 +588,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationCardNode.style.setProperty('--v-tilt-x', `${(state.tiltX * 0.78).toFixed(3)}deg`)
 			variationCardNode.style.setProperty('--v-tilt-y', `${(state.tiltY * 0.78).toFixed(3)}deg`)
 			variationCardNode.style.setProperty('--v-tilt-z', `${(state.tiltZ * 0.7).toFixed(3)}deg`)
+		}
+		if (variationFanNode) {
+			variationFanNode.style.setProperty('--fan-tilt-x', `${(state.tiltX * 0.74).toFixed(3)}deg`)
+			variationFanNode.style.setProperty('--fan-tilt-y', `${(state.tiltY * 0.74).toFixed(3)}deg`)
+			variationFanNode.style.setProperty('--fan-tilt-z', `${(state.tiltZ * 0.62).toFixed(3)}deg`)
 		}
 	}
 
