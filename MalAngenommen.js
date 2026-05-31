@@ -713,9 +713,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const targetMotionX = softClamp(normalizedX * MAX_MOTION_X * 0.9, MAX_MOTION_X)
 		const targetMotionY = softClamp(normalizedY * MAX_MOTION_Y * 0.9, MAX_MOTION_Y)
-		const targetTiltX = softClamp(normalizedX * MAX_TILT_X * 0.9, MAX_TILT_X)
-		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 0.9, MAX_TILT_Y)
-		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.12, MAX_TILT_Z)
+		const targetTiltX = softClamp(normalizedX * MAX_TILT_X * 1.9, MAX_TILT_X)
+		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 1.9, MAX_TILT_Y)
+		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 2.12, MAX_TILT_Z)
 
 		state.motionTargets.motionX = targetMotionX
 		state.motionTargets.motionY = targetMotionY
