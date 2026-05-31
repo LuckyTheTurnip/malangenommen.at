@@ -107,6 +107,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		orientationBetaWindow: [],
 		orientationGammaWindow: [],
 		motionSignalActive: false,
+		motionFrameId: 0,
+		motionTargetIntent: 0,
+		motionTargets: {
+			motionX: 0,
+			motionY: 0,
+			tiltX: 0,
+			tiltY: 0,
+			tiltZ: 0
+		},
 		touchStartX: 0,
 		touchStartY: 0,
 		lastTouchY: 0,
@@ -171,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const ORIENTATION_FILTER_ALPHA = 0.22
 	const ORIENTATION_SPIKE_CAP_DEG = 5.5
 	const ORIENTATION_MEDIAN_WINDOW = 5
-	const MOTION_ACTIVITY_ON = 0.46
-	const MOTION_ACTIVITY_OFF = 0.24
+	const MOTION_ACTIVITY_ON = 0.56
+	const MOTION_ACTIVITY_OFF = 0.3
 	const MOTION_BASELINE_ACTIVITY_FACTOR = 0.06
 	const SHINE_SHIFT_X_MAX = 38
 	const SHINE_SHIFT_Y_MAX = 32
@@ -218,6 +227,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.tiltY = stepToward(state.tiltY, easedTiltY, tiltStep)
 		state.tiltZ = stepToward(state.tiltZ, easedTiltZ, tiltStep)
 		applyMotionTransform()
+	}
+
+	const stopMotionLoop = () => {
+		if (state.motionFrameId) {
+			cancelAnimationFrame(state.motionFrameId)
+			state.motionFrameId = 0
+		}
+	}
+
+	const runMotionLoop = () => {
+		if (!state.isMotionEnabled || state.isMotionSuspended) {
+			stopMotionLoop()
+			return
+		}
+
+		applySmoothedMotionTargets(state.motionTargets, { intent: state.motionTargetIntent })
+		state.motionFrameId = requestAnimationFrame(runMotionLoop)
+	}
+
+	const startMotionLoop = () => {
+		if (state.motionFrameId || !state.isMotionEnabled || state.isMotionSuspended) {
+			return
+		}
+		state.motionFrameId = requestAnimationFrame(runMotionLoop)
 	}
 
 	const computeMedian = (values) => {
@@ -446,6 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.orientationBetaWindow = []
 			state.orientationGammaWindow = []
 			state.motionSignalActive = false
+			state.motionTargetIntent = 0
+			state.motionTargets = { motionX: 0, motionY: 0, tiltX: 0, tiltY: 0, tiltZ: 0 }
 			return
 		}
 
@@ -460,6 +495,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.orientationBetaWindow = [beta]
 		state.orientationGammaWindow = [gamma]
 		state.motionSignalActive = false
+		state.motionTargetIntent = 0
+		state.motionTargets = { motionX: 0, motionY: 0, tiltX: 0, tiltY: 0, tiltZ: 0 }
 	}
 
 	const updateLanguageButton = () => {
@@ -629,13 +666,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetTiltY = softClamp(normalizedY * MAX_TILT_Y * 0.9, MAX_TILT_Y)
 		const targetTiltZ = softClamp(normalizedX * MAX_TILT_Z * 0.12, MAX_TILT_Z)
 
-		applySmoothedMotionTargets({
-			motionX: targetMotionX,
-			motionY: targetMotionY,
-			tiltX: targetTiltX,
-			tiltY: targetTiltY,
-			tiltZ: targetTiltZ
-		}, { intent: 0.9 })
+		state.motionTargets.motionX = targetMotionX
+		state.motionTargets.motionY = targetMotionY
+		state.motionTargets.tiltX = targetTiltX
+		state.motionTargets.tiltY = targetTiltY
+		state.motionTargets.tiltZ = targetTiltZ
+		state.motionTargetIntent = 0.9
+		startMotionLoop()
 	}
 
 	const setFlipClass = (flipped) => {
@@ -1194,13 +1231,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		const targetTiltZ = softClamp(deltaGamma * TILT_Z_DAMPING, MAX_TILT_Z) * activationAlpha
 		const gatedScale = state.motionSignalActive ? 1 : 0.2
 
-		applySmoothedMotionTargets({
-			motionX: targetMotionX * gatedScale,
-			motionY: targetMotionY * gatedScale,
-			tiltX: targetTiltX * gatedScale,
-			tiltY: targetTiltY * gatedScale,
-			tiltZ: targetTiltZ * gatedScale
-		}, { intent })
+		state.motionTargets.motionX = targetMotionX * gatedScale
+		state.motionTargets.motionY = targetMotionY * gatedScale
+		state.motionTargets.tiltX = targetTiltX * gatedScale
+		state.motionTargets.tiltY = targetTiltY * gatedScale
+		state.motionTargets.tiltZ = targetTiltZ * gatedScale
+		state.motionTargetIntent = intent
+		startMotionLoop()
 	}
 
 	const disableMotion = () => {
@@ -1218,7 +1255,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.orientationBetaWindow = []
 		state.orientationGammaWindow = []
 		state.motionSignalActive = false
+		state.motionTargetIntent = 0
+		state.motionTargets = { motionX: 0, motionY: 0, tiltX: 0, tiltY: 0, tiltZ: 0 }
 		state.motionActivatedAt = 0
+		stopMotionLoop()
 		state.motionX = 0
 		state.motionY = 0
 		state.tiltX = 0
@@ -1235,6 +1275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionPermissionState = 'granted'
 		state.motionActivatedAt = performance.now()
 		setMotionBaseline(state.lastOrientationBeta, state.lastOrientationGamma)
+		startMotionLoop()
 		statusNode.textContent = '3D Motion ist aktiv.'
 		updateMotionButton('3D Motion aktiv', 'is-active', true)
 	}
@@ -1259,6 +1300,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.orientationBetaWindow = []
 		state.orientationGammaWindow = []
 		state.motionSignalActive = false
+		state.motionTargetIntent = 0
+		state.motionTargets = { motionX: 0, motionY: 0, tiltX: 0, tiltY: 0, tiltZ: 0 }
+		stopMotionLoop()
 		applyMotionTransform()
 		updateMotionButton('3D Motion', '', false)
 		return true
@@ -1272,6 +1316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		state.isMotionSuspended = false
 		state.isMotionEnabled = true
+		startMotionLoop()
 		updateMotionButton('3D Motion aktiv', 'is-active', true)
 	}
 
