@@ -99,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		motionActivatedAt: 0,
 		lastOrientationBeta: null,
 		lastOrientationGamma: null,
+		filteredOrientationBeta: null,
+		filteredOrientationGamma: null,
+		previousOrientationBeta: null,
+		previousOrientationGamma: null,
 		touchStartX: 0,
 		touchStartY: 0,
 		lastTouchY: 0,
@@ -150,13 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	const MAX_TILT_Z = 5
 	const MAX_MOTION_X = 20
 	const MAX_MOTION_Y = 22
-	const TILT_DAMPING = 0.22
-	const TILT_Z_DAMPING = 0.035
-	const MOTION_DEADZONE = 0.55
-	const TILT_DEADZONE = 0.45
-	const MAX_MOTION_STEP = 0.9
-	const MAX_TILT_STEP = 0.7
-	const MOTION_SMOOTHING = 0.14
+	const TILT_DAMPING = 0.27
+	const TILT_Z_DAMPING = 0.024
+	const MOTION_DEADZONE = 0.7
+	const TILT_DEADZONE = 0.6
+	const MAX_MOTION_STEP = 0.72
+	const MAX_TILT_STEP = 0.58
+	const MOTION_SMOOTHING = 0.19
+	const ORIENTATION_FILTER_ALPHA = 0.22
+	const ORIENTATION_SPIKE_CAP_DEG = 5.5
 	const SHINE_SHIFT_X_MAX = 38
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 512
@@ -196,6 +202,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.tiltY = stepToward(state.tiltY, easedTiltY, MAX_TILT_STEP)
 		state.tiltZ = stepToward(state.tiltZ, easedTiltZ, MAX_TILT_STEP)
 		applyMotionTransform()
+	}
+
+	const clampOrientationSpike = (currentValue, previousValue) => {
+		if (!Number.isFinite(currentValue)) {
+			return 0
+		}
+		if (!Number.isFinite(previousValue)) {
+			return currentValue
+		}
+		const delta = currentValue - previousValue
+		const boundedDelta = Math.max(-ORIENTATION_SPIKE_CAP_DEG, Math.min(ORIENTATION_SPIKE_CAP_DEG, delta))
+		return previousValue + boundedDelta
 	}
 
 	const normalizeSpawnMotionMode = (value) => {
@@ -384,12 +402,20 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.motionBaselineBeta = null
 			state.motionBaselineGamma = null
 			state.motionBaselinePending = true
+			state.filteredOrientationBeta = null
+			state.filteredOrientationGamma = null
+			state.previousOrientationBeta = null
+			state.previousOrientationGamma = null
 			return
 		}
 
 		state.motionBaselineBeta = beta
 		state.motionBaselineGamma = gamma
 		state.motionBaselinePending = false
+		state.filteredOrientationBeta = beta
+		state.filteredOrientationGamma = gamma
+		state.previousOrientationBeta = beta
+		state.previousOrientationGamma = gamma
 	}
 
 	const updateLanguageButton = () => {
@@ -1080,13 +1106,27 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
+		const clampedBeta = clampOrientationSpike(beta, state.previousOrientationBeta)
+		const clampedGamma = clampOrientationSpike(gamma, state.previousOrientationGamma)
+		state.previousOrientationBeta = clampedBeta
+		state.previousOrientationGamma = clampedGamma
+
+		const nextFilteredBeta = Number.isFinite(state.filteredOrientationBeta)
+			? state.filteredOrientationBeta + (clampedBeta - state.filteredOrientationBeta) * ORIENTATION_FILTER_ALPHA
+			: clampedBeta
+		const nextFilteredGamma = Number.isFinite(state.filteredOrientationGamma)
+			? state.filteredOrientationGamma + (clampedGamma - state.filteredOrientationGamma) * ORIENTATION_FILTER_ALPHA
+			: clampedGamma
+		state.filteredOrientationBeta = nextFilteredBeta
+		state.filteredOrientationGamma = nextFilteredGamma
+
 		const baselineBeta = Number.isFinite(state.motionBaselineBeta) ? state.motionBaselineBeta : beta
 		const baselineGamma = Number.isFinite(state.motionBaselineGamma) ? state.motionBaselineGamma : gamma
-		const deltaBeta = beta - baselineBeta
-		const deltaGamma = gamma - baselineGamma
+		const deltaBeta = nextFilteredBeta - baselineBeta
+		const deltaGamma = nextFilteredGamma - baselineGamma
 		const activationAlpha = Math.min(1, Math.max(0, (performance.now() - state.motionActivatedAt) / 260))
-		const targetMotionX = softClamp(deltaBeta * 0.24, MAX_MOTION_X) * activationAlpha
-		const targetMotionY = softClamp(-deltaGamma * 0.28, MAX_MOTION_Y) * activationAlpha
+		const targetMotionX = softClamp(deltaBeta * 0.31, MAX_MOTION_X) * activationAlpha
+		const targetMotionY = softClamp(-deltaGamma * 0.35, MAX_MOTION_Y) * activationAlpha
 		const targetTiltX = softClamp(deltaBeta * TILT_DAMPING, MAX_TILT_X) * activationAlpha
 		const targetTiltY = softClamp(-deltaGamma * TILT_DAMPING, MAX_TILT_Y) * activationAlpha
 		const targetTiltZ = softClamp(deltaGamma * TILT_Z_DAMPING, MAX_TILT_Z) * activationAlpha
@@ -1107,6 +1147,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.motionBaselineBeta = null
 		state.motionBaselineGamma = null
 		state.motionBaselinePending = false
+		state.filteredOrientationBeta = null
+		state.filteredOrientationGamma = null
+		state.previousOrientationBeta = null
+		state.previousOrientationGamma = null
 		state.motionActivatedAt = 0
 		state.motionX = 0
 		state.motionY = 0
@@ -1140,6 +1184,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.tiltX = 0
 		state.tiltY = 0
 		state.tiltZ = 0
+		state.filteredOrientationBeta = null
+		state.filteredOrientationGamma = null
+		state.previousOrientationBeta = null
+		state.previousOrientationGamma = null
 		applyMotionTransform()
 		updateMotionButton('3D Motion', '', false)
 		return true
