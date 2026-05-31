@@ -1,8 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 	const app = document.querySelector('[data-app]')
 	const activeCard = document.querySelector('[data-active-card]')
+	const bgCurrentNode = document.querySelector('[data-bg-current]')
+	const bgNextNode = document.querySelector('[data-bg-next]')
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const frontQuestionShellNode = frontQuestionNode ? frontQuestionNode.closest('.card-question-shell') : null
+	const kombiWordsNode = activeCard ? activeCard.querySelector('[data-kombi-words]') : null
+	const kombiWordOneNode = activeCard ? activeCard.querySelector('[data-kombi-word-1]') : null
+	const kombiWordTwoNode = activeCard ? activeCard.querySelector('[data-kombi-word-2]') : null
 	const backQuestionNode = activeCard ? activeCard.querySelector('[data-back-question]') : null
 	const cardBackLogoNode = activeCard ? activeCard.querySelector('.card-back-logo') : null
 	const cardBackOrbitTextNodes = activeCard ? Array.from(activeCard.querySelectorAll('.card-back-orbit-text textPath')) : []
@@ -176,7 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			,swipeUpCueTimer: null
 			,enterAnimationActive: false
 			,spawnAnimationTimer: null
-	}
+			,currentBackgroundCategoryKey: null
+			,isBgTransitioning: false
+			,bgTransitionTimer: null
+		}
 
 	const SWIPE_DISTANCE = 88
 	const SWIPE_RATIO = 1.2
@@ -225,6 +233,128 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
+	}
+
+	const parseHexColor = (value) => {
+		const normalized = String(value || '').trim()
+		const full = normalized.match(/^#([0-9a-f]{6})$/i)
+		const short = normalized.match(/^#([0-9a-f]{3})$/i)
+		if (full) {
+			const hex = full[1]
+			return {
+				r: parseInt(hex.slice(0, 2), 16),
+				g: parseInt(hex.slice(2, 4), 16),
+				b: parseInt(hex.slice(4, 6), 16)
+			}
+		}
+		if (short) {
+			const hex = short[1]
+			return {
+				r: parseInt(hex[0] + hex[0], 16),
+				g: parseInt(hex[1] + hex[1], 16),
+				b: parseInt(hex[2] + hex[2], 16)
+			}
+		}
+		return { r: 12, g: 16, b: 32 }
+	}
+
+	const mixRgb = (left, right, ratio) => {
+		const t = Math.max(0, Math.min(1, ratio))
+		return {
+			r: Math.round(left.r + (right.r - left.r) * t),
+			g: Math.round(left.g + (right.g - left.g) * t),
+			b: Math.round(left.b + (right.b - left.b) * t)
+		}
+	}
+
+	const scaleRgb = (rgb, factor) => {
+		return {
+			r: Math.max(0, Math.min(255, Math.round(rgb.r * factor))),
+			g: Math.max(0, Math.min(255, Math.round(rgb.g * factor))),
+			b: Math.max(0, Math.min(255, Math.round(rgb.b * factor)))
+		}
+	}
+
+	const rgbToCss = (rgb, alpha = 1) => {
+		if (alpha >= 1) {
+			return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`
+		}
+		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
+	}
+
+	const deriveBackgroundPalette = (theme) => {
+		const colorA = parseHexColor(theme?.patternColorA)
+		const colorB = parseHexColor(theme?.patternColorB)
+		const blend = mixRgb(colorA, colorB, 0.5)
+		const top = scaleRgb(mixRgb(colorA, blend, 0.35), 0.34)
+		const bottom = scaleRgb(mixRgb(colorB, blend, 0.62), 0.2)
+		const glowA = rgbToCss(scaleRgb(colorA, 0.88), 0.22)
+		const glowB = rgbToCss(scaleRgb(colorB, 0.9), 0.18)
+		const scene = mixRgb(top, bottom, 0.5)
+		const sceneLuma = (0.2126 * scene.r + 0.7152 * scene.g + 0.0722 * scene.b) / 255
+		return {
+			top: rgbToCss(top),
+			bottom: rgbToCss(bottom),
+			glowA,
+			glowB,
+			logoInvert: sceneLuma < 0.46 ? 1 : 0
+		}
+	}
+
+	const setBackgroundPlaneColors = (targetNode, palette) => {
+		if (!targetNode || !palette) {
+			return
+		}
+		targetNode.style.setProperty('--bg-top', palette.top)
+		targetNode.style.setProperty('--bg-bottom', palette.bottom)
+		targetNode.style.setProperty('--bg-glow-a', palette.glowA)
+		targetNode.style.setProperty('--bg-glow-b', palette.glowB)
+	}
+
+	const applyCategoryBackground = (categoryKey, options = {}) => {
+		if (!bgCurrentNode || !bgNextNode || !app) {
+			return
+		}
+		const theme = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.hypothetical
+		const palette = deriveBackgroundPalette(theme)
+		const immediate = !!options.immediate
+		const shouldSkip = !immediate && state.currentBackgroundCategoryKey === categoryKey
+		if (shouldSkip) {
+			return
+		}
+
+		if (state.bgTransitionTimer) {
+			clearTimeout(state.bgTransitionTimer)
+			state.bgTransitionTimer = null
+		}
+
+		if (immediate || !state.currentBackgroundCategoryKey) {
+			setBackgroundPlaneColors(bgCurrentNode, palette)
+			setBackgroundPlaneColors(bgNextNode, palette)
+			app.style.setProperty('--brand-logo-invert', String(palette.logoInvert))
+			app.classList.remove('is-bg-transitioning')
+			state.currentBackgroundCategoryKey = categoryKey
+			state.isBgTransitioning = false
+			return
+		}
+
+		setBackgroundPlaneColors(bgNextNode, palette)
+		state.isBgTransitioning = true
+		app.classList.add('is-bg-transitioning')
+		const finish = () => {
+			if (!state.isBgTransitioning) {
+				return
+			}
+			setBackgroundPlaneColors(bgCurrentNode, palette)
+			app.style.setProperty('--brand-logo-invert', String(palette.logoInvert))
+			app.classList.remove('is-bg-transitioning')
+			state.currentBackgroundCategoryKey = categoryKey
+			state.isBgTransitioning = false
+		}
+		state.bgTransitionTimer = window.setTimeout(() => {
+			finish()
+			state.bgTransitionTimer = null
+		}, 1480)
 	}
 
 	const applyDeadzone = (value, threshold) => {
@@ -411,6 +541,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					categoryLabel: CATEGORY_STYLES[categoryKey].label,
 					questionDe,
 					questionEn,
+					wordOneDe: String(card?.Wort1_de || card?.wort1_de || '').trim(),
+					wordTwoDe: String(card?.Wort2_de || card?.wort2_de || '').trim(),
+					wordOneEn: String(card?.Wort1_en || card?.wort1_en || '').trim(),
+					wordTwoEn: String(card?.Wort2_en || card?.wort2_en || '').trim(),
 					variationsClean,
 					variationsEnClean,
 					rawIndex: index
@@ -441,6 +575,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		return Array.isArray(card.variationsClean) ? card.variationsClean : []
+	}
+
+	const getKombiWords = (card) => {
+		if (!card || card.categoryKey !== 'kombichaos') {
+			return { wordOne: '', wordTwo: '' }
+		}
+		if (state.language === 'en') {
+			return {
+				wordOne: card.wordOneEn || card.wordOneDe || '',
+				wordTwo: card.wordTwoEn || card.wordTwoDe || ''
+			}
+		}
+		return {
+			wordOne: card.wordOneDe || card.wordOneEn || '',
+			wordTwo: card.wordTwoDe || card.wordTwoEn || ''
+		}
 	}
 
 	const getFilteredCards = () => {
@@ -491,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 		activeCard.style.setProperty('--question-shell-bg', theme.questionShellBg || '#ffffff')
 		activeCard.style.setProperty('--question-shell-text', theme.questionShellText || '#111111')
+		applyCategoryBackground(card.categoryKey)
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -1636,8 +1787,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const updateDeckLabels = () => {
-		const remaining = state.currentCard ? state.drawPile.length + 1 : 0
-		statusNode.textContent = `${remaining} Karten im Stapel`
+		if (statusNode) {
+			statusNode.textContent = ''
+		}
 	}
 
 	const buildDrawPile = (excludeId) => {
@@ -1680,6 +1832,18 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (frontQuestionNode) {
 					frontQuestionNode.textContent = getCardQuestion(card)
 					frontQuestionNode.style.color = theme.questionShellText || '#111111'
+				}
+				const kombiWords = getKombiWords(card)
+				const showKombiWords = card.categoryKey === 'kombichaos' && (kombiWords.wordOne || kombiWords.wordTwo)
+				if (kombiWordsNode) {
+					kombiWordsNode.hidden = !showKombiWords
+					kombiWordsNode.setAttribute('aria-hidden', showKombiWords ? 'false' : 'true')
+				}
+				if (kombiWordOneNode) {
+					kombiWordOneNode.textContent = kombiWords.wordOne || '—'
+				}
+				if (kombiWordTwoNode) {
+					kombiWordTwoNode.textContent = kombiWords.wordTwo || '—'
 				}
 				if (frontQuestionShellNode) {
 					frontQuestionShellNode.style.backgroundColor = theme.questionShellBg || '#ffffff'

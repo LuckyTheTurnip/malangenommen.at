@@ -9,15 +9,18 @@
 </head>
 <body>
     <main class="game motion-visuals-off" data-app>
+        <div class="game__bg" aria-hidden="true">
+            <div class="game__bg-plane game__bg-plane--current" data-bg-current></div>
+            <div class="game__bg-plane game__bg-plane--next" data-bg-next></div>
+        </div>
+        <div class="game__brand" aria-label="Mal Angenommen">
+            <img class="game__brand-logo" src="Media/Mal-Angenommen_Logo.svg" alt="Mal Angenommen">
+        </div>
         <div class="corner-dot" aria-hidden="true"></div>
         <div class="game__glow game__glow--one" aria-hidden="true"></div>
         <div class="game__glow game__glow--two" aria-hidden="true"></div>
 
         <header class="game__header">
-            <div>
-                <p class="game__eyebrow">Mal Angenommen</p>
-                <h1 class="game__title">Für die nächste Karte</h1>
-            </div>
             <div class="game__header-actions">
                 <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu">Filter</button>
                 <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false">3D Motion</button>
@@ -67,7 +70,14 @@
                                 </div>
 
                                 <div class="card-question-shell">
-                                    <p class="card-question" data-front-question></p>
+                                    <div class="card-question-shell__inner">
+                                        <p class="card-question" data-front-question></p>
+                                        <div class="kombi-words" data-kombi-words hidden aria-hidden="true">
+                                            <div class="kombi-words__field" data-kombi-word-1></div>
+                                            <div class="kombi-words__plus" aria-hidden="true">+</div>
+                                            <div class="kombi-words__field" data-kombi-word-2></div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="swipe-up-cue" data-swipe-up-cue hidden aria-hidden="true">
@@ -82,8 +92,8 @@
                                     <div class="card-back-orbit">
                                         <svg class="card-back-orbit-svg" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false">
                                             <defs>
-                                                <!-- Circle path (center 160,110 radius 88) -->
-                                                <path id="card-back-ellipse-path" d="M 248 110 A 88 88 0 1 0 72 110 A 88 88 0 1 0 248 110"/>
+                                                <!-- Circle path (center 160,110 radius 107) -->
+                                                <path id="card-back-ellipse-path" d="M 267 110 A 107 107 0 1 0 53 110 A 107 107 0 1 0 267 110"/>
                                             </defs>
                                             <text class="card-back-orbit-text">
                                                 <textPath href="#card-back-ellipse-path" xlink:href="#card-back-ellipse-path" startOffset="0%">HYPOTHETICAL</textPath>
@@ -121,7 +131,7 @@
 
         </section>
 
-        <p class="game__status" data-status aria-live="polite"></p>
+        <p class="game__status" data-status aria-live="polite" hidden></p>
     </main>
 
     <script src="MalAngenommen-data.js"></script>
