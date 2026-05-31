@@ -33,9 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
 			logoSrc: 'Media/Hypothetical_Logo.svg',
+			logoColor: '#e0b326',
 			patternSrc: "Media/Hypothetical Muster8.svg",
 			patternColorA: '#f7e971',
 			patternColorB: '#e0b326',
+			circleFillColor: '#f7e971',
 			accent: '#ff8a5b',
 			accentSoft: 'rgba(255, 138, 91, 0.18)',
 			top: 'rgba(38, 23, 31, 0.96)',
@@ -46,9 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-showstopper',
 			text: '#f4fbff',
 			logoSrc: 'Media/Showstopper Logo.svg',
+			logoColor: '#90af31',
 			patternSrc: "Media/Showstopper Muster8.svg",
 			patternColorA: '#90af31',
 			patternColorB: '#c6d977',
+			circleFillColor: '#c6d977',
 			accent: '#6fc4ff',
 			accentSoft: 'rgba(111, 196, 255, 0.16)',
 			top: 'rgba(17, 28, 44, 0.96)',
@@ -59,9 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-kombichaos',
 			text: '#f7fff1',
 			logoSrc: 'Media/Kombichaos Logo.svg',
+			logoColor: '#cd652e',
 			patternSrc: "Media/Kombichaos Muster8.svg",
 			patternColorA: '#cd652e',
 			patternColorB: '#dda0c4',
+			circleFillColor: '#dda0c4',
 			accent: '#9eff7a',
 			accentSoft: 'rgba(158, 255, 122, 0.16)',
 			top: 'rgba(20, 30, 18, 0.96)',
@@ -72,9 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			className: 'theme-monkeyspaw',
 			text: '#fff7e9',
 			logoSrc: 'Media/Monkeys Paw Logo.svg',
+			logoColor: '#2f56a8',
 			patternSrc: "Media/Monkey's Paw Muster8.svg",
 			patternColorA: '#2f56a8',
 			patternColorB: '#9d87bf',
+			circleFillColor: '#9d87bf',
 			accent: '#ffc45c',
 			accentSoft: 'rgba(255, 196, 92, 0.16)',
 			top: 'rgba(35, 27, 17, 0.96)',
@@ -139,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeVariationIndex: -1,
 			variationChoices: [],
 			variationSketch: null,
+			variationScratchCleanup: null,
 			canDismissVariation: false,
 			variationDismissStartX: 0,
 			variationDismissStartY: 0,
@@ -189,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SHINE_SHIFT_Y_MAX = 32
 	const FACET_TEX_WIDTH = 512
 	const FACET_TEX_HEIGHT = 640
-	const FACET_POLYGON_COUNT = 4000
+	const FACET_POLYGON_COUNT = 30000
 	const VARIATION_VISUALS = [
 		{ patternSrc: 'Media/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
 		{ patternSrc: 'Media/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
@@ -459,6 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
 		activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
 		activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
+		activeCard.style.setProperty('--back-logo-tone', theme.logoColor || theme.accent)
+		activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -560,17 +571,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		const shineX = Math.max(12, Math.min(88, 50 + (combinedTiltX / MAX_TILT_X) * SHINE_SHIFT_X_MAX))
 		const shineY = Math.max(10, Math.min(90, 36 + (combinedTiltY / MAX_TILT_Y) * SHINE_SHIFT_Y_MAX))
 		const motionEnergy = Math.min(1, (Math.abs(combinedTiltX) + Math.abs(combinedTiltY) + Math.abs(state.tiltZ)) / 28)
-		const shineAlpha = 0.2 + motionEnergy * 0.4
-		const shineEdgeAlpha = 0.2 + motionEnergy * 0.26
-		const shineRimAlpha = 0.22 + motionEnergy * 0.3
-		const shineSpeckleAlpha = 0.91 + motionEnergy * 0.98
+		const shineAlpha = 0.42 + motionEnergy * 0.56
+		const shineEdgeAlpha = 0.26 + motionEnergy * 0.34
+		const shineRimAlpha = 5.88 + motionEnergy * 1.45
+		const shineSpeckleAlpha = 20.1 + motionEnergy * 7.8
 		target.style.setProperty('--shine-x', `${shineX}%`)
 		target.style.setProperty('--shine-y', `${shineY}%`)
 		target.style.setProperty('--shine-alpha', `${shineAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-edge-alpha', `${shineEdgeAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-rim-alpha', `${shineRimAlpha.toFixed(3)}`)
 		target.style.setProperty('--shine-speckle-alpha', `${shineSpeckleAlpha.toFixed(3)}`)
-		const facetAlpha = 0.018 + motionEnergy * 0.48
+		const facetAlpha = 0.5 + motionEnergy * 0.38
 		const facetShiftX = Math.max(6, Math.min(94, 50 + (combinedTiltX / MAX_TILT_X) * 34))
 		const facetShiftY = Math.max(6, Math.min(94, 50 + (combinedTiltY / MAX_TILT_Y) * 30))
 		target.style.setProperty('--facet-alpha', `${facetAlpha.toFixed(3)}`)
@@ -755,6 +766,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const destroyVariationScratch = () => {
+		if (typeof state.variationScratchCleanup === 'function') {
+			state.variationScratchCleanup()
+		}
+		state.variationScratchCleanup = null
 		if (state.variationSketch && typeof state.variationSketch.remove === 'function') {
 			state.variationSketch.remove()
 		}
@@ -927,6 +942,111 @@ document.addEventListener('DOMContentLoaded', () => {
 		destroyVariationScratch()
 
 		const host = variationScratchNode
+		const dustCanvas = document.createElement('canvas')
+		dustCanvas.className = 'variation-mini-card__dust'
+		host.appendChild(dustCanvas)
+		const dustCtx = dustCanvas.getContext('2d')
+		const dustParticles = []
+		let dustRafId = 0
+		let lastDustTime = 0
+		let lastDustSpawnAt = 0
+		const MAX_DUST_PARTICLES = 120
+		const DUST_SPAWN_COOLDOWN_MS = 12
+
+		const resizeDustCanvas = () => {
+			if (!dustCtx) {
+				return
+			}
+			const bounds = host.getBoundingClientRect()
+			const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
+			dustCanvas.width = Math.max(1, Math.round(bounds.width * ratio))
+			dustCanvas.height = Math.max(1, Math.round(bounds.height * ratio))
+			dustCanvas.style.width = `${bounds.width}px`
+			dustCanvas.style.height = `${bounds.height}px`
+			dustCtx.setTransform(ratio, 0, 0, ratio, 0, 0)
+		}
+
+		const stopDustLoop = () => {
+			if (dustRafId) {
+				cancelAnimationFrame(dustRafId)
+				dustRafId = 0
+			}
+		}
+
+		const runDustLoop = (timeNow) => {
+			if (!dustCtx) {
+				stopDustLoop()
+				return
+			}
+			const now = Number.isFinite(timeNow) ? timeNow : performance.now()
+			const delta = Math.min(34, Math.max(8, now - (lastDustTime || now)))
+			lastDustTime = now
+			const dt = delta / 16.667
+			const width = parseFloat(dustCanvas.style.width || '0') || host.clientWidth || 1
+			const height = parseFloat(dustCanvas.style.height || '0') || host.clientHeight || 1
+			dustCtx.clearRect(0, 0, width, height)
+			for (let index = dustParticles.length - 1; index >= 0; index -= 1) {
+				const particle = dustParticles[index]
+				particle.vy += 0.12 * dt
+				particle.x += particle.vx * dt
+				particle.y += particle.vy * dt
+				particle.life -= delta
+				if (particle.life <= 0 || particle.y > height + 8) {
+					dustParticles.splice(index, 1)
+					continue
+				}
+				const alpha = Math.max(0, particle.life / particle.maxLife)
+				dustCtx.fillStyle = `rgba(${particle.r}, ${particle.g}, ${particle.b}, ${(alpha * 0.7).toFixed(3)})`
+				dustCtx.beginPath()
+				dustCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
+				dustCtx.fill()
+			}
+
+			if (dustParticles.length > 0) {
+				dustRafId = requestAnimationFrame(runDustLoop)
+			} else {
+				stopDustLoop()
+			}
+		}
+
+		const spawnDustParticles = (x, y) => {
+			const now = performance.now()
+			if (now - lastDustSpawnAt < DUST_SPAWN_COOLDOWN_MS) {
+				return
+			}
+			lastDustSpawnAt = now
+			const spawnCount = 3
+			for (let count = 0; count < spawnCount; count += 1) {
+				if (dustParticles.length >= MAX_DUST_PARTICLES) {
+					dustParticles.shift()
+				}
+				dustParticles.push({
+					x: x + (Math.random() - 0.5) * 8,
+					y: y + (Math.random() - 0.5) * 6,
+					vx: (Math.random() - 0.5) * 1.6,
+					vy: -1.2 - Math.random() * 1.6,
+					size: 0.8 + Math.random() * 1.8,
+					maxLife: 320 + Math.random() * 420,
+					life: 320 + Math.random() * 420,
+					r: 232 + Math.round(Math.random() * 22),
+					g: 210 + Math.round(Math.random() * 38),
+					b: 255
+				})
+			}
+			if (!dustRafId) {
+				lastDustTime = now
+				dustRafId = requestAnimationFrame(runDustLoop)
+			}
+		}
+
+		resizeDustCanvas()
+		state.variationScratchCleanup = () => {
+			stopDustLoop()
+			dustParticles.length = 0
+			if (dustCanvas.parentNode === host) {
+				host.removeChild(dustCanvas)
+			}
+		}
 		const p5Instance = new window.p5((p) => {
 			let brushSize = 28
 			let didComplete = false
@@ -1048,6 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				nativeScratchCtx.lineTo(x, y)
 				nativeScratchCtx.stroke()
 				nativeScratchCtx.restore()
+				spawnDustParticles(x, y)
 				evaluateReveal()
 			}
 
@@ -1196,6 +1317,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			p.windowResized = () => {
 				const bounds = host.getBoundingClientRect()
 				p.resizeCanvas(bounds.width, bounds.height)
+				resizeDustCanvas()
 			}
 		})
 
@@ -1522,6 +1644,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.setProperty('--back-circle-a', theme.patternColorA)
 			activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
 			activeCard.style.setProperty('--back-orbit-color', getDarkerHexColor(theme.patternColorA, theme.patternColorB))
+			activeCard.style.setProperty('--back-logo-tone', theme.logoColor || theme.accent)
+			activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 
 			setTheme(card)
 			updateLanguageButton()
@@ -1979,11 +2103,12 @@ document.addEventListener('DOMContentLoaded', () => {
 				throw new Error('Keine Karten gefunden.')
 			}
 
-			startFromRandomCard()
-			bindEvents()
-			updateMotionButton('3D Motion', '', false)
-			updateLanguageButton()
-			statusNode.textContent = 'Ziehe eine neue Karte.'
+				startFromRandomCard()
+				bindEvents()
+				updateMotionButton('3D Motion', '', false)
+				applyMotionVisualState()
+				updateLanguageButton()
+				statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)
 			statusNode.textContent = 'Die Karten konnten nicht geladen werden.'
