@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SCRATCH_GRAIN_FLAKE_COUNT = 540
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
+	const GAME_SESSION_STORAGE_KEY = 'malangenommen.gameSession'
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 52
 	const MAX_TILT_Y = 52
@@ -652,6 +653,44 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		return response.json()
+	}
+
+	const saveGameSession = () => {
+		if (!state.currentCard) {
+			return
+		}
+		const payload = {
+			currentCardId: state.currentCard.id,
+			drawPileIds: state.drawPile.map((card) => card.id),
+			isFlipped: !!state.isFlipped,
+			flipRotationDeg: state.flipRotationDeg
+		}
+		try {
+			window.localStorage.setItem(GAME_SESSION_STORAGE_KEY, JSON.stringify(payload))
+		} catch (error) {
+			console.warn('Spielstatus konnte nicht gespeichert werden.', error)
+		}
+	}
+
+	const loadGameSession = () => {
+		try {
+			const raw = window.localStorage.getItem(GAME_SESSION_STORAGE_KEY)
+			if (!raw) {
+				return null
+			}
+			const parsed = JSON.parse(raw)
+			if (!parsed || typeof parsed !== 'object' || typeof parsed.currentCardId !== 'string') {
+				return null
+			}
+			return {
+				currentCardId: parsed.currentCardId,
+				drawPileIds: Array.isArray(parsed.drawPileIds) ? parsed.drawPileIds.filter((id) => typeof id === 'string') : [],
+				isFlipped: !!parsed.isFlipped,
+				flipRotationDeg: Number.isFinite(parsed.flipRotationDeg) ? parsed.flipRotationDeg : 180
+			}
+		} catch (error) {
+			return null
+		}
 	}
 
 	const setTheme = (card) => {
@@ -2037,6 +2076,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.currentCard = filteredCards[randomIndex]
 		buildDrawPile(state.currentCard.id)
 		renderCard(state.currentCard)
+		saveGameSession()
 		triggerSpawnAnimation()
 	}
 
@@ -2068,6 +2108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.currentCard = filteredCards[nextIndex]
 		buildDrawPile(state.currentCard.id)
 		renderCard(state.currentCard)
+		saveGameSession()
 		triggerSpawnAnimation()
 	}
 
@@ -2189,6 +2230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			updateDeckLabels()
 			setPreviewCards()
 			fitQuestionText()
+			saveGameSession()
 			state.isAnimating = false
 			state.enterAnimationActive = false
 			scheduleSwipeUpCue()
@@ -2486,6 +2528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
+		saveGameSession()
 
 		if (motionWasActive) {
 			window.setTimeout(() => resumeMotionAfterTransition(), 420)
@@ -2579,7 +2622,27 @@ document.addEventListener('DOMContentLoaded', () => {
 				throw new Error('Keine Karten gefunden.')
 			}
 
-				startFromRandomCard()
+				const savedSession = loadGameSession()
+				const filteredCards = getFilteredCards()
+				const savedCard = savedSession
+					? filteredCards.find((card) => card.id === savedSession.currentCardId)
+					: null
+				if (savedCard) {
+					state.currentCard = savedCard
+					const cardsById = new Map(state.cards.map((card) => [card.id, card]))
+					state.drawPile = savedSession.drawPileIds
+						.map((id) => cardsById.get(id))
+						.filter((card) => card && card.id !== savedCard.id)
+					if (state.drawPile.length === 0) {
+						buildDrawPile(savedCard.id)
+					}
+					renderCard(savedCard, { resetFlip: false })
+					setFlipClass(savedSession.isFlipped)
+					setFlipRotation(savedSession.flipRotationDeg)
+					saveGameSession()
+				} else {
+					startFromRandomCard()
+				}
 				bindEvents()
 				updateMotionButton('3D Motion', '', false)
 				applyMotionVisualState()
