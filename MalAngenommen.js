@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const VARIATION_FLY_MS = 420
 	const VARIATION_DRAG_SNAP_PROGRESS = 0.35
 	const VARIATION_DRAG_OPEN_DISTANCE = 160
-	const VARIATION_DRAG_MAX_DISTANCE = 220
+	const VARIATION_DRAG_SNAP_CENTER_RATIO = 0.24
 	const VARIATION_DRAG_DEADZONE = 8
 	const SCRATCH_GRAIN_DOT_COUNT = 9600
 	const SCRATCH_GRAIN_FLAKE_COUNT = 540
@@ -1156,6 +1156,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		return variationCardNode.classList.contains('is-peek')
 	}
 
+	const isVariationTeaserNearCenter = () => {
+		if (!variationCardNode) {
+			return false
+		}
+		const rect = variationCardNode.getBoundingClientRect()
+		const cardCenterX = rect.left + rect.width * 0.5
+		const cardCenterY = rect.top + rect.height * 0.5
+		const viewportCenterX = window.innerWidth * 0.5
+		const viewportCenterY = window.innerHeight * 0.5
+		const distanceToCenter = Math.hypot(cardCenterX - viewportCenterX, cardCenterY - viewportCenterY)
+		const snapRadius = Math.min(window.innerWidth, window.innerHeight) * VARIATION_DRAG_SNAP_CENTER_RATIO
+		return distanceToCenter <= snapRadius
+	}
+
 	const dismissVariationCard = () => {
 		if (!variationCardNode || !state.miniCardOpen) {
 			return
@@ -1613,7 +1627,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.variationSketch = p5Instance
 	}
 
-	const openVariationCard = (selectedIndex = 0) => {
+	const openVariationCard = (selectedIndex = 0, options = {}) => {
+		const { fromDragSnap = false } = options
 		if (!state.currentCard || !variationCardNode || !variationTextNode || state.isAnimating || !state.hasVariations) {
 			return
 		}
@@ -1625,7 +1640,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		state.currentVariationText = choice.text
 		state.activeVariationIndex = choice.index
-		resetVariationTeaserDrag()
+		if (!fromDragSnap) {
+			resetVariationTeaserDrag()
+		}
 		state.miniCardOpen = true
 		state.scratchRevealed = false
 		state.canDismissVariation = true
@@ -1634,17 +1651,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
 		variationCardNode.classList.remove('is-revealed', 'is-flying-out')
-		setVariationVisualState('peek')
-		variationCardNode.getBoundingClientRect()
 		renderVariationFan()
-		window.setTimeout(() => {
-			setVariationVisualState('flying-in')
+		if (fromDragSnap) {
+			variationCardNode.classList.remove('is-dragging', 'is-returning')
+			variationCardNode.classList.add('is-snapping')
+			setVariationVisualState('open-center')
 			window.setTimeout(() => {
-				if (state.miniCardOpen) {
-					setVariationVisualState('open-center')
-				}
+				variationCardNode.classList.remove('is-snapping')
 			}, VARIATION_FLY_MS)
-		}, 28)
+		} else {
+			setVariationVisualState('peek')
+			variationCardNode.getBoundingClientRect()
+			window.setTimeout(() => {
+				setVariationVisualState('flying-in')
+				window.setTimeout(() => {
+					if (state.miniCardOpen) {
+						setVariationVisualState('open-center')
+					}
+				}, VARIATION_FLY_MS)
+			}, 28)
+		}
 
 		createVariationScratch()
 	}
@@ -2256,49 +2282,42 @@ document.addEventListener('DOMContentLoaded', () => {
 			return true
 		}
 
-		const onVariationTeaserDragMove = (x, y) => {
-			if (!state.variationTeaserDragging) {
-				return
+			const onVariationTeaserDragMove = (x, y) => {
+				if (!state.variationTeaserDragging) {
+					return
+				}
+				const deltaX = x - state.variationTeaserDragStartX
+				const deltaY = y - state.variationTeaserDragStartY
+				const distance = Math.hypot(deltaX, deltaY)
+				applyVariationTeaserDrag(deltaX, deltaY)
+				state.variationTeaserDragProgress = Math.min(1, distance / VARIATION_DRAG_OPEN_DISTANCE)
+				if (distance > VARIATION_DRAG_DEADZONE) {
+					setVariationTeaserSuppressClick()
+				}
 			}
-			const deltaX = x - state.variationTeaserDragStartX
-			const deltaY = y - state.variationTeaserDragStartY
-			const distance = Math.hypot(deltaX, deltaY)
-			const clampedDistance = Math.min(distance, VARIATION_DRAG_MAX_DISTANCE)
-			const ratio = distance > 0 ? clampedDistance / distance : 0
-			const dragX = deltaX * ratio
-			const dragY = deltaY * ratio
-			applyVariationTeaserDrag(dragX, dragY)
-			state.variationTeaserDragProgress = Math.min(1, clampedDistance / VARIATION_DRAG_OPEN_DISTANCE)
-			if (clampedDistance > VARIATION_DRAG_DEADZONE) {
-				setVariationTeaserSuppressClick()
-			}
-		}
 
 		const onVariationTeaserDragEnd = () => {
 			if (!state.variationTeaserDragging) {
 				return
 			}
-			const shouldSnapOpen = state.variationTeaserDragProgress >= VARIATION_DRAG_SNAP_PROGRESS
-			variationCardNode.classList.remove('is-dragging')
-			state.variationTeaserDragging = false
-			state.variationTeaserPointerId = null
+				const shouldSnapOpen = state.variationTeaserDragProgress >= VARIATION_DRAG_SNAP_PROGRESS || isVariationTeaserNearCenter()
+				variationCardNode.classList.remove('is-dragging')
+				state.variationTeaserDragging = false
+				state.variationTeaserPointerId = null
 			state.variationTeaserDragStartX = 0
 			state.variationTeaserDragStartY = 0
 			state.variationTeaserDragProgress = 0
 
-			if (shouldSnapOpen) {
-				variationCardNode.classList.remove('is-returning')
-				variationCardNode.classList.add('is-snapping')
-				applyVariationTeaserDrag(0, 0)
-				setVariationTeaserSuppressClick()
-				window.setTimeout(() => {
-					variationCardNode.classList.remove('is-snapping')
+				if (shouldSnapOpen) {
+					setVariationTeaserSuppressClick()
+					const selectedIndex = Number.isInteger(state.activeVariationIndex) && state.activeVariationIndex >= 0
+						? state.activeVariationIndex
+						: 0
 					if (!state.miniCardOpen) {
-						openVariationCard(0)
+						openVariationCard(selectedIndex, { fromDragSnap: true })
 					}
-				}, 180)
-				return
-			}
+					return
+				}
 
 			resetVariationTeaserDrag({ animate: true })
 		}
