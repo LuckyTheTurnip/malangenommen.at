@@ -1218,6 +1218,10 @@ body::before {
 	pointer-events: auto;
 }
 
+.variation-mini-card.is-open-center {
+	animation: variation-open-hover 3.6s ease-in-out infinite;
+}
+
 .variation-mini-card.is-flying-out {
 	opacity: 0;
 	transform: translate3d(calc(var(--variation-peek-x) + 86px), var(--variation-peek-y), 0) scale(0.9) rotate(5deg);
@@ -1369,6 +1373,17 @@ body::before {
 	92% {
 		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
 		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
+	}
+}
+
+@keyframes variation-open-hover {
+	0%, 100% {
+		transform: translate3d(-50%, -50%, 0) scale(1) rotate(0deg);
+		-webkit-transform: translate3d(-50%, -50%, 0) scale(1) rotate(0deg);
+	}
+	50% {
+		transform: translate3d(-50%, calc(-50% - 12px), 0) scale(1.025) rotate(0.6deg);
+		-webkit-transform: translate3d(-50%, calc(-50% - 12px), 0) scale(1.025) rotate(0.6deg);
 	}
 }
 
