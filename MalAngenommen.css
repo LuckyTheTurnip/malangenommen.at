@@ -236,7 +236,8 @@ body::before {
 .game__motion-toggle,
 .game__language-toggle,
 .game__filter-toggle,
-.game__spawn-toggle {
+.game__spawn-toggle,
+.game__rules-link {
 	margin: 0;
 	padding: clamp(0.62rem, 1.2vw, 0.78rem) clamp(0.78rem, 1.7vw, 1.04rem);
 	border-radius: 999px;
@@ -251,6 +252,7 @@ body::before {
 	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
 	cursor: pointer;
 	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+	text-decoration: none;
 }
 
 .game__language-toggle {
@@ -264,7 +266,9 @@ body::before {
 .game__filter-toggle:hover,
 .game__filter-toggle:focus-visible,
 .game__spawn-toggle:hover,
-.game__spawn-toggle:focus-visible {
+.game__spawn-toggle:focus-visible,
+.game__rules-link:hover,
+.game__rules-link:focus-visible {
 	transform: translateY(-1px);
 	background: rgba(255, 255, 255, 0.11);
 	border-color: rgba(255, 255, 255, 0.22);
@@ -574,9 +578,7 @@ body::before {
 	align-items: stretch;
 	justify-content: stretch;
 	border-radius: inherit;
-	overflow: hidden;
-	clip-path: inset(0 round var(--card-radius));
-	-webkit-clip-path: inset(0 round var(--card-radius));
+	overflow: visible;
 	transform-style: preserve-3d;
 	-webkit-transform-style: preserve-3d;
 	perspective: 1200px;
@@ -1074,6 +1076,8 @@ body::before {
 	--variation-pattern-url: none;
 	--variation-peek-x: clamp(44px, 15vw, 124px);
 	--variation-peek-y: clamp(88px, 20vh, 220px);
+	--variation-drag-x: 0px;
+	--variation-drag-y: 0px;
 	z-index: 16;
 	opacity: 0;
 	transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.9) rotate(5deg);
@@ -1107,18 +1111,39 @@ body::before {
 
 .variation-mini-card.is-peek {
 	opacity: 1;
-	transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
-	-webkit-transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
+	transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
+	-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
 	pointer-events: auto;
 	filter: saturate(1.16) brightness(1.08);
 	animation: variation-peek-shake-shell 2.4s ease-in-out infinite;
 }
 
 .variation-mini-card.is-peek .variation-mini-card__motion {
+	background-color: var(--variation-purple-b);
+	background-image: var(--variation-pattern-url);
+	background-size: 96px 96px;
+	background-repeat: repeat;
+	background-blend-mode: normal;
 	box-shadow:
 		0 18px 42px rgba(24, 8, 44, 0.62),
 		0 0 0 2px color-mix(in srgb, var(--variation-purple-a) 66%, white 34%),
 		0 0 26px color-mix(in srgb, var(--variation-purple-a) 58%, transparent);
+}
+
+.variation-mini-card.is-peek .variation-mini-card__question-shell {
+	display: none;
+}
+
+.variation-mini-card.is-dragging {
+	transition: none !important;
+}
+
+.variation-mini-card.is-returning {
+	transition: transform 260ms cubic-bezier(0.2, 0.8, 0.24, 1), opacity 260ms ease !important;
+}
+
+.variation-mini-card.is-snapping {
+	transition: transform 320ms cubic-bezier(0.16, 0.84, 0.24, 1), opacity 260ms ease !important;
 }
 
 .variation-fan {
@@ -1209,6 +1234,11 @@ body::before {
 	align-items: center;
 	justify-content: center;
 	text-align: center;
+}
+
+.variation-mini-card__question-shell {
+	width: 100%;
+	height: 100%;
 }
 
 .variation-mini-card__inner::before {

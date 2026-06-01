@@ -1,0 +1,111 @@
+:root {
+	--bg: #0b0f19;
+	--panel: rgba(15, 20, 35, 0.86);
+	--text: #f7f9ff;
+	--muted: rgba(233, 239, 255, 0.72);
+	--border: rgba(255, 255, 255, 0.14);
+	--accent: #ff8a5b;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	margin: 0;
+	min-height: 100%;
+	background: radial-gradient(circle at 20% 10%, #202a48 0%, #0b0f19 45%, #06080f 100%);
+	color: var(--text);
+	font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.rules-page {
+	width: min(960px, 100%);
+	margin: 0 auto;
+	padding: max(16px, env(safe-area-inset-top)) clamp(14px, 3vw, 26px) max(26px, env(safe-area-inset-bottom));
+}
+
+.rules-page__header {
+	display: grid;
+	gap: 18px;
+	margin-bottom: 22px;
+}
+
+.rules-page__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.rules-page__button {
+	margin: 0;
+	padding: 0.66rem 0.96rem;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-decoration: none;
+	cursor: pointer;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.rules-page__button:hover,
+.rules-page__button:focus-visible {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.11);
+	border-color: rgba(255, 255, 255, 0.24);
+	outline: none;
+}
+
+.rules-page__button.is-active {
+	border-color: color-mix(in srgb, var(--accent) 56%, rgba(255, 255, 255, 0.14));
+}
+
+.rules-page__title {
+	margin: 0;
+	font-size: clamp(1.65rem, 4vw, 2.5rem);
+	line-height: 1.15;
+}
+
+.rules-page__content {
+	display: grid;
+	gap: 14px;
+}
+
+.rules-page__section {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	padding: clamp(14px, 2.6vw, 20px);
+	backdrop-filter: blur(8px);
+}
+
+.rules-page__heading {
+	margin: 0 0 10px;
+	font-size: clamp(1.08rem, 2.2vw, 1.34rem);
+}
+
+.rules-page__paragraph {
+	margin: 0;
+	color: var(--muted);
+	line-height: 1.62;
+}
+
+.rules-page__list {
+	margin: 0;
+	padding-left: 1.2rem;
+	color: var(--muted);
+	line-height: 1.62;
+	display: grid;
+	gap: 8px;
+}
+
+.rules-page__status {
+	margin: 8px 2px 0;
+	color: #ffc3af;
+}

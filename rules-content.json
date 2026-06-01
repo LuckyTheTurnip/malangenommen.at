@@ -1,0 +1,76 @@
+{
+	"pageTitle": {
+		"de": "Regeln & Hintergrund",
+		"en": "Rules & Background"
+	},
+	"sections": [
+		{
+			"id": "goal",
+			"title": {
+				"de": "Ziel des Spiels",
+				"en": "Goal of the Game"
+			},
+			"blocks": [
+				{
+					"type": "paragraph",
+					"de": "Mal Angenommen ist ein Gesprächsspiel. Es gibt keine Punkte und keine Gewinner – das Ziel ist kreative, ehrliche und lustige Antworten.",
+					"en": "Mal Angenommen is a conversation game. There are no points and no winners – the goal is creative, honest and funny answers."
+				}
+			]
+		},
+		{
+			"id": "how-to-play",
+			"title": {
+				"de": "So wird gespielt",
+				"en": "How to Play"
+			},
+			"blocks": [
+				{
+					"type": "list",
+					"items": {
+						"de": [
+							"Eine Person liest die aktuelle Karte laut vor.",
+							"Alle dürfen kurz überlegen und dann reihum antworten.",
+							"Wenn eine Variation verfügbar ist, kann sie geöffnet und statt der Standardfrage gespielt werden.",
+							"Mit einem Swipe nach oben kommt die nächste Karte."
+						],
+						"en": [
+							"One person reads the current card out loud.",
+							"Everyone takes a short moment and then answers in turn.",
+							"If a variation is available, you can open it and play it instead of the default prompt.",
+							"Swipe up to move to the next card."
+						]
+					}
+				}
+			]
+		},
+		{
+			"id": "categories",
+			"title": {
+				"de": "Kategorien",
+				"en": "Categories"
+			},
+			"blocks": [
+				{
+					"type": "paragraph",
+					"de": "Jede Kategorie hat ihren eigenen Stil und Fragetyp. Im Filter-Menü könnt ihr Kategorien ein- oder ausblenden.",
+					"en": "Each category has its own style and question flavor. You can enable or disable categories in the filter menu."
+				}
+			]
+		},
+		{
+			"id": "background",
+			"title": {
+				"de": "Hintergrund",
+				"en": "Background"
+			},
+			"blocks": [
+				{
+					"type": "paragraph",
+					"de": "Diese Seite ist absichtlich datengetrieben aufgebaut. Tauscht den Text einfach in dieser JSON-Datei aus, um Regeln, Story und Hausregeln laufend zu aktualisieren.",
+					"en": "This page is intentionally data-driven. Just replace the text in this JSON file to keep rules, story and house rules up to date."
+				}
+			]
+		}
+	]
+}

@@ -25,6 +25,7 @@
                 <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu">Filter</button>
                 <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false">3D Motion</button>
                 <button class="game__language-toggle" type="button" data-language-toggle aria-pressed="false">English</button>
+                <a class="game__rules-link" href="rules.html">Regeln</a>
             </div>
         </header>
 
@@ -122,7 +123,11 @@
             <section class="variation-mini-card" data-variation-card hidden aria-hidden="true">
                 <div class="variation-mini-card__motion">
                     <div class="variation-mini-card__inner">
-                        <p class="variation-mini-card__text" data-variation-text></p>
+                        <div class="card-question-shell variation-mini-card__question-shell">
+                            <div class="card-question-shell__inner">
+                                <p class="variation-mini-card__text card-question" data-variation-text></p>
+                            </div>
+                        </div>
                         <div class="variation-mini-card__scratch" data-variation-scratch></div>
                     </div>
                 </div>

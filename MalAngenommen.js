@@ -173,6 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			canDismissVariation: false,
 			variationDismissStartX: 0,
 			variationDismissStartY: 0,
+			variationTeaserDragging: false,
+			variationTeaserDragStartX: 0,
+			variationTeaserDragStartY: 0,
+			variationTeaserDragX: 0,
+			variationTeaserDragY: 0,
+			variationTeaserDragProgress: 0,
+			variationTeaserPointerId: null,
+			variationTeaserSuppressClick: false,
+			variationTeaserSuppressClickTimer: null,
 			enabledCategories: new Set(['hypothetical', 'showstopper', 'kombichaos', 'monkeyspaw']),
 			variationsOnly: false,
 			filterMenuOpen: false,
@@ -194,23 +203,28 @@ document.addEventListener('DOMContentLoaded', () => {
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
 	const VARIATION_FLY_MS = 420
+	const VARIATION_DRAG_SNAP_PROGRESS = 0.35
+	const VARIATION_DRAG_OPEN_DISTANCE = 160
+	const VARIATION_DRAG_MAX_DISTANCE = 220
+	const VARIATION_DRAG_DEADZONE = 8
 	const SCRATCH_GRAIN_DOT_COUNT = 9600
 	const SCRATCH_GRAIN_FLAKE_COUNT = 540
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
+	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
 	const MAX_DRAG_ROTATION = 6
-	const MAX_TILT_X = 40
-	const MAX_TILT_Y = 40
-	const MAX_TILT_Z = 5
-	const MAX_MOTION_X = 20
-	const MAX_MOTION_Y = 22
+	const MAX_TILT_X = 52
+	const MAX_TILT_Y = 52
+	const MAX_TILT_Z = 6.5
+	const MAX_MOTION_X = 28
+	const MAX_MOTION_Y = 30
 	const TILT_DAMPING = 0.27
 	const TILT_Z_DAMPING = 0.024
 	const MOTION_DEADZONE = 0.7
 	const TILT_DEADZONE = 0.6
-	const MAX_MOTION_STEP_IDLE = 0.48
-	const MAX_MOTION_STEP_ACTIVE = 0.84
-	const MAX_TILT_STEP_IDLE = 0.38
-	const MAX_TILT_STEP_ACTIVE = 0.72
+	const MAX_MOTION_STEP_IDLE = 0.52
+	const MAX_MOTION_STEP_ACTIVE = 0.92
+	const MAX_TILT_STEP_IDLE = 0.42
+	const MAX_TILT_STEP_ACTIVE = 0.8
 	const MOTION_SMOOTHING_IDLE = 0.09
 	const MOTION_SMOOTHING_ACTIVE = 0.24
 	const ORIENTATION_FILTER_ALPHA = 0.22
@@ -233,6 +247,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
+	}
+
+	const normalizeLanguage = (value) => {
+		return value === 'en' ? 'en' : 'de'
+	}
+
+	const loadStoredLanguage = () => {
+		try {
+			return normalizeLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY))
+		} catch (error) {
+			return 'de'
+		}
+	}
+
+	const persistLanguage = () => {
+		try {
+			window.localStorage.setItem(LANGUAGE_STORAGE_KEY, normalizeLanguage(state.language))
+		} catch (error) {
+			console.warn('Spracheinstellung konnte nicht gespeichert werden.', error)
+		}
 	}
 
 	const parseHexColor = (value) => {
@@ -1068,11 +1102,66 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const clearVariationTeaserSuppressClick = () => {
+		if (state.variationTeaserSuppressClickTimer) {
+			clearTimeout(state.variationTeaserSuppressClickTimer)
+			state.variationTeaserSuppressClickTimer = null
+		}
+		state.variationTeaserSuppressClick = false
+	}
+
+	const setVariationTeaserSuppressClick = () => {
+		state.variationTeaserSuppressClick = true
+		if (state.variationTeaserSuppressClickTimer) {
+			clearTimeout(state.variationTeaserSuppressClickTimer)
+		}
+		state.variationTeaserSuppressClickTimer = window.setTimeout(() => {
+			state.variationTeaserSuppressClick = false
+			state.variationTeaserSuppressClickTimer = null
+		}, 260)
+	}
+
+	const applyVariationTeaserDrag = (x, y) => {
+		state.variationTeaserDragX = x
+		state.variationTeaserDragY = y
+		variationCardNode?.style.setProperty('--variation-drag-x', `${x}px`)
+		variationCardNode?.style.setProperty('--variation-drag-y', `${y}px`)
+	}
+
+	const resetVariationTeaserDrag = ({ animate = false } = {}) => {
+		if (!variationCardNode) {
+			return
+		}
+		state.variationTeaserDragging = false
+		state.variationTeaserPointerId = null
+		state.variationTeaserDragStartX = 0
+		state.variationTeaserDragStartY = 0
+		state.variationTeaserDragProgress = 0
+		variationCardNode.classList.remove('is-dragging', 'is-snapping')
+		variationCardNode.classList.toggle('is-returning', !!animate)
+		applyVariationTeaserDrag(0, 0)
+		if (animate) {
+			window.setTimeout(() => {
+				variationCardNode.classList.remove('is-returning')
+			}, 280)
+		} else {
+			variationCardNode.classList.remove('is-returning')
+		}
+	}
+
+	const canDragVariationTeaser = () => {
+		if (!variationCardNode || state.isAnimating || state.miniCardOpen || !state.hasVariations) {
+			return false
+		}
+		return variationCardNode.classList.contains('is-peek')
+	}
+
 	const dismissVariationCard = () => {
 		if (!variationCardNode || !state.miniCardOpen) {
 			return
 		}
 
+		resetVariationTeaserDrag()
 		state.miniCardOpen = false
 		state.canDismissVariation = false
 		setVariationVisualState('flying-out')
@@ -1092,6 +1181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const closeVariationCard = () => {
+		resetVariationTeaserDrag()
 		state.miniCardOpen = false
 		state.scratchRevealed = false
 		state.canDismissVariation = false
@@ -1535,6 +1625,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		state.currentVariationText = choice.text
 		state.activeVariationIndex = choice.index
+		resetVariationTeaserDrag()
 		state.miniCardOpen = true
 		state.scratchRevealed = false
 		state.canDismissVariation = true
@@ -1877,6 +1968,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const cardVariations = getCardVariations(card)
 			buildVariationChoices(card)
 			const hasVariations = cardVariations.length > 0
+			if (hasVariations && state.variationChoices.length > 0) {
+				applyVariationVisualTheme(state.variationChoices[0].visual)
+			}
 			setVariationTabVisibility(hasVariations)
 			closeVariationCard()
 			if (resetFlip) {
@@ -1891,6 +1985,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const toggleLanguage = () => {
 		state.language = state.language === 'en' ? 'de' : 'en'
+		persistLanguage()
 		updateLanguageButton()
 
 		if (state.currentCard) {
@@ -1961,6 +2056,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.dragOffsetX = 0
 		state.dragOffsetY = 0
 		state.isDragging = false
+		applyMotionTransform()
+		scheduleSwipeUpCue()
+	}
+
+	const settleCardPositionAfterFlip = () => {
+		activeCard.classList.remove('is-dragging')
+		state.isDragging = false
+		state.dragOffsetX = 0
+		state.dragOffsetY = 0
+		activeCard.style.setProperty('--drag-x', '0px')
+		activeCard.style.setProperty('--drag-y', '0px')
+		activeCard.style.setProperty('--drag-rot', '0deg')
 		applyMotionTransform()
 		scheduleSwipeUpCue()
 	}
@@ -2135,7 +2242,71 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
+		const onVariationTeaserDragStart = (x, y, pointerId = null) => {
+			if (!canDragVariationTeaser()) {
+				return false
+			}
+			state.variationTeaserDragging = true
+			state.variationTeaserPointerId = pointerId
+			state.variationTeaserDragStartX = x
+			state.variationTeaserDragStartY = y
+			state.variationTeaserDragProgress = 0
+			variationCardNode.classList.remove('is-returning', 'is-snapping')
+			variationCardNode.classList.add('is-dragging')
+			return true
+		}
+
+		const onVariationTeaserDragMove = (x, y) => {
+			if (!state.variationTeaserDragging) {
+				return
+			}
+			const deltaX = x - state.variationTeaserDragStartX
+			const deltaY = y - state.variationTeaserDragStartY
+			const distance = Math.hypot(deltaX, deltaY)
+			const clampedDistance = Math.min(distance, VARIATION_DRAG_MAX_DISTANCE)
+			const ratio = distance > 0 ? clampedDistance / distance : 0
+			const dragX = deltaX * ratio
+			const dragY = deltaY * ratio
+			applyVariationTeaserDrag(dragX, dragY)
+			state.variationTeaserDragProgress = Math.min(1, clampedDistance / VARIATION_DRAG_OPEN_DISTANCE)
+			if (clampedDistance > VARIATION_DRAG_DEADZONE) {
+				setVariationTeaserSuppressClick()
+			}
+		}
+
+		const onVariationTeaserDragEnd = () => {
+			if (!state.variationTeaserDragging) {
+				return
+			}
+			const shouldSnapOpen = state.variationTeaserDragProgress >= VARIATION_DRAG_SNAP_PROGRESS
+			variationCardNode.classList.remove('is-dragging')
+			state.variationTeaserDragging = false
+			state.variationTeaserPointerId = null
+			state.variationTeaserDragStartX = 0
+			state.variationTeaserDragStartY = 0
+			state.variationTeaserDragProgress = 0
+
+			if (shouldSnapOpen) {
+				variationCardNode.classList.remove('is-returning')
+				variationCardNode.classList.add('is-snapping')
+				applyVariationTeaserDrag(0, 0)
+				setVariationTeaserSuppressClick()
+				window.setTimeout(() => {
+					variationCardNode.classList.remove('is-snapping')
+					if (!state.miniCardOpen) {
+						openVariationCard(0)
+					}
+				}, 180)
+				return
+			}
+
+			resetVariationTeaserDrag({ animate: true })
+		}
+
 		const onVariationDismissTouchStart = (event) => {
+			if (!state.miniCardOpen || !variationCardNode.classList.contains('is-open-center')) {
+				return
+			}
 			if (!event.touches || event.touches.length !== 1) {
 				return
 			}
@@ -2144,6 +2315,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const onVariationDismissTouchEnd = (event) => {
+			if (!state.miniCardOpen || !variationCardNode.classList.contains('is-open-center')) {
+				return
+			}
 			if (!event.changedTouches || event.changedTouches.length !== 1) {
 				return
 			}
@@ -2156,9 +2330,67 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 
+		const onVariationTouchStart = (event) => {
+			if (!event.touches || event.touches.length !== 1) {
+				return
+			}
+			const touch = event.touches[0]
+			onVariationTeaserDragStart(touch.clientX, touch.clientY)
+		}
+
+		const onVariationTouchMove = (event) => {
+			if (!state.variationTeaserDragging || !event.touches || event.touches.length !== 1) {
+				return
+			}
+			const touch = event.touches[0]
+			onVariationTeaserDragMove(touch.clientX, touch.clientY)
+			event.preventDefault()
+		}
+
+		const onVariationTouchEndDrag = () => {
+			onVariationTeaserDragEnd()
+		}
+
+		const onVariationPointerDown = (event) => {
+			if (event.pointerType === 'touch') {
+				return
+			}
+			if (onVariationTeaserDragStart(event.clientX, event.clientY, event.pointerId)) {
+				event.preventDefault()
+			}
+		}
+
+		const onVariationPointerMove = (event) => {
+			if (!state.variationTeaserDragging || state.variationTeaserPointerId !== event.pointerId) {
+				return
+			}
+			onVariationTeaserDragMove(event.clientX, event.clientY)
+		}
+
+		const onVariationPointerEnd = (event) => {
+			if (state.variationTeaserPointerId !== event.pointerId) {
+				return
+			}
+			onVariationTeaserDragEnd()
+		}
+
+		variationCardNode.addEventListener('touchstart', onVariationTouchStart, { passive: true })
+		variationCardNode.addEventListener('touchmove', onVariationTouchMove, { passive: false })
+		variationCardNode.addEventListener('touchend', onVariationTouchEndDrag)
+		variationCardNode.addEventListener('touchcancel', onVariationTouchEndDrag)
 		variationCardNode.addEventListener('touchstart', onVariationDismissTouchStart, { passive: true })
 		variationCardNode.addEventListener('touchend', onVariationDismissTouchEnd)
+		variationCardNode.addEventListener('pointerdown', onVariationPointerDown)
+		variationCardNode.addEventListener('pointermove', onVariationPointerMove)
+		variationCardNode.addEventListener('pointerup', onVariationPointerEnd)
+		variationCardNode.addEventListener('pointercancel', onVariationPointerEnd)
 		variationCardNode.addEventListener('click', (event) => {
+			if (state.variationTeaserSuppressClick) {
+				event.preventDefault()
+				event.stopPropagation()
+				clearVariationTeaserSuppressClick()
+				return
+			}
 			event.preventDefault()
 			event.stopPropagation()
 			if (!state.miniCardOpen) {
@@ -2213,8 +2445,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (isHorizontalLeft || isHorizontalRight || isHorizontalFlickLeft || isHorizontalFlickRight) {
 			const direction = (isHorizontalLeft || isHorizontalFlickLeft) ? 'left' : 'right'
-			resetCardPosition()
-			window.requestAnimationFrame(() => flipCard(direction))
+			activeCard.classList.remove('is-dragging')
+			state.isDragging = false
+			flipCard(direction)
+			window.requestAnimationFrame(() => settleCardPositionAfterFlip())
 			return
 		}
 
@@ -2299,6 +2533,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const initialize = async () => {
 		try {
+			state.language = loadStoredLanguage()
 			const enabled = filterCategoryInputs
 				.filter((node) => node.checked)
 				.map((node) => String(node.dataset.filterCategory || ''))
