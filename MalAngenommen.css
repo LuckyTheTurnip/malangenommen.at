@@ -196,7 +196,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: hsl(75, 100%, 50%);
+	background: hsl(345, 100%, 50%);
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -1351,24 +1351,24 @@ body::before {
 
 @keyframes variation-peek-shake-shell {
 	0%, 68%, 100% {
-		transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
-		-webkit-transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
+		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
+		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
 	}
 	74% {
-		transform: translate3d(calc(var(--variation-peek-x) - 12px), calc(var(--variation-peek-y) - 3px), 0) scale(0.94) rotate(3.2deg);
-		-webkit-transform: translate3d(calc(var(--variation-peek-x) - 12px), calc(var(--variation-peek-y) - 3px), 0) scale(0.94) rotate(3.2deg);
+		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) - 12px), calc(var(--variation-peek-y) + var(--variation-drag-y) - 3px), 0) scale(0.94) rotate(3.2deg);
+		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) - 12px), calc(var(--variation-peek-y) + var(--variation-drag-y) - 3px), 0) scale(0.94) rotate(3.2deg);
 	}
 	80% {
-		transform: translate3d(calc(var(--variation-peek-x) + 10px), calc(var(--variation-peek-y) + 2px), 0) scale(0.94) rotate(7.1deg);
-		-webkit-transform: translate3d(calc(var(--variation-peek-x) + 10px), calc(var(--variation-peek-y) + 2px), 0) scale(0.94) rotate(7.1deg);
+		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) + 10px), calc(var(--variation-peek-y) + var(--variation-drag-y) + 2px), 0) scale(0.94) rotate(7.1deg);
+		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) + 10px), calc(var(--variation-peek-y) + var(--variation-drag-y) + 2px), 0) scale(0.94) rotate(7.1deg);
 	}
 	86% {
-		transform: translate3d(calc(var(--variation-peek-x) - 7px), calc(var(--variation-peek-y) - 1px), 0) scale(0.94) rotate(4.1deg);
-		-webkit-transform: translate3d(calc(var(--variation-peek-x) - 7px), calc(var(--variation-peek-y) - 1px), 0) scale(0.94) rotate(4.1deg);
+		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) - 7px), calc(var(--variation-peek-y) + var(--variation-drag-y) - 1px), 0) scale(0.94) rotate(4.1deg);
+		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x) - 7px), calc(var(--variation-peek-y) + var(--variation-drag-y) - 1px), 0) scale(0.94) rotate(4.1deg);
 	}
 	92% {
-		transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
-		-webkit-transform: translate3d(var(--variation-peek-x), var(--variation-peek-y), 0) scale(0.94) rotate(5deg);
+		transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
+		-webkit-transform: translate3d(calc(var(--variation-peek-x) + var(--variation-drag-x)), calc(var(--variation-peek-y) + var(--variation-drag-y)), 0) scale(0.94) rotate(5deg);
 	}
 }
 
