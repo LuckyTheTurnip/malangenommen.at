@@ -132,6 +132,26 @@ document.addEventListener('DOMContentLoaded', () => {
 			top: 'rgba(35, 27, 17, 0.96)',
 			bottom: 'rgba(15, 11, 7, 0.98)'
 		}
+		,
+		default: {
+			label: 'Other',
+			className: 'theme-default',
+			text: '#111111',
+			logoSrc: '',
+			coreColor: '#6b6b6b',
+			logoColor: '#6b6b6b',
+			patternSrc: '',
+			patternColorA: '#f0f0f0',
+			patternColorB: '#d0d0d0',
+			circleFillColor: '#d0d0d0',
+			questionShellBg: '#ffffff',
+			questionShellText: '#111111',
+			questionShellBorder: '#e0e0e0',
+			accent: '#8a8a8a',
+			accentSoft: 'rgba(138, 138, 138, 0.12)',
+			top: 'rgba(24,24,24,0.9)',
+			bottom: 'rgba(10,10,10,0.9)'
+		}
 	}
 
 	const state = {
@@ -207,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			answerComposerOpen: false,
 			answerSuccessTimer: null,
 			answerLeaderboardOpen: false,
+			answerHistory: [],
 			rulesOpen: false,
 			rulesContent: null,
 			rulesLoading: false,
@@ -241,6 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
 	const GAME_SESSION_STORAGE_KEY = 'malangenommen.gameSession'
 	const ANSWER_STORAGE_KEY = 'malangenommen.answers'
+	const ANSWER_SUBMISSION_ENDPOINT = '/submission'
+	const API_BASE = 'https://myfirstapi-slcb.onrender.com/api/v2/views'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
 	const PAGE_TRANSITION_MS = 520
 	const MAX_DRAG_ROTATION = 6
@@ -288,12 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			namePlaceholder: 'Gib deinen Namen ein',
 			answerPlaceholder: 'Schreib deine Antwort auf die Frage',
 			submit: 'Senden',
+			submitting: 'Wird gesendet...',
 			cancel: 'Schliessen',
 			leaderboard: 'Leaderboard',
 			showLeaderboard: 'Leaderboard',
 			hideLeaderboard: 'Zuruck',
 			empty: 'Noch keine Antworten.',
-			success: 'Antwort gespeichert.',
+			success: 'Antwort gesendet.',
+			error: 'Antwort konnte nicht gesendet werden.',
 			countSingular: '1 Antwort',
 			countPlural: (count) => `${count} Antworten`
 		},
@@ -304,19 +329,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			namePlaceholder: 'Enter your name',
 			answerPlaceholder: 'Write your answer to the question',
 			submit: 'Send',
+			submitting: 'Sending...',
 			cancel: 'Close',
 			leaderboard: 'Leaderboard',
 			showLeaderboard: 'Leaderboard',
 			hideLeaderboard: 'Close',
 			empty: 'No answers yet.',
-			success: 'Answer saved.',
+			success: 'Answer sent.',
+			error: 'Answer could not be sent.',
 			countSingular: '1 answer',
 			countPlural: (count) => `${count} answers`
 		}
-	}
-
-	const softClamp = (value, max) => {
-		return max * Math.tanh(value / max)
 	}
 
 	const normalizeLanguage = (value) => {
@@ -325,7 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const loadStoredLanguage = () => {
 		try {
-			return normalizeLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY))
+			const raw = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
+			return normalizeLanguage(raw)
 		} catch (error) {
 			return 'de'
 		}
@@ -341,24 +365,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const getAnswerCopy = () => ANSWER_TEXT[normalizeLanguage(state.language)] || ANSWER_TEXT.de
 
-	const readStoredAnswers = () => {
+	const softClamp = (value, max) => {
+		return max * Math.tanh(value / max)
+	}
+
+	const normalizeCategory = (value) => {
+		const raw = String(value || '').trim()
+		// remove common apostrophe/quote characters so "Monkey’s Paw" -> "Monkeys Paw"
+		const withoutApos = raw.replace(/['’‘`‛\u2019\u2018]+/g, '')
+		const normalized = withoutApos
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '')
+
+		if (normalized.includes('showstopper')) {
+			return 'showstopper'
+		}
+
+		if (normalized.includes('kombichaos')) {
+			return 'kombichaos'
+		}
+
+		// collapse dashes to check variants like "monkey-s-paw" -> "monkeyspaw"
+		const condensed = normalized.replace(/-/g, '')
+		if (condensed.includes('monkeyspaw') || condensed.includes('mokeyspaw') || condensed.includes('mokeystpaw')) {
+			return 'monkeyspaw'
+		}
+
+		// if we have a normalized token, use it, otherwise fallback to 'default'
+		return normalized || 'default'
+	}
+
+	// Read client API key and header name from window globals or meta tags
+	const getClientApiKeyAndHeader = () => {
+		let key = (typeof window !== 'undefined' && window.APP_API_KEY) ? String(window.APP_API_KEY) : null
+		let headerName = (typeof window !== 'undefined' && window.APP_API_KEY_HEADER_NAME) ? String(window.APP_API_KEY_HEADER_NAME) : 'x-api-key'
 		try {
-			const parsed = JSON.parse(window.localStorage.getItem(ANSWER_STORAGE_KEY) || '[]')
-			return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry === 'object') : []
+			if (!key) {
+				const meta = document.querySelector('meta[name="app-api-key"]')
+				if (meta && meta.getAttribute) {
+					key = String(meta.getAttribute('content') || '') || null
+				}
+			}
+			if (!headerName || headerName === '') {
+				const metaHeader = document.querySelector('meta[name="app-api-key-header-name"]')
+				if (metaHeader && metaHeader.getAttribute) {
+					headerName = String(metaHeader.getAttribute('content') || '') || 'x-api-key'
+				}
+			}
+		} catch (e) {
+			// ignore
+		}
+		return { key, headerName }
+	}
+
+	// Fetch history from remote API (returns array of entries)
+	const fetchHistoryFromApi = async () => {
+		// allow an API key to be provided on the client via window or meta tags
+		const { key: apiKey, headerName: apiKeyHeaderName } = getClientApiKeyAndHeader()
+		const headers = { 'Content-Type': 'application/json' }
+		if (apiKey) headers[apiKeyHeaderName] = apiKey
+		try {
+			const response = await fetch(`${API_BASE}/history`, { headers })
+			if (!response.ok) {
+				throw new Error(`History fetch failed with status ${response.status}`)
+			}
+			const json = await response.json()
+			const raw = Array.isArray(json.history) ? json.history : (Array.isArray(json) ? json : [])
+			return raw
+				.filter((entry) => entry && typeof entry === 'object')
+				.map((entry) => ({
+					username: String(entry.name || entry.username || ''),
+					answer: String(entry.answer || ''),
+					createdAt: String(entry.time || entry.createdAt || new Date().toISOString()),
+					question: String(entry.question || entry.question_text || '')
+				}))
 		} catch (error) {
-			console.warn('Antworten konnten nicht gelesen werden.', error)
+			console.warn('Antwort-Historie konnte nicht geladen werden.', error)
 			return []
 		}
 	}
-
-	const writeStoredAnswers = (answers) => {
-		try {
-			window.localStorage.setItem(ANSWER_STORAGE_KEY, JSON.stringify(answers))
-		} catch (error) {
-			console.warn('Antworten konnten nicht gespeichert werden.', error)
-		}
-	}
-
+	
 	const createAnswerId = () => {
 		if (window.crypto && typeof window.crypto.randomUUID === 'function') {
 			return window.crypto.randomUUID()
@@ -366,7 +455,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `answer-${Date.now()}-${Math.random().toString(36).slice(2)}`
 	}
 
-	const createAnswerSubmission = (payload) => {
+	const sendAnswerToDatabase = async (payload) => {
+		const { key: apiKey, headerName: apiKeyHeaderName } = getClientApiKeyAndHeader()
+		const headers = { 'Content-Type': 'application/json' }
+		if (apiKey) headers[apiKeyHeaderName] = apiKey
+		const response = await fetch(`${API_BASE}${ANSWER_SUBMISSION_ENDPOINT}`, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify({
+				username: String(payload.username || '').trim(),
+				answer: String(payload.answer || '').trim(),
+				question: String(payload.question || '')
+			})
+		})
+		if (!response.ok) {
+			let detail = ''
+			try { detail = await response.text() } catch (e) { /* ignore */ }
+			throw new Error(`Answer submission failed with status ${response.status} ${detail}`)
+		}
+	}
+
+	const createAnswerSubmission = async (payload) => {
 		const answer = {
 			id: createAnswerId(),
 			cardId: String(payload.cardId || ''),
@@ -376,16 +485,34 @@ document.addEventListener('DOMContentLoaded', () => {
 			answer: String(payload.answer || '').trim(),
 			createdAt: new Date().toISOString()
 		}
-		const answers = readStoredAnswers()
-		answers.unshift(answer)
-		writeStoredAnswers(answers)
+		await sendAnswerToDatabase(answer)
+		// refresh remote history cache
+		try {
+			state.answerHistory = await fetchHistoryFromApi()
+		} catch (e) {
+			state.answerHistory = state.answerHistory || []
+		}
 		return answer
 	}
 
 	const getAnswersForCard = (cardId) => {
 		const normalizedCardId = String(cardId || '')
-		return readStoredAnswers()
-			.filter((answer) => answer.cardId === normalizedCardId)
+		const raw = Array.isArray(state.answerHistory) ? state.answerHistory : []
+		const questionText = (state.currentCard ? getCardQuestion(state.currentCard) : '')
+		return raw
+			.filter((entry) => {
+				if (!entry) return false
+				// if entry includes a question and we have a current card question, match by question
+				if (entry.question && questionText) {
+					return String(entry.question).trim() === String(questionText).trim()
+				}
+				// if entry includes a cardId, match by cardId
+				if (entry.cardId) {
+					return String(entry.cardId) === normalizedCardId
+				}
+				// if history entries have no question/cardId, treat them as global answers and include them
+				return !entry.question && !entry.cardId
+			})
 			.sort((left, right) => String(right.createdAt || '').localeCompare(String(left.createdAt || '')))
 	}
 
@@ -719,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!bgCurrentNode || !bgNextNode || !app) {
 			return
 		}
-		const theme = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.hypothetical
+		const theme = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.default
 		const palette = deriveBackgroundPalette(theme)
 		const immediate = !!options.immediate
 		const shouldSkip = !immediate && state.currentBackgroundCategoryKey === categoryKey
@@ -862,27 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return 'on'
 	}
 
-	const normalizeCategory = (value) => {
-		const normalized = String(value || '')
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z]/g, '')
-
-		if (normalized.includes('showstopper')) {
-			return 'showstopper'
-		}
-
-		if (normalized.includes('kombichaos')) {
-			return 'kombichaos'
-		}
-
-		if (normalized.includes('monkeyspaw') || normalized.includes('mokeyspaw') || normalized.includes('mokeystpaw')) {
-			return 'monkeyspaw'
-		}
-
-		return 'hypothetical'
-	}
+	
 
 	const shuffle = (items) => {
 		const next = items.slice()
@@ -927,73 +1034,56 @@ document.addEventListener('DOMContentLoaded', () => {
 				.filter((entry) => entry.length > 0)
 		}
 
-		return rawCards
+		const out = rawCards
 			.map((card, index) => {
-				const categoryKey = normalizeCategory(card?.category)
-				const questionDe = String(card?.question || '').trim()
-				const questionEn = String(card?.question_en || '').trim()
-				const variationsClean = sanitizeVariationList(card?.variations_de || card?.variations)
-				const variationsEnClean = sanitizeVariationList(card?.variations_en)
-
-				if (!questionDe && !questionEn) {
-					return null
-				}
-
+				const categoryRaw = String(card?.category || '').trim()
+				const categoryKey = normalizeCategory(categoryRaw)
+				const question = String(card?.question || '').trim()
+				const variationsClean = sanitizeVariationList(card?.variations)
+				const wordOne = String(card?.word1 || card?.wordOne || card?.Wort1 || card?.wort1 || '').trim()
+				const wordTwo = String(card?.word2 || card?.wordTwo || card?.Wort2 || card?.wort2 || '').trim()
+				if (!question) return null
 				return {
 					id: `${categoryKey}-${index}`,
 					categoryKey,
-					categoryLabel: CATEGORY_STYLES[categoryKey].label,
-					questionDe,
-					questionEn,
-					wordOneDe: String(card?.Wort1_de || card?.wort1_de || '').trim(),
-					wordTwoDe: String(card?.Wort2_de || card?.wort2_de || '').trim(),
-					wordOneEn: String(card?.Wort1_en || card?.wort1_en || '').trim(),
-					wordTwoEn: String(card?.Wort2_en || card?.wort2_en || '').trim(),
+					categoryLabel: categoryRaw || (CATEGORY_STYLES[categoryKey] && CATEGORY_STYLES[categoryKey].label) || CATEGORY_STYLES.default.label,
+					question,
+					wordOne,
+					wordTwo,
 					variationsClean,
-					variationsEnClean,
+					variationAmount: Number.isFinite(Number(card?.variation_amount)) ? Number(card.variation_amount) : (Array.isArray(card?.variations) ? card.variations.length : 0),
 					rawIndex: index
 				}
 			})
 			.filter(Boolean)
+		// Ensure any unknown categories get a default style entry in CATEGORY_STYLES
+		const unknownCategories = new Set()
+		out.forEach((c) => {
+			if (!CATEGORY_STYLES[c.categoryKey]) {
+				unknownCategories.add(c.categoryKey)
+			}
+		})
+		unknownCategories.forEach((key) => {
+			CATEGORY_STYLES[key] = Object.assign({}, CATEGORY_STYLES.default, { label: key.replace(/-/g, ' ') })
+		})
+		return out
 	}
 
 	const getCardQuestion = (card) => {
-		if (!card) {
-			return ''
-		}
-
-		if (state.language === 'en') {
-			return card.questionEn || card.questionDe || ''
-		}
-
-		return card.questionDe || card.questionEn || ''
+		if (!card) return ''
+		return String(card.question || '').trim()
 	}
 
 	const getCardVariations = (card) => {
-		if (!card) {
-			return []
-		}
-
-		if (state.language === 'en' && Array.isArray(card.variationsEnClean) && card.variationsEnClean.length > 0) {
-			return card.variationsEnClean
-		}
-
+		if (!card) return []
 		return Array.isArray(card.variationsClean) ? card.variationsClean : []
 	}
 
 	const getKombiWords = (card) => {
-		if (!card || card.categoryKey !== 'kombichaos') {
-			return { wordOne: '', wordTwo: '' }
-		}
-		if (state.language === 'en') {
-			return {
-				wordOne: card.wordOneEn || card.wordOneDe || '',
-				wordTwo: card.wordTwoEn || card.wordTwoDe || ''
-			}
-		}
+		if (!card || card.categoryKey !== 'kombichaos') return { wordOne: '', wordTwo: '' }
 		return {
-			wordOne: card.wordOneDe || card.wordOneEn || '',
-			wordTwo: card.wordTwoDe || card.wordTwoEn || ''
+			wordOne: String(card.wordOne || card.word1 || '').trim(),
+			wordTwo: String(card.wordTwo || card.word2 || '').trim()
 		}
 	}
 
@@ -1012,20 +1102,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const getData = async () => {
+		// Try loading from remote API first (supports language code)
 		try {
-			const response = await fetch('MalAngenommen_V2.json')
+			const code = state.language === 'en' ? 'en' : 'de'
+			const { key: apiKey, headerName: apiKeyHeaderName } = getClientApiKeyAndHeader()
+			const headers = { 'Content-Type': 'application/json' }
+			if (apiKey) headers[apiKeyHeaderName] = apiKey
+			const response = await fetch(`${API_BASE}/cards?code=${code}`, { headers })
 			if (response.ok) {
-				return response.json()
+				const json = await response.json()
+				// API may return an array or an object with `cards` field
+				if (Array.isArray(json)) return { cards: json }
+				if (json && Array.isArray(json.cards)) return json
 			}
 		} catch (error) {
-			console.warn('Kartendaten aus JSON konnten nicht geladen werden.', error)
+			console.warn('Kartendaten von API konnten nicht geladen werden.', error)
+			throw new Error('Konnte die Kartendaten nicht laden.')
 		}
-
-		if (window.MAL_ANGENOMMEN_DATA?.cards) {
-			return window.MAL_ANGENOMMEN_DATA
-		}
-
-		throw new Error('Konnte die Kartendaten nicht laden.')
 	}
 
 	const isReloadNavigation = () => {
@@ -1083,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const setTheme = (card) => {
-		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+		const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.default
 		const unifiedColor = theme.coreColor || theme.logoColor || theme.patternColorA || theme.accent
 
 		app.classList.remove(...Object.values(CATEGORY_STYLES).map((entry) => entry.className))
@@ -1211,6 +1304,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			updateRulesVisibility()
 		}
 		updateLeaderboardVisibility()
+		if (state.answerLeaderboardOpen) {
+			// load latest history from API and render
+			fetchHistoryFromApi().then((history) => {
+				state.answerHistory = history
+				renderLeaderboard(state.currentCard ? state.currentCard.id : '')
+			}).catch(() => {
+				renderLeaderboard(state.currentCard ? state.currentCard.id : '')
+			})
+		}
 	}
 
 	const updateAnswerSubmitState = () => {
@@ -2473,7 +2575,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		stackCards.forEach((stackCard, index) => {
 			const preview = previewCards[index]
-			const theme = preview ? CATEGORY_STYLES[preview.categoryKey] : CATEGORY_STYLES.hypothetical
+			const theme = preview ? (CATEGORY_STYLES[preview.categoryKey] || CATEGORY_STYLES.default) : CATEGORY_STYLES.default
 
 			stackCard.className = `stack-card stack-card--${index} ${preview ? 'is-visible' : ''}`
 			stackCard.style.setProperty('--card-top', theme.top)
@@ -2500,10 +2602,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			const preservedVariationIndex = Number.isInteger(state.activeVariationIndex) && state.activeVariationIndex >= 0
 				? state.activeVariationIndex
 				: 0
-			const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
+			const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.default
 			const unifiedColor = theme.coreColor || theme.logoColor || theme.patternColorA || theme.accent
-				categoryLabel.textContent = ''
-				categoryLabel.style.display = 'none'
+			if (categoryLabel) {
+				categoryLabel.textContent = card.categoryLabel || theme.label || ''
+				categoryLabel.style.display = card.categoryLabel ? '' : 'none'
+			}
 				if (frontQuestionNode) {
 					frontQuestionNode.textContent = getCardQuestion(card)
 					frontQuestionNode.style.color = theme.questionShellText || '#111111'
@@ -3043,7 +3147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerLeaderboardToggleNode?.addEventListener('click', () => {
 			setLeaderboardOpen(!state.answerLeaderboardOpen)
 		})
-		answerFormNode?.addEventListener('submit', (event) => {
+		answerFormNode?.addEventListener('submit', async (event) => {
 			event.preventDefault()
 			if (!state.currentCard || !answerUsernameNode || !answerTextNode) {
 				return
@@ -3054,28 +3158,44 @@ document.addEventListener('DOMContentLoaded', () => {
 				updateAnswerSubmitState()
 				return
 			}
-			createAnswerSubmission({
-				cardId: state.currentCard.id,
-				question: getCardQuestion(state.currentCard),
-				category: state.currentCard.categoryKey,
-				username,
-				answer
-			})
-			answerTextNode.value = ''
-			updateAnswerSubmitState()
-			renderLeaderboard(state.currentCard.id)
+			const copy = getAnswerCopy()
+			answerSubmitNode.disabled = true
+			answerSubmitNode.textContent = copy.submitting
 			if (answerStatusNode) {
-				answerStatusNode.textContent = getAnswerCopy().success
+				answerStatusNode.textContent = copy.submitting
 			}
-			if (state.answerSuccessTimer) {
-				clearTimeout(state.answerSuccessTimer)
-			}
-			state.answerSuccessTimer = window.setTimeout(() => {
+			try {
+				await createAnswerSubmission({
+					cardId: state.currentCard.id,
+					question: getCardQuestion(state.currentCard),
+					category: state.currentCard.categoryKey,
+					username,
+					answer
+				})
+				answerTextNode.value = ''
+				updateAnswerSubmitState()
+				renderLeaderboard(state.currentCard.id)
 				if (answerStatusNode) {
-					answerStatusNode.textContent = ''
+					answerStatusNode.textContent = copy.success
 				}
-				state.answerSuccessTimer = null
-			}, 1800)
+				if (state.answerSuccessTimer) {
+					clearTimeout(state.answerSuccessTimer)
+				}
+				state.answerSuccessTimer = window.setTimeout(() => {
+					if (answerStatusNode) {
+						answerStatusNode.textContent = ''
+					}
+					state.answerSuccessTimer = null
+				}, 1800)
+			} catch (error) {
+				console.error(error)
+				if (answerStatusNode) {
+					answerStatusNode.textContent = copy.error
+				}
+			} finally {
+				answerSubmitNode.textContent = getAnswerCopy().submit
+				updateAnswerSubmitState()
+			}
 		})
 	}
 
@@ -3176,16 +3296,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		filterToggle?.addEventListener('click', () => {
 			setFilterMenuOpen(!state.filterMenuOpen)
 		})
-		filterCategoryInputs.forEach((input) => {
-			input.addEventListener('change', () => {
-				const enabled = filterCategoryInputs
-					.filter((node) => node.checked)
-					.map((node) => String(node.dataset.filterCategory || ''))
-					.filter(Boolean)
+		// category inputs are created dynamically after cards load; attach delegated handler
+		if (filterMenu) {
+			filterMenu.addEventListener('change', (event) => {
+				const target = event.target
+				if (!(target instanceof HTMLInputElement) || !target.dataset.filterCategory) return
+				const inputs = Array.from(filterMenu.querySelectorAll('input[data-filter-category]'))
+				const enabled = inputs.filter((node) => node.checked).map((node) => String(node.dataset.filterCategory || '')).filter(Boolean)
 				state.enabledCategories = new Set(enabled)
 				applyFilters({ keepCurrent: true })
 			})
-		})
+		}
 		filterVariationsOnlyInput?.addEventListener('change', () => {
 			state.variationsOnly = !!filterVariationsOnlyInput.checked
 			applyFilters({ keepCurrent: true })
@@ -3215,11 +3336,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		try {
 			applyPageEntryTransition()
 			state.language = loadStoredLanguage()
-			const enabled = filterCategoryInputs
-				.filter((node) => node.checked)
-				.map((node) => String(node.dataset.filterCategory || ''))
-				.filter(Boolean)
-			state.enabledCategories = new Set(enabled)
+			// enabled categories will be populated after loading cards
+			state.enabledCategories = new Set()
 			state.variationsOnly = !!filterVariationsOnlyInput?.checked
 			setFilterMenuOpen(false)
 
@@ -3236,6 +3354,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const data = await getData()
 			state.cards = toCards(Array.isArray(data.cards) ? data.cards : [])
+			// build dynamic filter options from loaded card categories
+			try {
+				if (filterMenu) {
+					// remove existing category option nodes (keep title and divider)
+					const divider = filterMenu.querySelector('.filter-menu__divider')
+					Array.from(filterMenu.querySelectorAll('.filter-menu__option')).forEach((node) => node.remove())
+					// insert category options before divider
+					const insertBefore = divider || null
+					const categories = []
+					const seen = new Set()
+					state.cards.forEach((c) => {
+						if (!seen.has(c.categoryKey)) {
+							seen.add(c.categoryKey)
+							categories.push({ key: c.categoryKey, label: c.categoryLabel })
+						}
+					})
+					categories.forEach((cat) => {
+						const label = document.createElement('label')
+						label.className = 'filter-menu__option'
+						const input = document.createElement('input')
+						input.type = 'checkbox'
+						input.dataset.filterCategory = cat.key
+						input.checked = true
+						const span = document.createElement('span')
+						span.textContent = cat.label
+						label.appendChild(input)
+						label.appendChild(span)
+						filterMenu.insertBefore(label, insertBefore)
+					})
+					// initialize enabled categories
+					state.enabledCategories = new Set(categories.map((c) => c.key))
+				}
+			} catch (e) {
+				console.warn('Filter-Menü konnte nicht dynamisch aufgebaut werden.', e)
+			}
 
 			if (state.cards.length === 0) {
 				throw new Error('Keine Karten gefunden.')
