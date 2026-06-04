@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Hypothetical',
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
-			logoSrc: 'Media/Logos/Hypothetical_logo.GIF',
+			logoSrc: 'Media/Logos/hypothetical_logo.GIF',
 			coreColor: '#e0b326',
 			logoColor: '#e0b326',
 			patternSrc: "Media/Patterns/Hypothetical Muster8.svg",
