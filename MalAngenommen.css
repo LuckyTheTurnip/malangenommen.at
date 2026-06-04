@@ -979,18 +979,14 @@ body::before {
 }
 
 .card-back-logo {
-	width: 70%;
-	height: 70%;
-	background-color: var(--back-logo-tone);
-	-webkit-mask-image: var(--back-logo-src);
-	mask-image: var(--back-logo-src);
-	-webkit-mask-size: contain;
-	mask-size: contain;
-	-webkit-mask-position: center;
-	mask-position: center;
-	-webkit-mask-repeat: no-repeat;
-	mask-repeat: no-repeat;
-	filter: none;
+	width: var(--back-logo-size, 70%);
+	height: var(--back-logo-size, 70%);
+	background-image: var(--back-logo-src);
+	background-size: contain;
+	background-position: center;
+	background-repeat: no-repeat;
+	mix-blend-mode: multiply;
+	filter: brightness(1.08) contrast(1.28);
 }
 
 @keyframes orbit-spin {
@@ -1916,6 +1912,7 @@ body::before {
 	--accent-soft: rgba(255, 138, 91, 0.18);
 	--card-top: rgba(38, 23, 31, 0.96);
 	--card-bottom: rgba(14, 10, 18, 0.97);
+	--back-logo-size: 65%;
 }
 
 .theme-showstopper {
@@ -1923,6 +1920,7 @@ body::before {
 	--accent-soft: rgba(111, 196, 255, 0.16);
 	--card-top: rgba(17, 28, 44, 0.96);
 	--card-bottom: rgba(10, 14, 26, 0.98);
+	--back-logo-size: 58%;
 }
 
 .theme-kombichaos {
@@ -1930,6 +1928,7 @@ body::before {
 	--accent-soft: rgba(158, 255, 122, 0.16);
 	--card-top: rgba(20, 30, 18, 0.96);
 	--card-bottom: rgba(10, 16, 12, 0.98);
+	--back-logo-size: 56%;
 }
 
 .theme-monkeyspaw {
@@ -1937,6 +1936,7 @@ body::before {
 	--accent-soft: rgba(255, 196, 92, 0.16);
 	--card-top: rgba(35, 27, 17, 0.96);
 	--card-bottom: rgba(15, 11, 7, 0.98);
+	--back-logo-size: 65%;
 }
 
 @media (max-width: 520px) {

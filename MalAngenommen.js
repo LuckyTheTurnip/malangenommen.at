@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Hypothetical',
 			className: 'theme-hypothetical',
 			text: '#fff9f6',
-			logoSrc: 'Media/Hypothetical_Logo.svg',
+			logoSrc: 'Media/Logos/Hypothetical_logo.GIF',
 			coreColor: '#e0b326',
 			logoColor: '#e0b326',
-			patternSrc: "Media/Hypothetical Muster8.svg",
+			patternSrc: "Media/Patterns/Hypothetical Muster8.svg",
 			patternColorA: '#f7e971',
 			patternColorB: '#e0b326',
 			circleFillColor: '#f7e971',
@@ -79,10 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Showstopper',
 			className: 'theme-showstopper',
 			text: '#f4fbff',
-			logoSrc: 'Media/Showstopper Logo.svg',
+			logoSrc: 'Media/Logos/Showstopper_logo.GIF',
 			coreColor: '#90af31',
 			logoColor: '#90af31',
-			patternSrc: "Media/Showstopper Muster8.svg",
+			patternSrc: "Media/Patterns/Showstopper Muster8.svg",
 			patternColorA: '#90af31',
 			patternColorB: '#c6d977',
 			circleFillColor: '#c6d977',
@@ -98,10 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Kombichaos',
 			className: 'theme-kombichaos',
 			text: '#f7fff1',
-			logoSrc: 'Media/Kombichaos Logo.svg',
+			logoSrc: 'Media/Logos/kombichaos_logo.GIF',
 			coreColor: '#cd652e',
 			logoColor: '#cd652e',
-			patternSrc: "Media/Kombichaos Muster8.svg",
+			patternSrc: "Media/Patterns/Kombichaos Muster8.svg",
 			patternColorA: '#cd652e',
 			patternColorB: '#dda0c4',
 			circleFillColor: '#dda0c4',
@@ -117,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Monkey’s Paw',
 			className: 'theme-monkeyspaw',
 			text: '#fff7e9',
-			logoSrc: 'Media/Monkeys Paw Logo.svg',
+			logoSrc: 'Media/Logos/MonkeysPaw_logo.GIF',
 			coreColor: '#2f56a8',
 			logoColor: '#2f56a8',
-			patternSrc: "Media/Monkey's Paw Muster8.svg",
+			patternSrc: "Media/Patterns/Monkey's Paw Muster8.svg",
 			patternColorA: '#2f56a8',
 			patternColorB: '#9d87bf',
 			circleFillColor: '#9d87bf',
@@ -298,10 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const FACET_TEX_HEIGHT = 640
 	const FACET_POLYGON_COUNT = 10000
 	const VARIATION_VISUALS = [
-		{ patternSrc: 'Media/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
-		{ patternSrc: 'Media/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
-		{ patternSrc: 'Media/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
-		{ patternSrc: 'Media/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
+		{ patternSrc: 'Media/Patterns/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
+		{ patternSrc: 'Media/Patterns/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
+		{ patternSrc: 'Media/Patterns/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
+		{ patternSrc: 'Media/Patterns/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
 	]
 	const ANSWER_TEXT = {
 		de: {
