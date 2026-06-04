@@ -19,11 +19,33 @@ document.addEventListener('DOMContentLoaded', () => {
 	const variationScratchNode = document.querySelector('[data-variation-scratch]')
 	const questionNode = frontQuestionNode || backQuestionNode || document.querySelector('[data-question]')
 	const categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
+	const answerComposerNode = activeCard ? activeCard.querySelector('[data-answer-composer]') : null
+	const answerToggleNode = activeCard ? activeCard.querySelector('[data-answer-toggle]') : null
+	const answerFormNode = activeCard ? activeCard.querySelector('[data-answer-form]') : null
+	const answerUsernameNode = activeCard ? activeCard.querySelector('[data-answer-username]') : null
+	const answerTextNode = activeCard ? activeCard.querySelector('[data-answer-text]') : null
+	const answerSubmitNode = activeCard ? activeCard.querySelector('[data-answer-submit]') : null
+	const answerCancelNode = activeCard ? activeCard.querySelector('[data-answer-cancel]') : null
+	const answerStatusNode = activeCard ? activeCard.querySelector('[data-answer-status]') : null
+	const answerNameLabelNode = activeCard ? activeCard.querySelector('[data-answer-name-label]') : null
+	const answerTextLabelNode = activeCard ? activeCard.querySelector('[data-answer-text-label]') : null
+	const answerLeaderboardNode = document.querySelector('[data-answer-leaderboard]')
+	const answerLeaderboardTitleNode = document.querySelector('[data-answer-leaderboard-title]')
+	const answerLeaderboardCountNode = document.querySelector('[data-answer-leaderboard-count]')
+	const answerLeaderboardListNode = document.querySelector('[data-answer-leaderboard-list]')
+	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
+	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
 	
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
 	const filterToggle = document.querySelector('[data-filter-toggle]')
 	const filterMenu = document.querySelector('[data-filter-menu]')
+	const rulesToggle = document.querySelector('[data-rules-toggle]')
+	const rulesViewNode = document.querySelector('[data-rules-view]')
+	const rulesCloseNode = document.querySelector('[data-rules-close]')
+	const rulesTitleNode = document.querySelector('[data-rules-title]')
+	const rulesSectionsNode = document.querySelector('[data-rules-sections]')
+	const rulesStatusNode = document.querySelector('[data-rules-status]')
 	const filterCategoryInputs = Array.from(document.querySelectorAll('[data-filter-category]'))
 	const filterVariationsOnlyInput = document.querySelector('[data-filter-variations-only]')
 	const statusNode = document.querySelector('[data-status]')
@@ -182,6 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationTeaserPointerId: null,
 			variationTeaserSuppressClick: false,
 			variationTeaserSuppressClickTimer: null,
+			answerComposerOpen: false,
+			answerSuccessTimer: null,
+			answerLeaderboardOpen: false,
+			rulesOpen: false,
+			rulesContent: null,
+			rulesLoading: false,
 			enabledCategories: new Set(['hypothetical', 'showstopper', 'kombichaos', 'monkeyspaw']),
 			variationsOnly: false,
 			filterMenuOpen: false,
@@ -212,6 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SPAWN_MOTION_STORAGE_KEY = 'malangenommen.spawnMotionMode'
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
 	const GAME_SESSION_STORAGE_KEY = 'malangenommen.gameSession'
+	const ANSWER_STORAGE_KEY = 'malangenommen.answers'
+	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
+	const PAGE_TRANSITION_MS = 520
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 52
 	const MAX_TILT_Y = 52
@@ -245,6 +276,40 @@ document.addEventListener('DOMContentLoaded', () => {
 		{ patternSrc: 'Media/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
 		{ patternSrc: 'Media/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
 	]
+	const ANSWER_TEXT = {
+		de: {
+			toggle: 'Eigene Antwort',
+			name: 'Name',
+			answer: 'Antwort',
+			namePlaceholder: 'Gib deinen Namen ein',
+			answerPlaceholder: 'Schreib deine Antwort auf die Frage',
+			submit: 'Senden',
+			cancel: 'Schliessen',
+			leaderboard: 'Leaderboard',
+			showLeaderboard: 'Leaderboard',
+			hideLeaderboard: 'Zuruck',
+			empty: 'Noch keine Antworten.',
+			success: 'Antwort gespeichert.',
+			countSingular: '1 Antwort',
+			countPlural: (count) => `${count} Antworten`
+		},
+		en: {
+			toggle: 'Your answer',
+			name: 'Name',
+			answer: 'Answer',
+			namePlaceholder: 'Enter your name',
+			answerPlaceholder: 'Write your answer to the question',
+			submit: 'Send',
+			cancel: 'Close',
+			leaderboard: 'Leaderboard',
+			showLeaderboard: 'Leaderboard',
+			hideLeaderboard: 'Close',
+			empty: 'No answers yet.',
+			success: 'Answer saved.',
+			countSingular: '1 answer',
+			countPlural: (count) => `${count} answers`
+		}
+	}
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -268,6 +333,306 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (error) {
 			console.warn('Spracheinstellung konnte nicht gespeichert werden.', error)
 		}
+	}
+
+	const getAnswerCopy = () => ANSWER_TEXT[normalizeLanguage(state.language)] || ANSWER_TEXT.de
+
+	const readStoredAnswers = () => {
+		try {
+			const parsed = JSON.parse(window.localStorage.getItem(ANSWER_STORAGE_KEY) || '[]')
+			return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry === 'object') : []
+		} catch (error) {
+			console.warn('Antworten konnten nicht gelesen werden.', error)
+			return []
+		}
+	}
+
+	const writeStoredAnswers = (answers) => {
+		try {
+			window.localStorage.setItem(ANSWER_STORAGE_KEY, JSON.stringify(answers))
+		} catch (error) {
+			console.warn('Antworten konnten nicht gespeichert werden.', error)
+		}
+	}
+
+	const createAnswerId = () => {
+		if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+			return window.crypto.randomUUID()
+		}
+		return `answer-${Date.now()}-${Math.random().toString(36).slice(2)}`
+	}
+
+	const createAnswerSubmission = (payload) => {
+		const answer = {
+			id: createAnswerId(),
+			cardId: String(payload.cardId || ''),
+			question: String(payload.question || ''),
+			category: String(payload.category || ''),
+			username: String(payload.username || '').trim(),
+			answer: String(payload.answer || '').trim(),
+			createdAt: new Date().toISOString()
+		}
+		const answers = readStoredAnswers()
+		answers.unshift(answer)
+		writeStoredAnswers(answers)
+		return answer
+	}
+
+	const getAnswersForCard = (cardId) => {
+		const normalizedCardId = String(cardId || '')
+		return readStoredAnswers()
+			.filter((answer) => answer.cardId === normalizedCardId)
+			.sort((left, right) => String(right.createdAt || '').localeCompare(String(left.createdAt || '')))
+	}
+
+	const formatAnswerTime = (createdAt) => {
+		const date = new Date(createdAt)
+		if (Number.isNaN(date.getTime())) {
+			return ''
+		}
+		try {
+			return new Intl.DateTimeFormat(state.language === 'en' ? 'en' : 'de-AT', {
+				day: '2-digit',
+				month: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit'
+			}).format(date)
+		} catch (error) {
+			return date.toLocaleString()
+		}
+	}
+
+	const renderLeaderboard = (cardId) => {
+		if (!answerLeaderboardNode || !answerLeaderboardListNode) {
+			return
+		}
+		const copy = getAnswerCopy()
+		const answers = getAnswersForCard(cardId)
+		if (answerLeaderboardTitleNode) {
+			answerLeaderboardTitleNode.textContent = copy.leaderboard
+		}
+		if (answerLeaderboardCountNode) {
+			answerLeaderboardCountNode.textContent = answers.length === 1 ? copy.countSingular : copy.countPlural(answers.length)
+		}
+		if (answerLeaderboardEmptyNode) {
+			answerLeaderboardEmptyNode.textContent = copy.empty
+		}
+		answerLeaderboardListNode.innerHTML = ''
+		if (answers.length === 0) {
+			const emptyNode = document.createElement('p')
+			emptyNode.className = 'answer-leaderboard__empty'
+			emptyNode.textContent = copy.empty
+			answerLeaderboardListNode.appendChild(emptyNode)
+			return
+		}
+		answers.slice(0, 12).forEach((entry, index) => {
+			const item = document.createElement('article')
+			item.className = 'answer-leaderboard__item'
+
+			const rank = document.createElement('span')
+			rank.className = 'answer-leaderboard__rank'
+			rank.textContent = String(index + 1)
+
+			const body = document.createElement('div')
+			body.className = 'answer-leaderboard__body'
+
+			const meta = document.createElement('p')
+			meta.className = 'answer-leaderboard__meta'
+			const name = document.createElement('strong')
+			name.textContent = entry.username || copy.name
+			meta.appendChild(name)
+			const time = formatAnswerTime(entry.createdAt)
+			if (time) {
+				const timeNode = document.createElement('span')
+				timeNode.textContent = time
+				meta.appendChild(timeNode)
+			}
+
+			const text = document.createElement('p')
+			text.className = 'answer-leaderboard__answer'
+			text.textContent = entry.answer || ''
+
+			body.appendChild(meta)
+			body.appendChild(text)
+			item.appendChild(rank)
+			item.appendChild(body)
+			answerLeaderboardListNode.appendChild(item)
+		})
+	}
+
+	const translateRulesEntry = (entry) => {
+		if (!entry || typeof entry !== 'object') {
+			return ''
+		}
+		if (state.language === 'en') {
+			return String(entry.en || entry.de || '')
+		}
+		return String(entry.de || entry.en || '')
+	}
+
+	const clearRulesSections = () => {
+		if (rulesSectionsNode) {
+			rulesSectionsNode.innerHTML = ''
+		}
+	}
+
+	const renderRulesBlock = (block) => {
+		if (!block || typeof block !== 'object') {
+			return null
+		}
+		if (block.type === 'list' && block.items && typeof block.items === 'object') {
+			const items = state.language === 'en' ? block.items.en || block.items.de : block.items.de || block.items.en
+			if (!Array.isArray(items) || items.length === 0) {
+				return null
+			}
+			const list = document.createElement('ul')
+			list.className = 'rules-view__list'
+			items.forEach((item) => {
+				const li = document.createElement('li')
+				li.textContent = String(item || '')
+				list.appendChild(li)
+			})
+			return list
+		}
+		const paragraph = document.createElement('p')
+		paragraph.className = 'rules-view__paragraph'
+		paragraph.textContent = translateRulesEntry(block)
+		return paragraph
+	}
+
+	const renderRulesContent = () => {
+		if (!rulesTitleNode || !rulesSectionsNode || !rulesCloseNode) {
+			return
+		}
+		rulesCloseNode.textContent = state.language === 'en' ? 'Back' : 'Zurück'
+		if (rulesToggle) {
+			rulesToggle.textContent = state.language === 'en' ? 'Rules' : 'Regeln'
+		}
+		if (!state.rulesContent) {
+			return
+		}
+		rulesTitleNode.textContent = translateRulesEntry(state.rulesContent.pageTitle)
+		clearRulesSections()
+		const sections = Array.isArray(state.rulesContent.sections) ? state.rulesContent.sections : []
+		sections.forEach((section) => {
+			const article = document.createElement('article')
+			article.className = 'rules-view__section'
+			if (section.id) {
+				article.id = `rules-${section.id}`
+			}
+			const heading = document.createElement('h2')
+			heading.className = 'rules-view__heading'
+			heading.textContent = translateRulesEntry(section.title)
+			article.appendChild(heading)
+			const blocks = Array.isArray(section.blocks) ? section.blocks : []
+			blocks.forEach((block) => {
+				const node = renderRulesBlock(block)
+				if (node) {
+					article.appendChild(node)
+				}
+			})
+			rulesSectionsNode.appendChild(article)
+		})
+	}
+
+	const loadRulesContent = async () => {
+		if (state.rulesContent || state.rulesLoading) {
+			return
+		}
+		state.rulesLoading = true
+		try {
+			const response = await fetch('rules-content.json')
+			if (!response.ok) {
+				throw new Error('Rules content could not be loaded.')
+			}
+			state.rulesContent = await response.json()
+			if (rulesStatusNode) {
+				rulesStatusNode.hidden = true
+				rulesStatusNode.textContent = ''
+			}
+			renderRulesContent()
+		} catch (error) {
+			console.error(error)
+			clearRulesSections()
+			if (rulesTitleNode) {
+				rulesTitleNode.textContent = state.language === 'en' ? 'Rules unavailable' : 'Regeln nicht verfügbar'
+			}
+			if (rulesStatusNode) {
+				rulesStatusNode.hidden = false
+				rulesStatusNode.textContent = state.language === 'en'
+					? 'The rules content could not be loaded. Please try again later.'
+					: 'Die Regeln konnten nicht geladen werden. Bitte versuche es später erneut.'
+			}
+		} finally {
+			state.rulesLoading = false
+		}
+	}
+
+	const updateRulesVisibility = () => {
+		app.classList.toggle('is-rules-view', state.rulesOpen)
+		if (rulesViewNode) {
+			rulesViewNode.classList.toggle('is-open', state.rulesOpen)
+			rulesViewNode.setAttribute('aria-hidden', state.rulesOpen ? 'false' : 'true')
+		}
+		if (rulesToggle) {
+			rulesToggle.classList.toggle('is-active', state.rulesOpen)
+			rulesToggle.setAttribute('aria-expanded', state.rulesOpen ? 'true' : 'false')
+		}
+	}
+
+	const setRulesOpen = async (open) => {
+		state.rulesOpen = !!open
+		if (state.rulesOpen) {
+			setLeaderboardOpen(false)
+			updateRulesVisibility()
+			await loadRulesContent()
+			renderRulesContent()
+			return
+		}
+		updateRulesVisibility()
+	}
+
+	const prefersReducedMotion = () => {
+		return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	}
+
+	const applyPageEntryTransition = () => {
+		let transitionSource = ''
+		try {
+			transitionSource = window.sessionStorage.getItem(PAGE_TRANSITION_STORAGE_KEY) || ''
+			window.sessionStorage.removeItem(PAGE_TRANSITION_STORAGE_KEY)
+		} catch (error) {
+			transitionSource = ''
+		}
+		if (transitionSource !== 'from-rules' || prefersReducedMotion()) {
+			return
+		}
+		app.classList.add('is-page-entering-from-rules')
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
+				app.classList.remove('is-page-entering-from-rules')
+			})
+		})
+	}
+
+	const navigateWithPageTransition = (event, targetClass, storageValue) => {
+		const link = event.currentTarget
+		if (!(link instanceof HTMLAnchorElement)) {
+			return
+		}
+		if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target || prefersReducedMotion()) {
+			return
+		}
+		event.preventDefault()
+		try {
+			window.sessionStorage.setItem(PAGE_TRANSITION_STORAGE_KEY, storageValue)
+		} catch (error) {
+			// Navigation still works without the destination entry transition.
+		}
+		app.classList.add(targetClass)
+		window.setTimeout(() => {
+			window.location.href = link.href
+		}, PAGE_TRANSITION_MS)
 	}
 
 	const parseHexColor = (value) => {
@@ -563,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const categoryKey = normalizeCategory(card?.category)
 				const questionDe = String(card?.question || '').trim()
 				const questionEn = String(card?.question_en || '').trim()
-				const variationsClean = sanitizeVariationList(card?.variations)
+				const variationsClean = sanitizeVariationList(card?.variations_de || card?.variations)
 				const variationsEnClean = sanitizeVariationList(card?.variations_en)
 
 				if (!questionDe && !questionEn) {
@@ -643,16 +1008,30 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const getData = async () => {
+		try {
+			const response = await fetch('MalAngenommen_V2.json')
+			if (response.ok) {
+				return response.json()
+			}
+		} catch (error) {
+			console.warn('Kartendaten aus JSON konnten nicht geladen werden.', error)
+		}
+
 		if (window.MAL_ANGENOMMEN_DATA?.cards) {
 			return window.MAL_ANGENOMMEN_DATA
 		}
 
-		const response = await fetch('MalAngenommen_V2.json')
-		if (!response.ok) {
-			throw new Error('Konnte die Kartendaten nicht laden.')
-		}
+		throw new Error('Konnte die Kartendaten nicht laden.')
+	}
 
-		return response.json()
+	const isReloadNavigation = () => {
+		const perf = typeof performance !== 'undefined' ? performance : null
+		const navigationEntry = perf && typeof perf.getEntriesByType === 'function'
+			? perf.getEntriesByType('navigation')[0]
+			: null
+		return navigationEntry
+			? navigationEntry.type === 'reload'
+			: perf?.navigation?.type === 1
 	}
 
 	const saveGameSession = () => {
@@ -666,7 +1045,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			flipRotationDeg: state.flipRotationDeg
 		}
 		try {
-			window.localStorage.setItem(GAME_SESSION_STORAGE_KEY, JSON.stringify(payload))
+			window.sessionStorage.setItem(GAME_SESSION_STORAGE_KEY, JSON.stringify(payload))
+			window.localStorage.removeItem(GAME_SESSION_STORAGE_KEY)
 		} catch (error) {
 			console.warn('Spielstatus konnte nicht gespeichert werden.', error)
 		}
@@ -674,7 +1054,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const loadGameSession = () => {
 		try {
-			const raw = window.localStorage.getItem(GAME_SESSION_STORAGE_KEY)
+			window.localStorage.removeItem(GAME_SESSION_STORAGE_KEY)
+			if (isReloadNavigation()) {
+				window.sessionStorage.removeItem(GAME_SESSION_STORAGE_KEY)
+				return null
+			}
+			const raw = window.sessionStorage.getItem(GAME_SESSION_STORAGE_KEY)
 			if (!raw) {
 				return null
 			}
@@ -772,6 +1157,108 @@ document.addEventListener('DOMContentLoaded', () => {
 		languageToggle.textContent = isEnglish ? 'Deutsch' : 'English'
 		languageToggle.classList.toggle('is-active', isEnglish)
 		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
+	}
+
+	const updateAnswerLabels = () => {
+		const copy = getAnswerCopy()
+		if (answerToggleNode) {
+			answerToggleNode.textContent = copy.toggle
+		}
+		if (answerNameLabelNode) {
+			answerNameLabelNode.textContent = copy.name
+		}
+		if (answerTextLabelNode) {
+			answerTextLabelNode.textContent = copy.answer
+		}
+		if (answerUsernameNode) {
+			answerUsernameNode.placeholder = copy.namePlaceholder
+		}
+		if (answerTextNode) {
+			answerTextNode.placeholder = copy.answerPlaceholder
+		}
+		if (answerSubmitNode) {
+			answerSubmitNode.textContent = copy.submit
+		}
+		if (answerCancelNode) {
+			answerCancelNode.textContent = copy.cancel
+		}
+		updateLeaderboardVisibility()
+		renderLeaderboard(state.currentCard ? state.currentCard.id : '')
+	}
+
+	const updateLeaderboardVisibility = () => {
+		const copy = getAnswerCopy()
+		app.classList.toggle('is-leaderboard-view', state.answerLeaderboardOpen)
+		if (answerLeaderboardNode) {
+			answerLeaderboardNode.classList.toggle('is-open', state.answerLeaderboardOpen)
+			answerLeaderboardNode.setAttribute('aria-hidden', state.answerLeaderboardOpen ? 'false' : 'true')
+		}
+		if (answerLeaderboardToggleNode) {
+			answerLeaderboardToggleNode.textContent = state.answerLeaderboardOpen ? copy.hideLeaderboard : copy.showLeaderboard
+			answerLeaderboardToggleNode.classList.toggle('is-active', state.answerLeaderboardOpen)
+			answerLeaderboardToggleNode.setAttribute('aria-expanded', state.answerLeaderboardOpen ? 'true' : 'false')
+		}
+	}
+
+	const setLeaderboardOpen = (open) => {
+		state.answerLeaderboardOpen = !!open
+		if (state.answerLeaderboardOpen) {
+			state.rulesOpen = false
+			updateRulesVisibility()
+		}
+		updateLeaderboardVisibility()
+	}
+
+	const updateAnswerSubmitState = () => {
+		if (!answerSubmitNode || !answerUsernameNode || !answerTextNode) {
+			return
+		}
+		const hasUsername = answerUsernameNode.value.trim().length > 0
+		const hasAnswer = answerTextNode.value.trim().length > 0
+		answerSubmitNode.disabled = !(hasUsername && hasAnswer)
+	}
+
+	const setAnswerComposerOpen = (open, options = {}) => {
+		const { clearStatus = true } = options
+		state.answerComposerOpen = !!open
+		if (answerFormNode) {
+			answerFormNode.hidden = !state.answerComposerOpen
+		}
+		if (answerComposerNode) {
+			answerComposerNode.classList.toggle('is-open', state.answerComposerOpen)
+		}
+		if (answerToggleNode) {
+			answerToggleNode.setAttribute('aria-expanded', state.answerComposerOpen ? 'true' : 'false')
+		}
+		if (clearStatus && answerStatusNode) {
+			answerStatusNode.textContent = ''
+		}
+		if (state.answerComposerOpen && answerUsernameNode) {
+			window.setTimeout(() => answerUsernameNode.focus(), 40)
+		}
+		fitQuestionText()
+	}
+
+	const resetAnswerComposer = () => {
+		if (state.answerSuccessTimer) {
+			clearTimeout(state.answerSuccessTimer)
+			state.answerSuccessTimer = null
+		}
+		if (answerUsernameNode) {
+			answerUsernameNode.value = ''
+		}
+		if (answerTextNode) {
+			answerTextNode.value = ''
+		}
+		if (answerStatusNode) {
+			answerStatusNode.textContent = ''
+		}
+		updateAnswerSubmitState()
+		setAnswerComposerOpen(false)
+	}
+
+	const isAnswerInteractionTarget = (target) => {
+		return !!(answerComposerNode && target instanceof Node && answerComposerNode.contains(target))
 	}
 
 	const setFilterMenuOpen = (open) => {
@@ -1714,6 +2201,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		createVariationScratch()
 	}
 
+	const refreshOpenVariationCard = (selectedIndex = 0) => {
+		if (!variationCardNode || !variationTextNode || !state.hasVariations || state.variationChoices.length === 0) {
+			closeVariationCard()
+			return
+		}
+		const boundedIndex = Math.max(0, Math.min(selectedIndex, state.variationChoices.length - 1))
+		const choice = state.variationChoices[boundedIndex]
+		if (!choice?.text) {
+			closeVariationCard()
+			return
+		}
+		state.currentVariationText = choice.text
+		state.activeVariationIndex = choice.index
+		state.miniCardOpen = true
+		state.canDismissVariation = true
+		variationTextNode.textContent = choice.text
+		applyVariationVisualTheme(choice.visual)
+		variationCardNode.hidden = false
+		variationCardNode.setAttribute('aria-hidden', 'false')
+		variationCardNode.classList.remove('is-peek', 'is-flying-in', 'is-flying-out')
+		variationCardNode.classList.add('is-open-center')
+		renderVariationFan()
+	}
+
 	const setFlipRotation = (degrees) => {
 		state.flipRotationDeg = degrees
 		activeCard.style.setProperty('--flip-rot', `${degrees}deg`)
@@ -1980,7 +2491,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 		const renderCard = (card, options = {}) => {
-			const { resetFlip = true } = options
+			const { resetFlip = true, resetAnswerForm = true, preserveVariation = false } = options
+			const shouldPreserveOpenVariation = preserveVariation && state.miniCardOpen
+			const preservedVariationIndex = Number.isInteger(state.activeVariationIndex) && state.activeVariationIndex >= 0
+				? state.activeVariationIndex
+				: 0
 			const theme = CATEGORY_STYLES[card.categoryKey] || CATEGORY_STYLES.hypothetical
 			const unifiedColor = theme.coreColor || theme.logoColor || theme.patternColorA || theme.accent
 				categoryLabel.textContent = ''
@@ -2027,8 +2542,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			setTheme(card)
 			updateLanguageButton()
+			updateAnswerLabels()
 			updateDeckLabels()
 			setPreviewCards()
+			if (resetAnswerForm) {
+				resetAnswerComposer()
+			} else {
+				updateAnswerSubmitState()
+			}
+			renderLeaderboard(card.id)
 			fitQuestionText()
 			const cardVariations = getCardVariations(card)
 			buildVariationChoices(card)
@@ -2037,7 +2559,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				applyVariationVisualTheme(state.variationChoices[0].visual)
 			}
 			setVariationTabVisibility(hasVariations)
-			closeVariationCard()
+			if (shouldPreserveOpenVariation && hasVariations) {
+				refreshOpenVariationCard(preservedVariationIndex)
+			} else {
+				closeVariationCard()
+			}
 			if (resetFlip) {
 				applyMicrofacetTexture()
 				// New cards start on the logo side ("back side"), then flip to reveal the question side.
@@ -2052,9 +2578,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.language = state.language === 'en' ? 'de' : 'en'
 		persistLanguage()
 		updateLanguageButton()
+		updateAnswerLabels()
+		renderRulesContent()
 
 		if (state.currentCard) {
-			renderCard(state.currentCard, { resetFlip: false })
+			renderCard(state.currentCard, { resetFlip: false, resetAnswerForm: false, preserveVariation: true })
 		}
 	}
 
@@ -2065,6 +2593,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.drawPile = []
 			questionNode.textContent = 'Keine Karten mit den aktuellen Filtern.'
 			categoryLabel.textContent = 'Filter'
+			resetAnswerComposer()
+			renderLeaderboard('')
 			setVariationTabVisibility(false)
 			closeVariationCard()
 			updateDeckLabels()
@@ -2089,6 +2619,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.drawPile = []
 			questionNode.textContent = 'Keine Karten mit den aktuellen Filtern.'
 			categoryLabel.textContent = 'Filter'
+			resetAnswerComposer()
+			renderLeaderboard('')
 			setVariationTabVisibility(false)
 			closeVariationCard()
 			updateDeckLabels()
@@ -2251,6 +2783,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const onTouchStart = (event) => {
 		if (event.currentTarget !== activeCard || state.isAnimating || !event.touches || event.touches.length !== 1) {
+			return
+		}
+		if (isAnswerInteractionTarget(event.target)) {
 			return
 		}
 		if (state.miniCardOpen && variationCardNode && variationCardNode.contains(event.target)) {
@@ -2477,6 +3012,69 @@ document.addEventListener('DOMContentLoaded', () => {
 		// p5 touch callbacks rely on bubbling in Safari/Chrome mobile.
 	}
 
+	const bindAnswerInteractions = () => {
+		if (!answerComposerNode) {
+			return
+		}
+		const stopAnswerGesture = (event) => {
+			event.stopPropagation()
+		}
+		answerComposerNode.addEventListener('touchstart', stopAnswerGesture, { passive: true })
+		answerComposerNode.addEventListener('touchmove', stopAnswerGesture, { passive: false })
+		answerComposerNode.addEventListener('touchend', stopAnswerGesture)
+		answerComposerNode.addEventListener('pointerdown', stopAnswerGesture)
+		answerComposerNode.addEventListener('pointermove', stopAnswerGesture)
+		answerComposerNode.addEventListener('pointerup', stopAnswerGesture)
+		answerComposerNode.addEventListener('click', stopAnswerGesture)
+
+		answerToggleNode?.addEventListener('click', () => {
+			hideSwipeUpCue()
+			setAnswerComposerOpen(!state.answerComposerOpen)
+		})
+		answerCancelNode?.addEventListener('click', () => {
+			setAnswerComposerOpen(false)
+		})
+		answerUsernameNode?.addEventListener('input', updateAnswerSubmitState)
+		answerTextNode?.addEventListener('input', updateAnswerSubmitState)
+		answerLeaderboardToggleNode?.addEventListener('click', () => {
+			setLeaderboardOpen(!state.answerLeaderboardOpen)
+		})
+		answerFormNode?.addEventListener('submit', (event) => {
+			event.preventDefault()
+			if (!state.currentCard || !answerUsernameNode || !answerTextNode) {
+				return
+			}
+			const username = answerUsernameNode.value.trim()
+			const answer = answerTextNode.value.trim()
+			if (!username || !answer) {
+				updateAnswerSubmitState()
+				return
+			}
+			createAnswerSubmission({
+				cardId: state.currentCard.id,
+				question: getCardQuestion(state.currentCard),
+				category: state.currentCard.categoryKey,
+				username,
+				answer
+			})
+			answerTextNode.value = ''
+			updateAnswerSubmitState()
+			renderLeaderboard(state.currentCard.id)
+			if (answerStatusNode) {
+				answerStatusNode.textContent = getAnswerCopy().success
+			}
+			if (state.answerSuccessTimer) {
+				clearTimeout(state.answerSuccessTimer)
+			}
+			state.answerSuccessTimer = window.setTimeout(() => {
+				if (answerStatusNode) {
+					answerStatusNode.textContent = ''
+				}
+				state.answerSuccessTimer = null
+			}, 1800)
+		})
+	}
+
 	const onTouchEnd = (event) => {
 		if (!state.isDragging || state.isAnimating) {
 			return
@@ -2536,6 +3134,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const onKeyDown = (event) => {
+		const target = event.target
+		const isTypingTarget = target instanceof Element && (
+			target.matches('input, textarea, select, button') ||
+			target.closest('[data-answer-composer]')
+		)
+		if (isTypingTarget) {
+			return
+		}
+
 		if (event.key === 'ArrowUp' || event.key === 'PageUp' || event.key === ' ') {
 			event.preventDefault()
 			advanceCard()
@@ -2559,6 +3166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bindEvents = () => {
 		bindCardShell(activeCard)
 		bindVariationInteractions()
+		bindAnswerInteractions()
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
 		filterToggle?.addEventListener('click', () => {
@@ -2578,6 +3186,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			state.variationsOnly = !!filterVariationsOnlyInput.checked
 			applyFilters({ keepCurrent: true })
 		})
+		rulesToggle?.addEventListener('click', () => {
+			setRulesOpen(!state.rulesOpen)
+		})
+		rulesCloseNode?.addEventListener('click', () => {
+			setRulesOpen(false)
+		})
 		document.addEventListener('click', (event) => {
 			if (!state.filterMenuOpen || !filterMenu || !filterToggle) {
 				return
@@ -2595,6 +3209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const initialize = async () => {
 		try {
+			applyPageEntryTransition()
 			state.language = loadStoredLanguage()
 			const enabled = filterCategoryInputs
 				.filter((node) => node.checked)
@@ -2647,6 +3262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				updateMotionButton('3D Motion', '', false)
 				applyMotionVisualState()
 				updateLanguageButton()
+				renderRulesContent()
 				statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)

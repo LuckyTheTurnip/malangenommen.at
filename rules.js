@@ -10,12 +10,53 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
+	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
+	const PAGE_TRANSITION_MS = 520
 	const state = {
 		language: 'de',
 		content: null
 	}
 
 	const normalizeLanguage = (value) => (value === 'en' ? 'en' : 'de')
+
+	const prefersReducedMotion = () => {
+		return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	}
+
+	const applyPageEntryTransition = () => {
+		let transitionSource = ''
+		try {
+			transitionSource = window.sessionStorage.getItem(PAGE_TRANSITION_STORAGE_KEY) || ''
+			window.sessionStorage.removeItem(PAGE_TRANSITION_STORAGE_KEY)
+		} catch (error) {
+			transitionSource = ''
+		}
+		if (transitionSource !== 'from-game' || prefersReducedMotion()) {
+			return
+		}
+		app.classList.add('is-page-entering-from-game')
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
+				app.classList.remove('is-page-entering-from-game')
+			})
+		})
+	}
+
+	const navigateWithPageTransition = (event) => {
+		if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || backLink.target || prefersReducedMotion()) {
+			return
+		}
+		event.preventDefault()
+		try {
+			window.sessionStorage.setItem(PAGE_TRANSITION_STORAGE_KEY, 'from-rules')
+		} catch (error) {
+			// Navigation still works without the destination entry transition.
+		}
+		app.classList.add('is-page-exiting-to-game')
+		window.setTimeout(() => {
+			window.location.href = backLink.href
+		}, PAGE_TRANSITION_MS)
+	}
 
 	const loadStoredLanguage = () => {
 		try {
@@ -141,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const initialize = async () => {
+		applyPageEntryTransition()
 		state.language = loadStoredLanguage()
 		try {
 			state.content = await getContent()
@@ -154,5 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	languageToggle.addEventListener('click', toggleLanguage)
+	backLink.addEventListener('click', navigateWithPageTransition)
 	initialize()
 })

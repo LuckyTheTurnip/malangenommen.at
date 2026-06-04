@@ -25,7 +25,7 @@
                 <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu">Filter</button>
                 <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false">3D Motion</button>
                 <button class="game__language-toggle" type="button" data-language-toggle aria-pressed="false">English</button>
-                <a class="game__rules-link" href="rules.html">Regeln</a>
+                <button class="game__rules-link" type="button" data-rules-toggle aria-expanded="false" aria-controls="rules-view">Regeln</button>
             </div>
         </header>
 
@@ -81,6 +81,25 @@
                                     </div>
                                 </div>
 
+                                <div class="answer-composer" data-answer-composer>
+                                    <button class="answer-composer__toggle" type="button" data-answer-toggle aria-expanded="false" aria-controls="answer-form">Eigene Antwort</button>
+                                    <form class="answer-composer__form" id="answer-form" data-answer-form hidden>
+                                        <label class="answer-composer__field">
+                                            <span data-answer-name-label>Name</span>
+                                            <input class="answer-composer__input" type="text" name="username" data-answer-username autocomplete="name" maxlength="40" placeholder="Gib deinen Namen ein" required>
+                                        </label>
+                                        <label class="answer-composer__field">
+                                            <span data-answer-text-label>Antwort</span>
+                                            <textarea class="answer-composer__textarea" name="answer" data-answer-text rows="3" maxlength="360" placeholder="Schreib deine Antwort auf die Frage" required></textarea>
+                                        </label>
+                                        <div class="answer-composer__actions">
+                                            <button class="answer-composer__submit" type="submit" data-answer-submit disabled>Senden</button>
+                                            <button class="answer-composer__cancel" type="button" data-answer-cancel>Schliessen</button>
+                                        </div>
+                                        <p class="answer-composer__status" data-answer-status aria-live="polite"></p>
+                                    </form>
+                                </div>
+
                                 <div class="swipe-up-cue" data-swipe-up-cue hidden aria-hidden="true">
                                     <span class="swipe-up-cue__asset" aria-hidden="true">↑</span>
                                 </div>
@@ -134,6 +153,28 @@
             </section>
             <div class="variation-fan" data-variation-fan hidden aria-hidden="true"></div>
 
+        </section>
+
+        <button class="answer-leaderboard-toggle" type="button" data-answer-leaderboard-toggle aria-expanded="false" aria-controls="answer-leaderboard">Leaderboard</button>
+        <aside class="answer-leaderboard" id="answer-leaderboard" data-answer-leaderboard aria-live="polite" aria-hidden="true">
+            <div class="answer-leaderboard__header">
+                <p class="answer-leaderboard__title" data-answer-leaderboard-title>Leaderboard</p>
+                <p class="answer-leaderboard__count" data-answer-leaderboard-count>0 Antworten</p>
+            </div>
+            <div class="answer-leaderboard__list" data-answer-leaderboard-list>
+                <p class="answer-leaderboard__empty" data-answer-leaderboard-empty>Noch keine Antworten.</p>
+            </div>
+        </aside>
+
+        <section class="rules-view" id="rules-view" data-rules-view aria-hidden="true">
+            <div class="rules-view__inner">
+                <div class="rules-view__header">
+                    <button class="rules-view__back" type="button" data-rules-close>Zurück</button>
+                    <h1 class="rules-view__title" data-rules-title>Regeln &amp; Hintergrund</h1>
+                </div>
+                <div class="rules-view__content" data-rules-sections></div>
+                <p class="rules-view__status" data-rules-status hidden aria-live="polite"></p>
+            </div>
         </section>
 
         <p class="game__status" data-status aria-live="polite" hidden></p>
