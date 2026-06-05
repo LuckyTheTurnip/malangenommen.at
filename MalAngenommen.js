@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const bgCurrentNode = document.querySelector('[data-bg-current]')
 	const bgNextNode = document.querySelector('[data-bg-next]')
 	const loadingIndicatorNode = document.querySelector('[data-loading-indicator]')
+	const pageTransitionNode = document.querySelector('[data-page-transition]')
+	const pageTransitionAssetNode = document.querySelector('[data-page-transition-asset]')
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const frontQuestionShellNode = frontQuestionNode ? frontQuestionNode.closest('.card-question-shell') : null
 	const kombiWordsNode = activeCard ? activeCard.querySelector('[data-kombi-words]') : null
@@ -230,6 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			answerLeaderboardOpen: false,
 			answerHistory: [],
 			leaderboardParallaxFrame: 0,
+			pageTransitionActive: false,
+			pageTransitionTimer: null,
+			pageTransitionSwitchTimer: null,
 			rulesOpen: false,
 			rulesContent: null,
 			rulesLoading: false,
@@ -268,6 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const API_BASE = 'https://myfirstapi-slcb.onrender.com/api/v2/views'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
 	const PAGE_TRANSITION_MS = 520
+	const LEADERBOARD_PAGE_TRANSITION_MS = 920
+	const LEADERBOARD_PAGE_TRANSITION_SWITCH_MS = 460
+	const LEADERBOARD_PAGE_TRANSITION_SRC = 'Media/Icons/Page_Change.gif'
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 52
 	const MAX_TILT_Y = 52
@@ -1438,6 +1446,59 @@ document.addEventListener('DOMContentLoaded', () => {
 				renderLeaderboard(state.currentCard ? state.currentCard.id : '')
 			})
 		}
+	}
+
+	const clearLeaderboardPageTransitionTimers = () => {
+		if (state.pageTransitionSwitchTimer) {
+			clearTimeout(state.pageTransitionSwitchTimer)
+			state.pageTransitionSwitchTimer = null
+		}
+		if (state.pageTransitionTimer) {
+			clearTimeout(state.pageTransitionTimer)
+			state.pageTransitionTimer = null
+		}
+	}
+
+	const finishLeaderboardPageTransition = () => {
+		clearLeaderboardPageTransitionTimers()
+		state.pageTransitionActive = false
+		if (pageTransitionNode) {
+			pageTransitionNode.classList.remove('is-active')
+			pageTransitionNode.setAttribute('aria-hidden', 'true')
+		}
+	}
+
+	const replayPageTransitionGif = () => {
+		if (!pageTransitionAssetNode) {
+			return
+		}
+		pageTransitionAssetNode.src = ''
+		pageTransitionAssetNode.offsetHeight
+		pageTransitionAssetNode.src = `${LEADERBOARD_PAGE_TRANSITION_SRC}?t=${Date.now()}`
+	}
+
+	const transitionLeaderboardOpen = (open) => {
+		const nextOpen = !!open
+		if (nextOpen === state.answerLeaderboardOpen || state.pageTransitionActive) {
+			return
+		}
+		if (!pageTransitionNode || prefersReducedMotion()) {
+			setLeaderboardOpen(nextOpen)
+			return
+		}
+
+		clearLeaderboardPageTransitionTimers()
+		state.pageTransitionActive = true
+		replayPageTransitionGif()
+		pageTransitionNode.setAttribute('aria-hidden', 'false')
+		pageTransitionNode.classList.add('is-active')
+
+		state.pageTransitionSwitchTimer = window.setTimeout(() => {
+			state.pageTransitionSwitchTimer = null
+			setLeaderboardOpen(nextOpen)
+		}, LEADERBOARD_PAGE_TRANSITION_SWITCH_MS)
+
+		state.pageTransitionTimer = window.setTimeout(finishLeaderboardPageTransition, LEADERBOARD_PAGE_TRANSITION_MS)
 	}
 
 	const updateAnswerSubmitState = () => {
@@ -3377,7 +3438,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerUsernameNode?.addEventListener('input', updateAnswerSubmitState)
 		answerTextNode?.addEventListener('input', updateAnswerSubmitState)
 		answerLeaderboardToggleNode?.addEventListener('click', () => {
-			setLeaderboardOpen(!state.answerLeaderboardOpen)
+			transitionLeaderboardOpen(!state.answerLeaderboardOpen)
 		})
 		answerFormNode?.addEventListener('submit', async (event) => {
 			event.preventDefault()

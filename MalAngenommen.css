@@ -130,6 +130,34 @@ body::before {
 	overflow: hidden;
 }
 
+.page-transition {
+	position: fixed;
+	inset: 0;
+	z-index: 999;
+	width: 100vw;
+	height: 100dvh;
+	display: grid;
+	place-items: stretch;
+	background: transparent;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.page-transition.is-active {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+}
+
+.page-transition__asset {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: cover;
+	filter: url("#loading-alpha-filter");
+}
+
 .game.is-page-entering-from-rules {
 	opacity: 0;
 	filter: blur(1.2px);
@@ -1687,18 +1715,29 @@ body::before {
 	gap: clamp(14px, 2.4vw, 22px);
 	padding: max(72px, env(safe-area-inset-top)) clamp(18px, 6vw, 72px) max(86px, env(safe-area-inset-bottom));
 	border-radius: 0;
-	background:
-		radial-gradient(circle at 20% 20%, var(--accent-soft), transparent 34%),
-		linear-gradient(180deg, rgba(8, 12, 22, 0.94), rgba(4, 7, 13, 0.98));
+	background: transparent;
 	border: 0;
 	box-shadow: none;
-	backdrop-filter: blur(4px);
 	color: var(--text);
 	pointer-events: none;
 	opacity: 0;
 	transform: translate3d(72vw, 0, -120px) rotateY(22deg) scale(0.94);
 	transform-origin: 50% 50%;
 	transition: transform 560ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 300ms ease;
+	isolation: isolate;
+	overflow: visible;
+}
+
+.answer-leaderboard::before {
+	content: "";
+	position: absolute;
+	inset: -18vmax;
+	z-index: -1;
+	background:
+		radial-gradient(circle at 20% 20%, var(--accent-soft), transparent 34%),
+		linear-gradient(180deg, rgba(8, 12, 22, 0.96), rgba(4, 7, 13, 0.99));
+	backdrop-filter: blur(4px);
+	pointer-events: none;
 }
 
 .answer-leaderboard.is-open {
@@ -1749,7 +1788,7 @@ body::before {
 	gap: clamp(14px, 2.6vw, 24px);
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: clamp(20px, 4vw, 42px) clamp(6px, 1.4vw, 14px);
+	padding: clamp(20px, 4vw, 42px) clamp(34px, 5vw, 72px);
 	perspective: 900px;
 	transform-style: preserve-3d;
 	scrollbar-width: none;
@@ -1772,6 +1811,7 @@ body::before {
 	--message-opacity: 1;
 	--message-x: 0px;
 	--message-random-x: 0px;
+	--message-safe-random-x: var(--message-random-x);
 	--message-y: 0px;
 	--message-z: 1;
 	--message-float-distance: 8px;
@@ -1785,7 +1825,7 @@ body::before {
 	gap: clamp(10px, 2.2vw, 18px);
 	opacity: var(--message-opacity);
 	filter: blur(var(--message-blur));
-	transform: translate3d(calc(var(--message-x) + var(--message-random-x)), var(--message-y), calc((var(--message-scale) - 1) * 340px)) scale(var(--message-scale));
+	transform: translate3d(calc(var(--message-x) + var(--message-safe-random-x)), var(--message-y), calc((var(--message-scale) - 1) * 340px)) scale(var(--message-scale));
 	transform-origin: center center;
 	will-change: transform, opacity, filter;
 	transition: opacity 120ms ease, filter 120ms ease;
@@ -1793,11 +1833,13 @@ body::before {
 
 .answer-leaderboard__message--left {
 	align-self: flex-start;
+	margin-left: clamp(4px, 1vw, 12px);
 }
 
 .answer-leaderboard__message--right {
 	align-self: flex-end;
 	flex-direction: row-reverse;
+	margin-right: clamp(4px, 1vw, 12px);
 }
 
 .answer-leaderboard__avatar {
@@ -2137,6 +2179,15 @@ body::before {
 	.answer-leaderboard {
 		padding: max(72px, env(safe-area-inset-top)) 14px max(82px, env(safe-area-inset-bottom));
 		transform: translate3d(82vw, 0, -80px) rotateY(16deg) scale(0.96);
+	}
+
+	.answer-leaderboard__list {
+		padding-inline: max(42px, calc(env(safe-area-inset-left) + 28px)) max(42px, calc(env(safe-area-inset-right) + 28px));
+	}
+
+	.answer-leaderboard__message {
+		width: min(78%, 320px);
+		--message-safe-random-x: clamp(-8px, var(--message-random-x), 8px);
 	}
 
 	.answer-leaderboard.is-open {
