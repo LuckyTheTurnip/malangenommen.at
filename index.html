@@ -10,7 +10,12 @@
 <body>
     <svg class="svg-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
         <filter id="loading-alpha-filter" color-interpolation-filters="sRGB">
-            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0.333 0.333 0.333 0 0"></feColorMatrix>
+            <feColorMatrix in="SourceGraphic" result="alpha-mask" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.333 0.333 0.333 0 0"></feColorMatrix>
+            <feComponentTransfer in="alpha-mask" result="clean-alpha">
+                <feFuncA type="linear" slope="1.7" intercept="-0.18"></feFuncA>
+            </feComponentTransfer>
+            <feFlood flood-color="#ffffff" result="white-fill"></feFlood>
+            <feComposite in="white-fill" in2="clean-alpha" operator="in"></feComposite>
         </filter>
     </svg>
     <main class="game motion-visuals-off" data-app data-loading="true" aria-busy="true">
@@ -89,6 +94,10 @@
                                             <div class="kombi-words__field" data-kombi-word-2></div>
                                         </div>
                                     </div>
+
+                                    <div class="swipe-up-cue" data-swipe-up-cue hidden aria-hidden="true">
+                                        <img class="swipe-up-cue__asset cue-gif" src="Media/Icons/Swipe_up.gif" alt="">
+                                    </div>
                                 </div>
 
                                 <div class="answer-composer" data-answer-composer>
@@ -108,10 +117,6 @@
                                         </div>
                                         <p class="answer-composer__status" data-answer-status aria-live="polite"></p>
                                     </form>
-                                </div>
-
-                                <div class="swipe-up-cue" data-swipe-up-cue hidden aria-hidden="true">
-                                    <span class="swipe-up-cue__asset" aria-hidden="true">↑</span>
                                 </div>
                             </div>
                         </div>
@@ -141,7 +146,7 @@
                                     </div>
                                 </div>
                                 <div class="flip-cue" data-flip-cue hidden aria-hidden="true">
-                                    <span class="flip-cue__asset" aria-hidden="true">↔</span>
+                                    <img class="flip-cue__asset cue-gif" src="Media/Icons/Swipe_right.gif" alt="">
                                 </div>
                             </div>
                         </div>

@@ -63,7 +63,7 @@
 	--radius-sm: clamp(10px, 1.4vw, 14px);
 	--radius-md: clamp(14px, 1.9vw, 20px);
 	--radius-lg: clamp(18px, 2.8vw, 28px);
-	--hint-size: clamp(46px, 7.2vw, 54px);
+	--hint-size: clamp(82px, 17vw, 118px);
 	--browser-bottom-safe-space: max(18px, env(safe-area-inset-bottom));
 }
 
@@ -479,6 +479,7 @@ body::before {
 	width: clamp(200px, 60vw, 240px);
 	height: auto;
 	display: block;
+	opacity: 0.7;
 	filter: url("#loading-alpha-filter") drop-shadow(0 16px 34px rgba(0, 0, 0, 0.28));
 }
 
@@ -920,11 +921,6 @@ body::before {
 	height: var(--hint-size);
 	display: grid;
 	place-items: center;
-	border-radius: 999px;
-	background: rgba(10, 15, 26, 0.56);
-	border: 1px solid rgba(255, 255, 255, 0.16);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
-	backdrop-filter: blur(6px);
 	opacity: 0;
 	animation: flip-cue-pulse 1.6s ease-in-out infinite;
 	pointer-events: none;
@@ -935,32 +931,30 @@ body::before {
 	opacity: 1;
 }
 
+.flip-cue[hidden],
+.swipe-up-cue[hidden] {
+	display: none;
+}
+
 .flip-cue__asset {
-	font-size: 1.55rem;
-	line-height: 1;
-	font-weight: 800;
-	color: color-mix(in srgb, #ffffff 80%, var(--accent) 20%);
+	width: 100%;
+	height: 100%;
 }
 
 .swipe-up-cue {
 	position: absolute;
 	left: 50%;
-	bottom: clamp(16px, 3.6vw, 26px);
-	transform: translateX(-50%);
-	-webkit-transform: translateX(-50%);
-	width: var(--hint-size);
-	height: var(--hint-size);
+	bottom: 0;
+	transform: translate(-50%, 0);
+	-webkit-transform: translate(-50%, 0);
+	width: 15vw;
+	height: 15vh;
 	display: grid;
 	place-items: center;
-	border-radius: 999px;
-	background: rgba(10, 15, 26, 0.56);
-	border: 1px solid rgba(255, 255, 255, 0.16);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
-	backdrop-filter: blur(6px);
 	opacity: 0;
 	animation: swipe-up-cue-pulse 1.8s ease-in-out infinite;
 	pointer-events: none;
-	z-index: 7;
+	z-index: 19;
 }
 
 .swipe-up-cue.is-visible {
@@ -968,10 +962,16 @@ body::before {
 }
 
 .swipe-up-cue__asset {
-	font-size: 1.5rem;
-	line-height: 1;
-	font-weight: 800;
-	color: color-mix(in srgb, #ffffff 80%, var(--accent) 20%);
+	width: 100%;
+	height: 100%;
+}
+
+.cue-gif {
+	display: block;
+	object-fit: contain;
+	filter: url("#loading-alpha-filter");
+	transform: scale(1.18);
+	-webkit-transform: scale(1.18);
 }
 
 .card-back-design {
@@ -1066,12 +1066,12 @@ body::before {
 @keyframes swipe-up-cue-pulse {
 	0%,
 	100% {
-		transform: translateX(-50%) translateY(0);
-		-webkit-transform: translateX(-50%) translateY(0);
+		transform: translate(-50%, 0);
+		-webkit-transform: translate(-50%, 0);
 	}
 	50% {
-		transform: translateX(-50%) translateY(-4px);
-		-webkit-transform: translateX(-50%) translateY(-4px);
+		transform: translate(-50%, -5px);
+		-webkit-transform: translate(-50%, -5px);
 	}
 }
 
@@ -1085,6 +1085,7 @@ body::before {
 /* .card-index removed */
 
 .card-question-shell {
+	position: relative;
 	flex: 1;
 	display: flex;
 	align-items: center;
