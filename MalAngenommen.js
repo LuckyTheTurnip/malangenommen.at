@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const activeCard = document.querySelector('[data-active-card]')
 	const bgCurrentNode = document.querySelector('[data-bg-current]')
 	const bgNextNode = document.querySelector('[data-bg-next]')
+	const loadingIndicatorNode = document.querySelector('[data-loading-indicator]')
 	const frontQuestionNode = activeCard ? activeCard.querySelector('[data-front-question]') : null
 	const frontQuestionShellNode = frontQuestionNode ? frontQuestionNode.closest('.card-question-shell') : null
 	const kombiWordsNode = activeCard ? activeCard.querySelector('[data-kombi-words]') : null
@@ -1200,6 +1201,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--question-shell-bg', theme.questionShellBg || '#ffffff')
 		activeCard.style.setProperty('--question-shell-text', theme.questionShellText || '#111111')
 		applyCategoryBackground(card.categoryKey)
+	}
+
+	const setLoadingState = (isLoading) => {
+		app.dataset.loading = isLoading ? 'true' : 'false'
+		app.setAttribute('aria-busy', isLoading ? 'true' : 'false')
+		activeCard.setAttribute('aria-hidden', isLoading ? 'true' : 'false')
+		if (loadingIndicatorNode) {
+			loadingIndicatorNode.setAttribute('aria-hidden', isLoading ? 'false' : 'true')
+		}
 	}
 
 	const updateMotionButton = (label, className, pressed) => {
@@ -3444,6 +3454,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const initialize = async () => {
 		try {
+			setLoadingState(true)
 			applyPageEntryTransition()
 			state.language = loadStoredLanguage()
 			// enabled categories will be populated after loading cards
@@ -3525,6 +3536,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				} else {
 					startFromRandomCard()
 				}
+				setLoadingState(false)
 				bindEvents()
 				updateMotionButton('3D Motion', '', false)
 				applyMotionVisualState()
@@ -3533,6 +3545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				statusNode.textContent = 'Ziehe eine neue Karte.'
 		} catch (error) {
 			console.error(error)
+			setLoadingState(false)
 			statusNode.textContent = 'Die Karten konnten nicht geladen werden.'
 			questionNode.textContent = 'Die Karten konnten nicht geladen werden.'
 			categoryLabel.textContent = 'Fehler'

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="MalAngenommen.css">
 </head>
 <body>
-    <main class="game motion-visuals-off" data-app>
+    <main class="game motion-visuals-off" data-app data-loading="true" aria-busy="true">
         <div class="game__bg" aria-hidden="true">
             <div class="game__bg-plane game__bg-plane--current" data-bg-current></div>
             <div class="game__bg-plane game__bg-plane--next" data-bg-next></div>
@@ -55,6 +55,11 @@
         </aside>
 
         <section class="deck-stage" data-deck-stage>
+            <div class="loading-indicator" data-loading-indicator role="status" aria-live="polite">
+                <span class="loading-indicator__asset" aria-hidden="true"></span>
+                <span class="loading-indicator__text">Karten werden geladen</span>
+            </div>
+
             <div class="deck-stack" aria-hidden="true">
                 <article class="stack-card" data-stack-card="0"></article>
                 <article class="stack-card" data-stack-card="1"></article>
