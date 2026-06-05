@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			answerSuccessTimer: null,
 			answerLeaderboardOpen: false,
 			answerHistory: [],
+			leaderboardParallaxFrame: 0,
 			rulesOpen: false,
 			rulesContent: null,
 			rulesLoading: false,
@@ -304,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		{ patternSrc: 'Media/Patterns/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
 		{ patternSrc: 'Media/Patterns/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
 	]
+	const AVATAR_IMAGE_SOURCES = []
 	const ANSWER_TEXT = {
 		de: {
 			toggle: 'Eigene Antwort',
@@ -534,6 +536,113 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const hashString = (value) => {
+		const input = String(value || '')
+		let hash = 2166136261
+		for (let index = 0; index < input.length; index += 1) {
+			hash ^= input.charCodeAt(index)
+			hash = Math.imul(hash, 16777619)
+		}
+		return hash >>> 0
+	}
+
+	const getAnswerIdentity = (entry, index) => {
+		return [
+			entry?.id,
+			entry?.username,
+			entry?.answer,
+			entry?.createdAt,
+			index
+		].filter(Boolean).join('|')
+	}
+
+	const getAvatarInitials = (username) => {
+		const clean = String(username || '').trim()
+		if (!clean) return '?'
+		return clean
+			.split(/\s+/)
+			.slice(0, 2)
+			.map((part) => part.charAt(0).toUpperCase())
+			.join('')
+	}
+
+	const createAvatarNode = (entry, index, copy) => {
+		const identity = getAnswerIdentity(entry, index)
+		const hash = hashString(identity)
+		const avatar = document.createElement('div')
+		avatar.className = 'answer-leaderboard__avatar'
+		avatar.setAttribute('aria-hidden', 'true')
+
+		if (AVATAR_IMAGE_SOURCES.length > 0) {
+			const img = document.createElement('img')
+			img.src = AVATAR_IMAGE_SOURCES[hash % AVATAR_IMAGE_SOURCES.length]
+			img.alt = ''
+			avatar.appendChild(img)
+			return avatar
+		}
+
+		const hue = hash % 360
+		avatar.style.setProperty('--avatar-hue', String(hue))
+		avatar.textContent = getAvatarInitials(entry?.username || copy.name)
+		return avatar
+	}
+
+	const applyMessageVariation = (message, entry, index) => {
+		const hash = hashString(getAnswerIdentity(entry, index))
+		const randomUnit = (shift) => ((hash >>> shift) & 255) / 255
+		const side = message.classList.contains('answer-leaderboard__message--right') ? 1 : -1
+		const drift = (randomUnit(0) * 2 - 1) * 42
+		const floatDistance = 5 + randomUnit(8) * 8
+		const floatDuration = 4.8 + randomUnit(16) * 2.8
+		const floatDelay = -randomUnit(24) * floatDuration
+
+		message.style.setProperty('--message-random-x', `${(side * drift).toFixed(1)}px`)
+		message.style.setProperty('--message-float-distance', `${floatDistance.toFixed(1)}px`)
+		message.style.setProperty('--message-float-duration', `${floatDuration.toFixed(2)}s`)
+		message.style.setProperty('--message-float-delay', `${floatDelay.toFixed(2)}s`)
+	}
+
+	const updateLeaderboardParallax = () => {
+		state.leaderboardParallaxFrame = 0
+		if (!answerLeaderboardListNode || !state.answerLeaderboardOpen) {
+			return
+		}
+
+		const listRect = answerLeaderboardListNode.getBoundingClientRect()
+		const centerY = listRect.top + listRect.height / 2
+		const maxDistance = Math.max(listRect.height / 2, 1)
+		const messages = Array.from(answerLeaderboardListNode.querySelectorAll('.answer-leaderboard__message'))
+
+		messages.forEach((message, index) => {
+			const rect = message.getBoundingClientRect()
+			const messageCenter = rect.top + rect.height / 2
+			const distance = Math.min(Math.abs(messageCenter - centerY) / maxDistance, 1)
+			const edgeDistance = Math.max(0, (distance - 0.68) / 0.32)
+			const side = message.classList.contains('answer-leaderboard__message--right') ? 1 : -1
+			const depth = 1 - distance
+			const scale = 0.94 + depth * 0.06
+			const blur = edgeDistance * 1.85
+			const opacity = 0.78 + (1 - edgeDistance) * 0.22
+			const yOffset = (0.5 - depth) * 20
+			const xOffset = side * edgeDistance * 10
+			const zIndex = Math.round(depth * 100) + index
+
+			message.style.setProperty('--message-scale', scale.toFixed(3))
+			message.style.setProperty('--message-blur', `${blur.toFixed(2)}px`)
+			message.style.setProperty('--message-opacity', opacity.toFixed(3))
+			message.style.setProperty('--message-y', `${yOffset.toFixed(1)}px`)
+			message.style.setProperty('--message-x', `${xOffset.toFixed(1)}px`)
+			message.style.setProperty('--message-z', String(zIndex))
+		})
+	}
+
+	const scheduleLeaderboardParallax = () => {
+		if (state.leaderboardParallaxFrame || !answerLeaderboardListNode) {
+			return
+		}
+		state.leaderboardParallaxFrame = window.requestAnimationFrame(updateLeaderboardParallax)
+	}
+
 	const renderLeaderboard = (cardId) => {
 		if (!answerLeaderboardNode || !answerLeaderboardListNode) {
 			return
@@ -555,18 +664,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			emptyNode.className = 'answer-leaderboard__empty'
 			emptyNode.textContent = copy.empty
 			answerLeaderboardListNode.appendChild(emptyNode)
+			scheduleLeaderboardParallax()
 			return
 		}
-		answers.slice(0, 12).forEach((entry, index) => {
+		answers.forEach((entry, index) => {
 			const item = document.createElement('article')
-			item.className = 'answer-leaderboard__item'
+			item.className = `answer-leaderboard__message answer-leaderboard__message--${index % 2 === 0 ? 'left' : 'right'}`
+			applyMessageVariation(item, entry, index)
 
-			const rank = document.createElement('span')
-			rank.className = 'answer-leaderboard__rank'
-			rank.textContent = String(index + 1)
-
-			const body = document.createElement('div')
-			body.className = 'answer-leaderboard__body'
+			const avatar = createAvatarNode(entry, index, copy)
+			const bubble = document.createElement('div')
+			bubble.className = 'answer-leaderboard__bubble'
 
 			const meta = document.createElement('p')
 			meta.className = 'answer-leaderboard__meta'
@@ -584,12 +692,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			text.className = 'answer-leaderboard__answer'
 			text.textContent = entry.answer || ''
 
-			body.appendChild(meta)
-			body.appendChild(text)
-			item.appendChild(rank)
-			item.appendChild(body)
+			bubble.appendChild(meta)
+			bubble.appendChild(text)
+			item.appendChild(avatar)
+			item.appendChild(bubble)
 			answerLeaderboardListNode.appendChild(item)
 		})
+		scheduleLeaderboardParallax()
 	}
 
 	const translateRulesEntry = (entry) => {
@@ -1307,6 +1416,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			answerLeaderboardToggleNode.textContent = state.answerLeaderboardOpen ? copy.hideLeaderboard : copy.showLeaderboard
 			answerLeaderboardToggleNode.classList.toggle('is-active', state.answerLeaderboardOpen)
 			answerLeaderboardToggleNode.setAttribute('aria-expanded', state.answerLeaderboardOpen ? 'true' : 'false')
+		}
+		if (state.answerLeaderboardOpen) {
+			scheduleLeaderboardParallax()
 		}
 	}
 
@@ -3447,7 +3559,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			setFilterMenuOpen(false)
 		})
 		window.addEventListener('keydown', onKeyDown)
-		window.addEventListener('resize', fitQuestionText)
+		window.addEventListener('resize', () => {
+			fitQuestionText()
+			scheduleLeaderboardParallax()
+		})
+		answerLeaderboardListNode?.addEventListener('scroll', scheduleLeaderboardParallax, { passive: true })
 		window.addEventListener('deviceorientation', updateTiltFromOrientation)
 		window.addEventListener('pointermove', updateTiltFromPointer)
 	}
