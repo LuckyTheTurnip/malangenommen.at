@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="MalAngenommen.css">
 </head>
 <body>
+    <svg class="svg-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <filter id="loading-alpha-filter" color-interpolation-filters="sRGB">
+            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0.333 0.333 0.333 0 0"></feColorMatrix>
+        </filter>
+    </svg>
     <main class="game motion-visuals-off" data-app data-loading="true" aria-busy="true">
         <div class="game__bg" aria-hidden="true">
             <div class="game__bg-plane game__bg-plane--current" data-bg-current></div>
@@ -56,7 +61,7 @@
 
         <section class="deck-stage" data-deck-stage>
             <div class="loading-indicator" data-loading-indicator role="status" aria-live="polite">
-                <span class="loading-indicator__asset" aria-hidden="true"></span>
+                <img class="loading-indicator__asset" src="Media/Icons/loading.gif" alt="">
                 <span class="loading-indicator__text">Karten werden geladen</span>
             </div>
 

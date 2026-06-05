@@ -123,6 +123,13 @@ body::before {
 	pointer-events: none;
 }
 
+.svg-filter-defs {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}
+
 .game.is-page-entering-from-rules {
 	opacity: 0;
 	filter: blur(1.2px);
@@ -238,7 +245,7 @@ body::before {
 	width: 16px;
 	height: 16px;
 	border-radius: 999px;
-	background: hsl(245, 100%, 50%);
+	background: hsl(143, 100%, 50%);
 	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
 	pointer-events: none;
 	z-index: 6;
@@ -470,21 +477,9 @@ body::before {
 
 .loading-indicator__asset {
 	width: clamp(200px, 60vw, 240px);
-	aspect-ratio: 1 / 1;
+	height: auto;
 	display: block;
-	background: #ffffff;
-	-webkit-mask-image: url("Media/Icons/loading.gif");
-	mask-image: url("Media/Icons/loading.gif");
-	-webkit-mask-size: contain;
-	mask-size: contain;
-	-webkit-mask-position: center;
-	mask-position: center;
-	-webkit-mask-repeat: no-repeat;
-	mask-repeat: no-repeat;
-	-webkit-mask-mode: luminance;
-	mask-mode: luminance;
-	mask-type: luminance;
-	filter: drop-shadow(0 16px 34px rgba(0, 0, 0, 0.28));
+	filter: url("#loading-alpha-filter") drop-shadow(0 16px 34px rgba(0, 0, 0, 0.28));
 }
 
 .loading-indicator__text {
