@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const img = languageToggle.querySelector('img')
 		if (img) {
-			img.src = state.language === 'de' ? 'Media/Icons/German.gif' : 'Media/Icons/English.gif'
+			img.src = state.language === 'de' ? 'Media/Icons/German.webp' : 'Media/Icons/English.gif'
 			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
 		}
 

@@ -1347,7 +1347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (className && className.indexOf('is-active') !== -1) {
 				img.src = 'Media/Icons/3D_Active.gif'
 			} else {
-				img.src = 'Media/Icons/3D_Idle.gif'
+				img.src = 'Media/Icons/3D_Idle.webp'
 			}
 		}
 	}
@@ -1396,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const img = languageToggle.querySelector('img')
 		if (img) {
-			img.src = state.language === 'de' ? 'Media/Icons/German.gif' : 'Media/Icons/English.gif'
+			img.src = state.language === 'de' ? 'Media/Icons/German.webp' : 'Media/Icons/English.gif'
 			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
 		}
 	}
@@ -1582,7 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const img = filterToggle.querySelector('img')
 		if (img) {
-			img.src = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.gif'
+			img.src = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.webp'
 			img.alt = 'Filter'
 		}
 	}

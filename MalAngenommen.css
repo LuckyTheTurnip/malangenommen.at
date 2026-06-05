@@ -65,6 +65,15 @@
 	--radius-lg: clamp(18px, 2.8vw, 28px);
 	--hint-size: clamp(82px, 17vw, 118px);
 	--browser-bottom-safe-space: max(18px, env(safe-area-inset-bottom));
+
+	/* Header icon tweakable CSS variables (change these to preview color/size tweaks) */
+	--header-icon-width: 72px;
+	--header-icon-height: 72px;
+	--header-icon-hue: 0deg;
+	--header-icon-saturate: 1.05;
+	--header-icon-brightness: 1.02;
+	--header-icon-contrast: 1.05;
+	--header-icon-blend: lighten; /* try: lighten | screen | normal */
 }
 
 * {
@@ -310,6 +319,7 @@ body::before {
 	justify-content: center;
 	gap: 10px;
 	z-index: 60;
+	isolation: isolate;
 }
 
 .game__header-actions .game__filter-toggle,
@@ -333,13 +343,43 @@ body::before {
 }
 
 .header-icon {
-	width: 72px;
-	height: 72px;
+	width: var(--header-icon-width);
+	height: var(--header-icon-height);
 	display: block;
 	object-fit: contain;
-	mix-blend-mode: screen;
+	/* Force icons to appear white: make pixels black then invert to white. This preserves transparency. */
+	mix-blend-mode: normal;
+	filter: brightness(0) invert(1);
 	-webkit-mask-image: none;
 }
+
+/* Quick tweak examples — paste or edit below to preview changes fast:
+
+	 1) Global tint (hue rotate) + boost saturation:
+			:root {
+				--header-icon-hue: 20deg; /* rotate hue */
+				--header-icon-saturate: 1.25;
+				--header-icon-brightness: 1.05;
+				--header-icon-contrast: 1.03;
+			}
+
+	 2) Per-button color variations (override just that button):
+			.game__header-actions .game__motion-toggle .header-icon {
+				filter: hue-rotate(12deg) saturate(1.2) brightness(1.02) contrast(1.05);
+				mix-blend-mode: screen;
+			}
+			.game__header-actions .game__filter-toggle .header-icon {
+				filter: hue-rotate(-40deg) saturate(1.4) brightness(1.0) contrast(1.02);
+			}
+
+	 3) Strong tint baked visually (use with caution):
+			.game__header-actions .game__language-toggle .header-icon {
+				filter: grayscale(1) brightness(1.1) contrast(1.05) sepia(1) hue-rotate(200deg) saturate(1.6);
+				mix-blend-mode: screen;
+			}
+
+	 After changing values, hard-refresh the page to see the effect. If you want me to add controls or a small dev-only UI to tweak these at runtime, I can add that too.
+*/
 
 .game__eyebrow {
 	margin: 0 0 6px;
