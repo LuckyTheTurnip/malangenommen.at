@@ -1334,12 +1334,22 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
-		motionToggle.textContent = label
+		// Update classes and aria state
 		motionToggle.classList.remove('is-active', 'is-disabled')
 		if (className) {
 			motionToggle.classList.add(className)
 		}
 		motionToggle.setAttribute('aria-pressed', pressed ? 'true' : 'false')
+
+		// Swap icon based on state
+		const img = motionToggle.querySelector('img')
+		if (img) {
+			if (className && className.indexOf('is-active') !== -1) {
+				img.src = 'Media/Icons/3D_Active.gif'
+			} else {
+				img.src = 'Media/Icons/3D_Idle.gif'
+			}
+		}
 	}
 
 	const setMotionBaseline = (beta, gamma) => {
@@ -1381,9 +1391,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const isEnglish = state.language === 'en'
-		languageToggle.textContent = isEnglish ? 'Deutsch' : 'English'
 		languageToggle.classList.toggle('is-active', isEnglish)
 		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
+
+		const img = languageToggle.querySelector('img')
+		if (img) {
+			img.src = state.language === 'de' ? 'Media/Icons/German.gif' : 'Media/Icons/English.gif'
+			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
+		}
 	}
 
 	const updateAnswerLabels = () => {
@@ -1564,6 +1579,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		filterMenu.classList.toggle('is-open', state.filterMenuOpen)
 		filterToggle.classList.toggle('is-active', state.filterMenuOpen)
 		filterToggle.setAttribute('aria-expanded', state.filterMenuOpen ? 'true' : 'false')
+
+		const img = filterToggle.querySelector('img')
+		if (img) {
+			img.src = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.gif'
+			img.alt = 'Filter'
+		}
 	}
 
 	const applySpawnMotionMode = (mode, persist = true) => {

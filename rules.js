@@ -122,9 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		titleNode.textContent = t(state.content.pageTitle)
 		backLink.textContent = state.language === 'en' ? 'Back' : 'Zurück'
 		backLink.setAttribute('aria-label', state.language === 'en' ? 'Back to game' : 'Zurück zum Spiel')
-		languageToggle.textContent = state.language === 'en' ? 'Deutsch' : 'English'
 		languageToggle.setAttribute('aria-pressed', state.language === 'en' ? 'true' : 'false')
 		languageToggle.classList.toggle('is-active', state.language === 'en')
+
+		const img = languageToggle.querySelector('img')
+		if (img) {
+			img.src = state.language === 'de' ? 'Media/Icons/German.gif' : 'Media/Icons/English.gif'
+			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
+		}
 
 		clearSections()
 		const sections = Array.isArray(state.content.sections) ? state.content.sections : []

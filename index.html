@@ -35,12 +35,20 @@
 
         <header class="game__header">
             <div class="game__header-actions">
-                <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu">Filter</button>
-                <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false">3D Motion</button>
-                <button class="game__language-toggle" type="button" data-language-toggle aria-pressed="false">English</button>
-                <button class="game__rules-link" type="button" data-rules-toggle aria-expanded="false" aria-controls="rules-view">Regeln</button>
+                <button class="game__motion-toggle" type="button" data-motion-toggle aria-pressed="false" aria-label="3D Motion">
+                    <img class="header-icon" src="Media/Icons/3D_Idle.gif" alt="3D Motion">
+                </button>
+                <button class="game__filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-menu" aria-label="Filter">
+                    <img class="header-icon" src="Media/Icons/Filter_idle.gif" alt="Filter">
+                </button>
+                <button class="game__language-toggle" type="button" data-language-toggle aria-pressed="false" aria-label="Language">
+                    <img class="header-icon" src="Media/Icons/German.gif" alt="Deutsch">
+                </button>
             </div>
         </header>
+
+        <!-- Rules button moved out of the centered header-actions to fixed top-left -->
+        <button class="game__rules-link" type="button" data-rules-toggle aria-expanded="false" aria-controls="rules-view">Regeln</button>
 
         <aside class="filter-menu" id="filter-menu" data-filter-menu hidden aria-hidden="true">
             <p class="filter-menu__title">Kategorien</p>

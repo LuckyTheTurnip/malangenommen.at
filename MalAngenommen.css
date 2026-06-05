@@ -301,6 +301,46 @@ body::before {
 	flex-wrap: wrap;
 }
 
+/* Center header actions horizontally and place them above the card */
+.game__header-actions {
+	position: fixed;
+	left: 50%;
+	top: clamp(36px, 18vh, 120px);
+	transform: translateX(-50%);
+	justify-content: center;
+	gap: 10px;
+	z-index: 60;
+}
+
+.game__header-actions .game__filter-toggle,
+.game__header-actions .game__motion-toggle,
+.game__header-actions .game__language-toggle {
+	padding: 0;
+	width: 88px;
+	height: 88px;
+	min-width: 0;
+	border-radius: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+.game__header-actions .game__language-toggle {
+	min-width: 0;
+}
+
+.header-icon {
+	width: 72px;
+	height: 72px;
+	display: block;
+	object-fit: contain;
+	mix-blend-mode: screen;
+	-webkit-mask-image: none;
+}
+
 .game__eyebrow {
 	margin: 0 0 6px;
 	text-transform: uppercase;
@@ -347,8 +387,8 @@ body::before {
 .game__rules-link:hover,
 .game__rules-link:focus-visible {
 	transform: translateY(-1px);
-	background: rgba(255, 255, 255, 0.11);
-	border-color: rgba(255, 255, 255, 0.22);
+	background: transparent;
+	border-color: transparent;
 	outline: none;
 }
 
@@ -488,6 +528,9 @@ body::before {
 	min-height: 0;
 	perspective: 1200px;
 	-webkit-perspective: 1200px;
+
+	/* Keep a consistent gap between the fixed header action icons and the card area */
+	margin-top: calc(clamp(36px, 18vh, 120px) + 48px);
 }
 
 .loading-indicator {
@@ -1667,9 +1710,9 @@ body::before {
 
 .answer-leaderboard-toggle {
 	position: fixed;
-	left: 50%;
-	top: calc(max(16px, env(safe-area-inset-top)) + clamp(82px, 14vh, 132px));
-	z-index: 30;
+	right: clamp(8px, 2.2vw, 18px);
+	top: calc(max(12px, env(safe-area-inset-top)) + 8px);
+	z-index: 80;
 	margin: 0;
 	padding: 0.72rem 0.98rem;
 	border: 0;
@@ -1682,7 +1725,7 @@ body::before {
 	font-weight: 800;
 	line-height: 1;
 	cursor: pointer;
-	transform: translateX(-50%);
+	transform: none;
 	transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
 }
 
@@ -1699,7 +1742,15 @@ body::before {
 .game.is-rules-view .answer-leaderboard-toggle {
 	opacity: 0;
 	pointer-events: none;
-	transform: translateX(-50%) translateY(8px);
+	transform: translateY(8px);
+}
+
+/* Position rules button top-left corner */
+.game__rules-link {
+	position: fixed;
+	left: clamp(8px, 2.2vw, 18px);
+	top: calc(max(12px, env(safe-area-inset-top)) + 8px);
+	z-index: 80;
 }
 
 .answer-leaderboard {
@@ -2143,6 +2194,18 @@ body::before {
 	.game__header-actions {
 		width: 100%;
 		justify-content: space-between;
+	}
+
+	.game__header-actions .game__filter-toggle,
+	.game__header-actions .game__motion-toggle,
+	.game__header-actions .game__language-toggle {
+		width: 56px;
+		height: 56px;
+	}
+
+	.header-icon {
+		width: 48px;
+		height: 48px;
 	}
 
 	.game__title {
