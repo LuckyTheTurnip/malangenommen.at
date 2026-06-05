@@ -1076,6 +1076,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const getCardVariations = (card) => {
 		if (!card) return []
+		// Only return variations if the card explicitly has variationAmount > 0
+		const amount = Number.isFinite(Number(card.variationAmount)) ? Number(card.variationAmount) : 0
+		if (amount <= 0) return []
 		return Array.isArray(card.variationsClean) ? card.variationsClean : []
 	}
 
@@ -2682,15 +2685,122 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 	}
 
-	const toggleLanguage = () => {
-		state.language = state.language === 'en' ? 'de' : 'en'
+	const toggleLanguage = async () => {
+		const prevLanguage = state.language
+		const newLanguage = prevLanguage === 'en' ? 'de' : 'en'
+
+		// update UI language state first
+		state.language = newLanguage
 		persistLanguage()
 		updateLanguageButton()
 		updateAnswerLabels()
 		renderRulesContent()
 
-		if (state.currentCard) {
-			renderCard(state.currentCard, { resetFlip: false, resetAnswerForm: false, preserveVariation: true })
+		// If there's no current card, just update labels
+		if (!state.currentCard) {
+			return
+		}
+
+		// Attempt to translate the currently displayed card via API
+		try {
+			const payload = {
+				question: String(getCardQuestion(state.currentCard) || ''),
+				language: String(prevLanguage || 'de')
+			}
+			const { key: apiKey, headerName: apiKeyHeaderName } = getClientApiKeyAndHeader()
+			const headers = { 'Content-Type': 'application/json' }
+			if (apiKey) headers[apiKeyHeaderName] = apiKey
+
+			const resp = await fetch(`https://myfirstapi-slcb.onrender.com/api/v2/questions/translation/`, {
+				method: 'POST',
+				headers,
+				body: JSON.stringify(payload)
+			})
+			if (resp.ok) {
+				const json = await resp.json()
+				const q = json && (json.question || json.question_text || json) ? (json.question || json) : null
+				if (q && typeof q === 'object') {
+					// apply translated fields into the currently displayed card
+					const translated = {
+						question: String(q.question || ''),
+						wordOne: String(q.word1 || ''),
+						wordTwo: String(q.word2 || ''),
+						variationsClean: Array.isArray(q.variations) ? q.variations.map((v) => v) : [],
+						variationAmount: Number.isFinite(Number(q.variation_amount)) ? Number(q.variation_amount) : (Array.isArray(q.variations) ? q.variations.length : 0),
+						categoryLabel: String(q.category || state.currentCard.categoryLabel || ''),
+						categoryKey: normalizeCategory(q.category || state.currentCard.categoryLabel || '')
+					}
+					Object.assign(state.currentCard, translated)
+					// re-render the active card with preserved state
+					renderCard(state.currentCard, { resetFlip: false, resetAnswerForm: false, preserveVariation: true })
+				}
+			}
+		} catch (error) {
+			console.warn('Übersetzung fehlgeschlagen, nur UI-Sprache gewechselt.', error)
+		}
+
+		// Refresh the queued cards from /cards for the new language
+		try {
+			const prevCards = Array.isArray(state.cards) ? state.cards.slice() : []
+			const { key: apiKey2, headerName: apiKeyHeaderName2 } = getClientApiKeyAndHeader()
+			const headers2 = { 'Content-Type': 'application/json' }
+			if (apiKey2) headers2[apiKeyHeaderName2] = apiKey2
+			const codeParam = newLanguage === 'en' ? 'en' : 'de'
+			const cardsResp = await fetch(`${API_BASE}/cards?code=${encodeURIComponent(codeParam)}`, { headers: headers2 })
+			if (cardsResp.ok) {
+				const cardsJson = await cardsResp.json()
+				const rawCards = Array.isArray(cardsJson.cards) ? cardsJson.cards : (Array.isArray(cardsJson) ? cardsJson : [])
+				const newCards = toCards(rawCards)
+
+				// Preserve variation presence from previous queue for matching ids
+				newCards.forEach((nc) => {
+					const prev = prevCards.find((pc) => pc && pc.id === nc.id)
+					if (prev) {
+						// copy only the variation-related fields to keep presence identical
+						if (Array.isArray(prev.variationsClean)) {
+							nc.variationsClean = prev.variationsClean.slice()
+						}
+						if (Number.isFinite(Number(prev.variationAmount))) {
+							nc.variationAmount = Number(prev.variationAmount)
+						}
+					}
+				})
+
+				// try to preserve the current card position by matching id
+				const currentId = state.currentCard && state.currentCard.id ? state.currentCard.id : null
+				if (currentId) {
+					const idx = newCards.findIndex((c) => c.id === currentId)
+					if (idx >= 0) {
+						// merge translated fields into the refreshed card entry but keep variation flags from prev
+						const prev = prevCards.find((pc) => pc && pc.id === currentId)
+						const merged = Object.assign({}, newCards[idx], state.currentCard)
+						if (prev) {
+							if (Array.isArray(prev.variationsClean)) merged.variationsClean = prev.variationsClean.slice()
+							if (Number.isFinite(Number(prev.variationAmount))) merged.variationAmount = Number(prev.variationAmount)
+						}
+						newCards[idx] = merged
+						state.cards = newCards
+						state.currentCard = merged
+						buildDrawPile(state.currentCard.id)
+						setPreviewCards()
+						updateDeckLabels()
+						return
+					}
+				}
+
+				// if no matching id, replace the whole queue and keep currentCard as-is (but ensure it's present)
+				state.cards = newCards
+				const exists = newCards.some((c) => c.id === currentId)
+				if (!exists && state.currentCard) {
+					// insert current at front of queue to keep it visible
+					state.cards.unshift(state.currentCard)
+				}
+				buildDrawPile(state.currentCard.id)
+				setPreviewCards()
+				updateDeckLabels()
+			}
+		} catch (error) {
+			console.warn('Karten-Refresh nach Sprachwechsel fehlgeschlagen.', error)
 		}
 	}
 
