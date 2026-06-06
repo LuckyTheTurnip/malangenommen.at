@@ -27,7 +27,7 @@
             <div class="game__bg-plane game__bg-plane--next" data-bg-next></div>
         </div>
         <div class="game__brand" aria-label="Mal Angenommen">
-            <img class="game__brand-logo" src="Media/Logos/Mal-Angenommen_Logo.svg" alt="Mal Angenommen">
+            <div class="game__brand-logo" aria-hidden="true"></div>
         </div>
         <div class="corner-dot" aria-hidden="true"></div>
         <div class="game__glow game__glow--one" aria-hidden="true"></div>
@@ -50,7 +50,7 @@
         <!-- Rules button moved out of the centered header-actions to fixed top-left -->
         <button class="game__rules-link" type="button" data-rules-toggle aria-expanded="false" aria-controls="rules-view">Regeln</button>
 
-        <aside class="filter-menu" id="filter-menu" data-filter-menu hidden aria-hidden="true">
+        <aside class="filter-menu" id="filter-menu" data-filter-menu aria-hidden="true" inert>
             <p class="filter-menu__title">Kategorien</p>
             <label class="filter-menu__option">
                 <input type="checkbox" data-filter-category="hypothetical" checked>

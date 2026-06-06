@@ -209,15 +209,12 @@ body::before {
 
 .game__brand-logo {
 	width: clamp(180px, 34vw, 300px);
-	height: auto;
+	aspect-ratio: 175.85 / 36.27;
 	display: block;
-	mix-blend-mode: normal;
-	filter:
-		brightness(0)
-		saturate(100%)
-		invert(var(--brand-logo-invert, 1))
-		drop-shadow(0 4px 12px rgba(0, 0, 0, 0.22));
-	opacity: 0.98;
+	background: var(--accent);
+	filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.22));
+	mask: url("../Media/Logos/Mal-Angenommen_Logo.svg") center / contain no-repeat;
+	-webkit-mask: url("../Media/Logos/Mal-Angenommen_Logo.svg") center / contain no-repeat;
 }
 
 .game__bg {

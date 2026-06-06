@@ -1215,12 +1215,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// Swap icon based on state
 		const img = motionToggle.querySelector('img')
+		const iconSrc = className && className.indexOf('is-active') !== -1
+			? 'Media/Icons/3D_Active.gif'
+			: 'Media/Icons/3D_Idle.webp'
+		motionToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
 		if (img) {
-			if (className && className.indexOf('is-active') !== -1) {
-				img.src = 'Media/Icons/3D_Active.gif'
-			} else {
-				img.src = 'Media/Icons/3D_Idle.webp'
-			}
+			img.src = iconSrc
 		}
 	}
 
@@ -1267,8 +1267,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
 
 		const img = languageToggle.querySelector('img')
+		const iconSrc = state.language === 'de' ? 'Media/Icons/German.webp' : 'Media/Icons/English.gif'
+		languageToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
 		if (img) {
-			img.src = state.language === 'de' ? 'Media/Icons/German.webp' : 'Media/Icons/English.gif'
+			img.src = iconSrc
 			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
 		}
 	}
@@ -1446,15 +1448,18 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
-		filterMenu.hidden = !state.filterMenuOpen
 		filterMenu.setAttribute('aria-hidden', state.filterMenuOpen ? 'false' : 'true')
+		filterMenu.toggleAttribute('inert', !state.filterMenuOpen)
 		filterMenu.classList.toggle('is-open', state.filterMenuOpen)
+		app.classList.toggle('is-filter-menu-open', state.filterMenuOpen)
 		filterToggle.classList.toggle('is-active', state.filterMenuOpen)
 		filterToggle.setAttribute('aria-expanded', state.filterMenuOpen ? 'true' : 'false')
 
 		const img = filterToggle.querySelector('img')
+		const iconSrc = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.webp'
+		filterToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
 		if (img) {
-			img.src = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.webp'
+			img.src = iconSrc
 			img.alt = 'Filter'
 		}
 	}
