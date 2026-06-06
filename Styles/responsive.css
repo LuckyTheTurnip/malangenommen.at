@@ -67,12 +67,12 @@
 	}
 
 	.answer-leaderboard {
-		padding: max(72px, env(safe-area-inset-top)) 14px max(82px, env(safe-area-inset-bottom));
+		padding: max(58px, env(safe-area-inset-top)) 8px max(12px, calc(env(safe-area-inset-bottom) + 8px));
 		transform: translate3d(82vw, 0, -80px) rotateY(16deg) scale(0.96);
 	}
 
 	.answer-leaderboard__list {
-		padding-inline: max(26px, calc(env(safe-area-inset-left) + 18px)) max(26px, calc(env(safe-area-inset-right) + 18px));
+		padding: 8px max(18px, calc(env(safe-area-inset-left) + 12px)) max(8px, calc(env(safe-area-inset-bottom) + 6px)) max(18px, calc(env(safe-area-inset-right) + 12px));
 	}
 
 	.answer-leaderboard__message {

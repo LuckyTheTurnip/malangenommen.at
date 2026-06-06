@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			,currentBackgroundCategoryKey: null
 			,isBgTransitioning: false
 			,bgTransitionTimer: null
+			,loadingIndicatorTimer: null
 		}
 
 	const SWIPE_DISTANCE = 88
@@ -158,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_VELOCITY = 0.72
 	const FLIP_CUE_DELAY_MS = 5000
 	const SWIPE_UP_CUE_DELAY_MS = 15000
+	const LOADING_INDICATOR_DELAY_MS = 2000
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
 	const VARIATION_FLY_MS = 420
@@ -1198,11 +1200,29 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const setLoadingState = (isLoading) => {
+		if (state.loadingIndicatorTimer) {
+			clearTimeout(state.loadingIndicatorTimer)
+			state.loadingIndicatorTimer = null
+		}
+
 		app.dataset.loading = isLoading ? 'true' : 'false'
+		app.dataset.loadingIndicatorVisible = 'false'
 		app.setAttribute('aria-busy', isLoading ? 'true' : 'false')
 		activeCard.setAttribute('aria-hidden', isLoading ? 'true' : 'false')
 		if (loadingIndicatorNode) {
-			loadingIndicatorNode.setAttribute('aria-hidden', isLoading ? 'false' : 'true')
+			loadingIndicatorNode.setAttribute('aria-hidden', 'true')
+		}
+
+		if (isLoading) {
+			state.loadingIndicatorTimer = window.setTimeout(() => {
+				state.loadingIndicatorTimer = null
+				if (app.dataset.loading === 'true') {
+					app.dataset.loadingIndicatorVisible = 'true'
+					if (loadingIndicatorNode) {
+						loadingIndicatorNode.setAttribute('aria-hidden', 'false')
+					}
+				}
+			}, LOADING_INDICATOR_DELAY_MS)
 		}
 	}
 
@@ -1475,6 +1495,34 @@ document.addEventListener('DOMContentLoaded', () => {
 		return !!(answerComposerNode && target instanceof Node && answerComposerNode.contains(target))
 	}
 
+	const hasActiveFilter = () => {
+		if (state.variationsOnly) {
+			return true
+		}
+		const categoryInputs = filterMenu
+			? Array.from(filterMenu.querySelectorAll('input[data-filter-category]'))
+			: filterCategoryInputs
+		if (categoryInputs.length === 0) {
+			return false
+		}
+		return categoryInputs.some((node) => !node.checked)
+	}
+
+	const updateFilterToggleIcon = () => {
+		if (!filterToggle) {
+			return
+		}
+		const filterActive = hasActiveFilter()
+		const img = filterToggle.querySelector('img')
+		const iconSrc = filterActive ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.webp'
+		filterToggle.classList.toggle('has-active-filter', filterActive)
+		filterToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
+		if (img) {
+			img.src = iconSrc
+			img.alt = 'Filter'
+		}
+	}
+
 	const setFilterMenuOpen = (open) => {
 		state.filterMenuOpen = !!open
 		if (!filterMenu || !filterToggle) {
@@ -1487,14 +1535,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.classList.toggle('is-filter-menu-open', state.filterMenuOpen)
 		filterToggle.classList.toggle('is-active', state.filterMenuOpen)
 		filterToggle.setAttribute('aria-expanded', state.filterMenuOpen ? 'true' : 'false')
-
-		const img = filterToggle.querySelector('img')
-		const iconSrc = state.filterMenuOpen ? 'Media/Icons/filter_active.gif' : 'Media/Icons/Filter_idle.webp'
-		filterToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
-		if (img) {
-			img.src = iconSrc
-			img.alt = 'Filter'
-		}
+		updateFilterToggleIcon()
 	}
 
 	const applySpawnMotionMode = (mode, persist = true) => {
@@ -2647,32 +2688,45 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		state.fitFrame = requestAnimationFrame(() => {
-			const shell = questionNode.parentElement
-			if (!shell) {
+			const questionBox = questionNode.parentElement
+			if (!questionBox) {
 				return
 			}
 
-			const maxSize = 34
-			const minSize = 18
-			let bestSize = minSize
-			let low = minSize
-			let high = maxSize
-
-			questionNode.style.fontSize = `${maxSize}px`
-
-			while (low <= high) {
-				const mid = Math.floor((low + high) / 2)
-				questionNode.style.fontSize = `${mid}px`
-
-				if (questionNode.scrollHeight <= shell.clientHeight + 2) {
-					bestSize = mid
-					low = mid + 1
-				} else {
-					high = mid - 1
+			const fitTextNode = (node, box, minSize, maxSize, extraCheck) => {
+				if (!node || !box) {
+					return
 				}
+				let bestSize = minSize
+				let low = minSize
+				let high = maxSize
+
+				node.style.fontSize = `${maxSize}px`
+
+				while (low <= high) {
+					const mid = Math.floor((low + high) / 2)
+					node.style.fontSize = `${mid}px`
+
+					const nodeFits = node.scrollHeight <= box.clientHeight + 2 && node.scrollWidth <= box.clientWidth + 2
+					const layoutFits = typeof extraCheck === 'function' ? extraCheck() : true
+					if (nodeFits && layoutFits) {
+						bestSize = mid
+						low = mid + 1
+					} else {
+						high = mid - 1
+					}
+				}
+
+				node.style.fontSize = `${bestSize}px`
 			}
 
-			questionNode.style.fontSize = `${bestSize}px`
+			fitTextNode(questionNode, questionBox, 14, 34, () => {
+				return questionBox.scrollHeight <= questionBox.clientHeight + 2 && questionBox.scrollWidth <= questionBox.clientWidth + 2
+			})
+
+			if (categoryLabel && categoryLabel.style.display !== 'none') {
+				fitTextNode(categoryLabel, categoryLabel, 9, 14)
+			}
 		})
 	}
 
@@ -3529,11 +3583,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				const enabled = inputs.filter((node) => node.checked).map((node) => String(node.dataset.filterCategory || '')).filter(Boolean)
 				state.enabledCategories = new Set(enabled)
 				applyFilters({ keepCurrent: true })
+				updateFilterToggleIcon()
 			})
 		}
 		filterVariationsOnlyInput?.addEventListener('change', () => {
 			state.variationsOnly = !!filterVariationsOnlyInput.checked
 			applyFilters({ keepCurrent: true })
+			updateFilterToggleIcon()
 		})
 		rulesToggle?.addEventListener('click', () => {
 			transitionRulesOpen(!state.rulesOpen)
@@ -3614,6 +3670,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					})
 					// initialize enabled categories
 					state.enabledCategories = new Set(categories.map((c) => c.key))
+					updateFilterToggleIcon()
 				}
 			} catch (e) {
 				console.warn('Filter-Menü konnte nicht dynamisch aufgebaut werden.', e)

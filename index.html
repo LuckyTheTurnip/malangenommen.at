@@ -21,7 +21,7 @@
     <div class="page-transition" data-page-transition aria-hidden="true">
         <img class="page-transition__asset" data-page-transition-asset src="Media/Icons/Page_Change_right.gif" alt="">
     </div>
-    <main class="game motion-visuals-off" data-app data-loading="true" aria-busy="true">
+    <main class="game motion-visuals-off" data-app data-loading="true" data-loading-indicator-visible="false" aria-busy="true">
         <div class="game__bg" aria-hidden="true">
             <div class="game__bg-plane game__bg-plane--current" data-bg-current></div>
             <div class="game__bg-plane game__bg-plane--next" data-bg-next></div>
@@ -181,6 +181,7 @@
         <button class="answer-leaderboard-toggle" type="button" data-answer-leaderboard-toggle aria-expanded="false" aria-controls="answer-leaderboard">Leaderboard</button>
         <aside class="answer-leaderboard" id="answer-leaderboard" data-answer-leaderboard aria-live="polite" aria-hidden="true">
             <div class="answer-leaderboard__header">
+                <span class="answer-leaderboard__logo" aria-hidden="true"></span>
                 <p class="answer-leaderboard__title" data-answer-leaderboard-title>Leaderboard</p>
             </div>
             <div class="answer-leaderboard__list" data-answer-leaderboard-list>

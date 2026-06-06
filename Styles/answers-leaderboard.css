@@ -1,5 +1,7 @@
 .card-question {
 	width: 100%;
+	max-width: 100%;
+	min-width: 0;
 	margin: 0;
     font-family: 'Social Book', 'Fraunces', serif;
 	font-weight: 700;
@@ -13,6 +15,7 @@
 	max-height: 100%;
 	overflow: hidden;
 	text-align: center;
+	contain: layout paint;
 }
 
 .answer-composer {
@@ -157,36 +160,57 @@
 }
 
 .answer-leaderboard-toggle {
+	--page-button-icon: url("../Media/Icons/Leaderboard_idle.gif");
 	position: fixed;
 	right: clamp(8px, 2.2vw, 18px);
 	top: calc(max(12px, env(safe-area-inset-top)) + 8px);
 	z-index: 80;
 	margin: 0;
-	padding: 0.72rem 0.98rem;
+	padding: 0;
+	width: clamp(62px, 12vw, 88px);
+	height: clamp(62px, 12vw, 88px);
 	border: 0;
-	border-radius: 999px;
-	color: color-mix(in srgb, var(--card-bottom) 84%, black 16%);
-	background: color-mix(in srgb, var(--accent) 82%, white 18%);
-	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+	border-radius: 0;
+	color: transparent;
+	background: transparent;
+	box-shadow: none;
 	font: inherit;
-	font-size: clamp(0.78rem, 1.8vw, 0.9rem);
+	font-size: 0;
 	font-weight: 800;
-	line-height: 1;
+	line-height: 0;
 	cursor: pointer;
 	transform: none;
 	transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
 }
 
+.answer-leaderboard-toggle::before {
+	content: "";
+	width: 100%;
+	height: 100%;
+	display: block;
+	background: var(--accent);
+	mask-image: var(--page-button-icon);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	mask-mode: alpha;
+	-webkit-mask-image: var(--page-button-icon);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
 .answer-leaderboard-toggle:hover,
 .answer-leaderboard-toggle:focus-visible {
 	transform: translateY(-1px);
+	background: transparent;
 	outline: none;
 }
 
 .answer-leaderboard-toggle.is-active {
 	left: clamp(8px, 2.2vw, 18px);
 	right: auto;
-	background: rgba(255, 255, 255, 0.88);
+	background: transparent;
 }
 
 .game.is-rules-view .answer-leaderboard-toggle {
@@ -197,10 +221,47 @@
 
 /* Position rules button top-left corner */
 .game__rules-link {
+	--page-button-icon: url("../Media/Icons/Rules_idle.gif");
 	position: fixed;
 	left: clamp(8px, 2.2vw, 18px);
 	top: calc(max(12px, env(safe-area-inset-top)) + 8px);
 	z-index: 80;
+	width: clamp(74px, 14vw, 104px);
+	height: clamp(74px, 14vw, 104px);
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	color: transparent;
+	background: transparent;
+	box-shadow: none;
+	font-size: 0;
+	line-height: 0;
+}
+
+.game__rules-link::before {
+	content: "";
+	width: 100%;
+	height: 100%;
+	display: block;
+	background: var(--accent);
+	mask-image: var(--page-button-icon);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	mask-mode: alpha;
+	-webkit-mask-image: var(--page-button-icon);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+.game__rules-link:hover,
+.game__rules-link:focus-visible {
+	transform: translateY(-1px);
+	background: transparent;
+	border-color: transparent;
+	box-shadow: none;
+	outline: none;
 }
 
 .game.is-leaderboard-view .game__rules-link {
@@ -226,7 +287,7 @@
 	flex-direction: column;
 	justify-content: stretch;
 	gap: clamp(14px, 2.4vw, 22px);
-	padding: max(72px, env(safe-area-inset-top)) clamp(18px, 6vw, 72px) max(86px, env(safe-area-inset-bottom));
+	padding: max(58px, env(safe-area-inset-top)) clamp(12px, 4vw, 52px) max(20px, calc(env(safe-area-inset-bottom) + 12px));
 	border-radius: 0;
 	background: transparent;
 	border: 0;
@@ -263,9 +324,27 @@
 	width: min(100%, 920px);
 	margin: 0 auto;
 	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 12px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(4px, 0.8vw, 8px);
+	text-align: center;
+}
+
+.answer-leaderboard__logo {
+	width: clamp(74px, 16vw, 132px);
+	aspect-ratio: 1 / 1;
+	display: block;
+	background: var(--accent);
+	mask-image: url("../Media/Logos/Leaderboard_logo.gif");
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	mask-mode: alpha;
+	-webkit-mask-image: url("../Media/Logos/Leaderboard_logo.gif");
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
 }
 
 .answer-leaderboard__title,
@@ -276,7 +355,7 @@
 }
 
 .answer-leaderboard__title {
-	font-size: clamp(1.8rem, 5vw, 4rem);
+	font-size: clamp(1.35rem, 3.6vw, 2.8rem);
 	font-weight: 900;
 	letter-spacing: 0;
 	text-transform: uppercase;
@@ -284,7 +363,7 @@
 }
 
 .answer-leaderboard__list {
-	width: min(100%, 980px);
+	width: min(100%, 1120px);
 	flex: 1;
 	min-height: 0;
 	margin: 0 auto;
@@ -293,10 +372,12 @@
 	gap: clamp(14px, 2.6vw, 24px);
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: clamp(20px, 4vw, 42px) clamp(18px, 3vw, 42px);
+	padding: clamp(10px, 2.2vw, 22px) clamp(12px, 2.4vw, 30px) clamp(8px, 1.5vw, 16px);
 	perspective: 900px;
 	transform-style: preserve-3d;
 	scrollbar-width: none;
+	mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(42px, 8vh, 82px), #000 100%);
+	-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(42px, 8vh, 82px), #000 100%);
 }
 
 .answer-leaderboard__list::-webkit-scrollbar {
