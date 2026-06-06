@@ -140,8 +140,7 @@
 	color: white;
 }
 
-.stack-card__badge,
-.card-badge {
+.stack-card__badge {
 	width: fit-content;
 	padding: 0.42rem 0.72rem;
 	border-radius: 999px;
@@ -152,6 +151,21 @@
 	text-transform: uppercase;
 	border: 1px solid rgba(255, 255, 255, 0.16);
 	background: rgba(255, 255, 255, 0.08);
+}
+
+.card-badge {
+	width: 100%;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: var(--accent);
+	font-size: clamp(0.74rem, 1.8vw, 0.9rem);
+	line-height: 1.1;
+	font-weight: 900;
+	letter-spacing: 0.14em;
+	text-align: center;
+	text-transform: uppercase;
 }
 
 .stack-card__question {
@@ -691,7 +705,7 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: var(--space-3);
+	gap: clamp(10px, 2vw, 16px);
 }
 
 .kombi-words {
