@@ -5,15 +5,26 @@
 	width: 100%;
 	height: 100dvh;
 	padding: max(18px, env(safe-area-inset-top)) clamp(14px, 4vw, 42px) max(20px, env(safe-area-inset-bottom));
-	background:
-		radial-gradient(circle at 80% 12%, var(--accent-soft), transparent 34%),
-		linear-gradient(180deg, rgba(8, 12, 22, 0.95), rgba(4, 7, 13, 0.99));
+	background: transparent;
 	color: var(--text);
 	opacity: 0;
 	pointer-events: none;
 	transform: translate3d(-72vw, 0, -120px) rotateY(-22deg) scale(0.94);
 	transform-origin: 50% 50%;
 	transition: transform 560ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 300ms ease;
+	isolation: isolate;
+	overflow: visible;
+}
+
+.rules-view::before {
+	content: "";
+	position: absolute;
+	inset: -18vmax;
+	z-index: -1;
+	background:
+		radial-gradient(circle at 80% 12%, var(--accent-soft), transparent 34%),
+		linear-gradient(180deg, rgba(8, 12, 22, 0.95), rgba(4, 7, 13, 0.99));
+	pointer-events: none;
 }
 
 .rules-view.is-open {
@@ -183,4 +194,3 @@
 	--card-bottom: rgba(15, 11, 7, 0.98);
 	--back-logo-size: 65%;
 }
-

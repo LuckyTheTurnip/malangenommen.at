@@ -184,6 +184,8 @@
 }
 
 .answer-leaderboard-toggle.is-active {
+	left: clamp(8px, 2.2vw, 18px);
+	right: auto;
 	background: rgba(255, 255, 255, 0.88);
 }
 
@@ -202,6 +204,12 @@
 }
 
 .game.is-leaderboard-view .game__rules-link {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(-8px);
+}
+
+.game.is-rules-view .game__rules-link {
 	opacity: 0;
 	pointer-events: none;
 	transform: translateY(-8px);
@@ -261,7 +269,6 @@
 }
 
 .answer-leaderboard__title,
-.answer-leaderboard__count,
 .answer-leaderboard__empty,
 .answer-leaderboard__meta,
 .answer-leaderboard__answer {
@@ -276,13 +283,6 @@
 	color: color-mix(in srgb, var(--accent) 76%, white 24%);
 }
 
-.answer-leaderboard__count {
-	font-size: clamp(0.86rem, 1.8vw, 1.05rem);
-	font-weight: 800;
-	color: rgba(255, 255, 255, 0.62);
-	white-space: nowrap;
-}
-
 .answer-leaderboard__list {
 	width: min(100%, 980px);
 	flex: 1;
@@ -293,7 +293,7 @@
 	gap: clamp(14px, 2.6vw, 24px);
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: clamp(20px, 4vw, 42px) clamp(34px, 5vw, 72px);
+	padding: clamp(20px, 4vw, 42px) clamp(18px, 3vw, 42px);
 	perspective: 900px;
 	transform-style: preserve-3d;
 	scrollbar-width: none;
@@ -326,7 +326,7 @@
 	z-index: var(--message-z);
 	width: min(86%, 680px);
 	display: flex;
-	align-items: center;
+	align-items: flex-end;
 	gap: clamp(10px, 2.2vw, 18px);
 	opacity: var(--message-opacity);
 	filter: blur(var(--message-blur));
@@ -338,21 +338,30 @@
 
 .answer-leaderboard__message--left {
 	align-self: flex-start;
-	margin-left: clamp(4px, 1vw, 12px);
+	margin-left: clamp(0px, 0.5vw, 6px);
 }
 
 .answer-leaderboard__message--right {
 	align-self: flex-end;
 	flex-direction: row-reverse;
-	margin-right: clamp(4px, 1vw, 12px);
+	margin-right: clamp(0px, 0.5vw, 6px);
+}
+
+.answer-leaderboard__speaker {
+	flex: 0 0 auto;
+	align-self: flex-end;
+	width: clamp(58px, 11vw, 84px);
+	display: grid;
+	justify-items: center;
+	gap: clamp(5px, 1vw, 8px);
+	margin-bottom: clamp(-18px, -2.4vw, -10px);
+	animation: leaderboard-message-float var(--message-float-duration) ease-in-out infinite;
+	animation-delay: var(--message-float-delay);
 }
 
 .answer-leaderboard__avatar {
 	width: clamp(42px, 8vw, 66px);
 	height: clamp(42px, 8vw, 66px);
-	flex: 0 0 auto;
-	align-self: flex-end;
-	margin-bottom: clamp(-14px, -1.8vw, -8px);
 	display: grid;
 	place-items: center;
 	border-radius: 999px;
@@ -365,8 +374,6 @@
 		inset 0 0 0 2px rgba(255, 255, 255, 0.22);
 	font-size: clamp(0.84rem, 2vw, 1.08rem);
 	font-weight: 900;
-	animation: leaderboard-message-float var(--message-float-duration) ease-in-out infinite;
-	animation-delay: var(--message-float-delay);
 }
 
 .answer-leaderboard__avatar img {
@@ -378,46 +385,98 @@
 }
 
 .answer-leaderboard__bubble {
+	--bubble-radius-large: 22px;
+	--bubble-radius-small: 6px;
+	--bubble-frame-inset-x: clamp(7px, 1.4vw, 12px);
+	--bubble-frame-inset-y: clamp(9px, 1.8vw, 16px);
+	--bubble-outline-color: var(--accent);
+	--bubble-outline-mask: url("../Media/Icons/Speech_bubble_edge.gif");
+	position: relative;
 	min-width: 0;
 	display: grid;
 	gap: clamp(6px, 1.2vw, 10px);
-	padding: clamp(13px, 2.4vw, 20px) clamp(15px, 3vw, 24px);
-	border-radius: 22px 22px 22px 6px;
-	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(235, 241, 255, 0.9));
+	padding:
+		clamp(25px, 4.3vw, 38px)
+		clamp(33px, 6vw, 54px)
+		clamp(38px, 7vw, 66px)
+		clamp(31px, 5.4vw, 50px);
+	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small);
+	background: transparent;
 	color: #111827;
-	box-shadow:
-		0 18px 46px rgba(0, 0, 0, 0.28),
-		inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+	filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.22));
+	transform: translateY(clamp(-34px, -4.6vw, -20px));
 	animation: leaderboard-message-float var(--message-float-duration) ease-in-out infinite;
 	animation-delay: var(--message-float-delay);
 }
 
+.answer-leaderboard__bubble-edge {
+	position: absolute;
+	inset:
+		calc(var(--bubble-frame-inset-y) * -1)
+		calc(var(--bubble-frame-inset-x) * -1);
+	z-index: 0;
+	width: calc(100% + var(--bubble-frame-inset-x) * 2);
+	height: calc(100% + var(--bubble-frame-inset-y) * 2);
+	display: block;
+	background: var(--bubble-outline-color);
+	mask-image: var(--bubble-outline-mask);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: 100% 100%;
+	mask-mode: alpha;
+	-webkit-mask-image: var(--bubble-outline-mask);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: 100% 100%;
+	pointer-events: none;
+}
+
 .answer-leaderboard__message--right .answer-leaderboard__bubble {
-	border-radius: 22px 22px 6px 22px;
-	background:
-		linear-gradient(180deg, color-mix(in srgb, var(--accent) 28%, white 72%), color-mix(in srgb, var(--accent) 18%, white 82%));
+	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small) var(--bubble-radius-large);
+	padding:
+		clamp(25px, 4.3vw, 38px)
+		clamp(31px, 5.4vw, 50px)
+		clamp(38px, 7vw, 66px)
+		clamp(33px, 6vw, 54px);
+}
+
+.answer-leaderboard__message--left .answer-leaderboard__bubble-edge {
+	transform: scaleX(-1);
 }
 
 .answer-leaderboard__meta {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 8px;
-	color: rgba(17, 24, 39, 0.58);
-	font-size: 0.74rem;
-	line-height: 1.25;
+	position: relative;
+	z-index: 1;
+	width: min(100%, 9.5ch);
+	display: grid;
+	justify-items: center;
+	gap: 2px;
+	margin: 0;
+	color: color-mix(in srgb, var(--accent) 72%, white 28%);
+	font-size: clamp(0.62rem, 1.4vw, 0.72rem);
+	line-height: 1.12;
+	text-align: center;
 }
 
 .answer-leaderboard__meta strong {
 	min-width: 0;
-	color: rgba(17, 24, 39, 0.88);
+	max-width: 100%;
+	color: var(--accent);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.answer-leaderboard__meta span {
+	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .answer-leaderboard__answer {
+	position: relative;
+	z-index: 1;
 	color: rgba(17, 24, 39, 0.9);
 	font-size: clamp(0.95rem, 2vw, 1.12rem);
 	line-height: 1.32;

@@ -148,9 +148,26 @@ body::before {
 	display: grid;
 	place-items: stretch;
 	background: transparent;
+	--page-transition-mask: url("../Media/Icons/Page_Change_right.gif");
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
+}
+
+.page-transition::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--accent);
+	mask-image: var(--page-transition-mask);
+	mask-mode: luminance;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: cover;
+	-webkit-mask-image: var(--page-transition-mask);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: cover;
 }
 
 .page-transition.is-active {
@@ -164,7 +181,7 @@ body::before {
 	height: 100%;
 	display: block;
 	object-fit: cover;
-	filter: url("#loading-alpha-filter");
+	opacity: 0;
 }
 
 .game.is-page-entering-from-rules {
@@ -181,7 +198,6 @@ body::before {
 }
 
 .game.is-leaderboard-view .game__brand,
-.game.is-leaderboard-view .game__header,
 .game.is-leaderboard-view .deck-stage {
 	opacity: 0.18;
 	filter: blur(1.5px);
@@ -190,12 +206,35 @@ body::before {
 }
 
 .game.is-rules-view .game__brand,
-.game.is-rules-view .game__header,
 .game.is-rules-view .deck-stage {
 	opacity: 0.18;
 	filter: blur(1.5px);
 	transform: translate3d(42vw, 0, -160px) rotateY(18deg) scale(0.92);
 	pointer-events: none;
+}
+
+.game.is-leaderboard-view .game__header,
+.game.is-rules-view .game__header {
+	opacity: 1;
+	filter: none;
+	transform: none;
+	pointer-events: none;
+}
+
+.game.is-leaderboard-view .game__header-actions,
+.game.is-rules-view .game__header-actions {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateX(-50%);
+}
+
+.game.is-page-transitioning .game__header-actions,
+.game.is-page-transitioning .game__rules-link,
+.game.is-page-transitioning .answer-leaderboard-toggle,
+.game.is-page-transitioning .answer-leaderboard__message {
+	opacity: 0;
+	pointer-events: none;
+	transition: none;
 }
 
 .game__brand {

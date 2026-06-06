@@ -72,11 +72,11 @@
 	}
 
 	.answer-leaderboard__list {
-		padding-inline: max(42px, calc(env(safe-area-inset-left) + 28px)) max(42px, calc(env(safe-area-inset-right) + 28px));
+		padding-inline: max(26px, calc(env(safe-area-inset-left) + 18px)) max(26px, calc(env(safe-area-inset-right) + 18px));
 	}
 
 	.answer-leaderboard__message {
-		width: min(78%, 320px);
+		width: min(88%, 360px);
 		--message-safe-random-x: clamp(-8px, var(--message-random-x), 8px);
 	}
 
@@ -94,13 +94,11 @@
 	}
 
 	.game.is-leaderboard-view .game__brand,
-	.game.is-leaderboard-view .game__header,
 	.game.is-leaderboard-view .deck-stage {
 		transform: translate3d(-56vw, 0, -100px) rotateY(-14deg) scale(0.92);
 	}
 
 	.game.is-rules-view .game__brand,
-	.game.is-rules-view .game__header,
 	.game.is-rules-view .deck-stage {
 		transform: translate3d(56vw, 0, -100px) rotateY(14deg) scale(0.92);
 	}
@@ -205,7 +203,7 @@
 		transition: none !important;
 	}
 
-	.answer-leaderboard__avatar,
+	.answer-leaderboard__speaker,
 	.answer-leaderboard__bubble {
 		animation: none !important;
 	}

@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const answerTextLabelNode = activeCard ? activeCard.querySelector('[data-answer-text-label]') : null
 	const answerLeaderboardNode = document.querySelector('[data-answer-leaderboard]')
 	const answerLeaderboardTitleNode = document.querySelector('[data-answer-leaderboard-title]')
-	const answerLeaderboardCountNode = document.querySelector('[data-answer-leaderboard-count]')
 	const answerLeaderboardListNode = document.querySelector('[data-answer-leaderboard-list]')
 	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
 	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
@@ -178,7 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const PAGE_TRANSITION_MS = 520
 	const LEADERBOARD_PAGE_TRANSITION_MS = 920
 	const LEADERBOARD_PAGE_TRANSITION_SWITCH_MS = 460
-	const LEADERBOARD_PAGE_TRANSITION_SRC = 'Media/Icons/Page_Change.gif'
+	const LEADERBOARD_PAGE_TRANSITION_RIGHT_SRC = 'Media/Icons/Page_Change_right.gif'
+	const LEADERBOARD_PAGE_TRANSITION_LEFT_SRC = 'Media/Icons/Page_Change_left.gif'
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 52
 	const MAX_TILT_Y = 52
@@ -406,13 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		try {
 			return new Intl.DateTimeFormat(state.language === 'en' ? 'en' : 'de-AT', {
-				day: '2-digit',
-				month: '2-digit',
 				hour: '2-digit',
 				minute: '2-digit'
 			}).format(date)
 		} catch (error) {
-			return date.toLocaleString()
+			return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 		}
 	}
 
@@ -532,9 +530,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (answerLeaderboardTitleNode) {
 			answerLeaderboardTitleNode.textContent = copy.leaderboard
 		}
-		if (answerLeaderboardCountNode) {
-			answerLeaderboardCountNode.textContent = answers.length === 1 ? copy.countSingular : copy.countPlural(answers.length)
-		}
 		if (answerLeaderboardEmptyNode) {
 			answerLeaderboardEmptyNode.textContent = copy.empty
 		}
@@ -553,8 +548,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			applyMessageVariation(item, entry, index)
 
 			const avatar = createAvatarNode(entry, index, copy)
+			const speaker = document.createElement('div')
+			speaker.className = 'answer-leaderboard__speaker'
+			speaker.appendChild(avatar)
 			const bubble = document.createElement('div')
 			bubble.className = 'answer-leaderboard__bubble'
+			const bubbleEdge = document.createElement('span')
+			bubbleEdge.className = 'answer-leaderboard__bubble-edge'
+			bubbleEdge.setAttribute('aria-hidden', 'true')
 
 			const meta = document.createElement('p')
 			meta.className = 'answer-leaderboard__meta'
@@ -572,9 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			text.className = 'answer-leaderboard__answer'
 			text.textContent = entry.answer || ''
 
-			bubble.appendChild(meta)
+			speaker.appendChild(meta)
+			bubble.appendChild(bubbleEdge)
 			bubble.appendChild(text)
-			item.appendChild(avatar)
+			item.appendChild(speaker)
 			item.appendChild(bubble)
 			answerLeaderboardListNode.appendChild(item)
 		})
@@ -1178,6 +1180,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.style.setProperty('--accent-soft', theme.accentSoft)
 		app.style.setProperty('--card-top', theme.top)
 		app.style.setProperty('--card-bottom', theme.bottom)
+		if (pageTransitionNode) {
+			pageTransitionNode.style.setProperty('--accent', theme.accent)
+		}
 
 		activeCard.style.setProperty('--card-text', theme.text)
 		activeCard.style.setProperty('--card-pattern-url', toStyleAssetUrl(theme.patternSrc))
@@ -1351,19 +1356,49 @@ document.addEventListener('DOMContentLoaded', () => {
 	const finishLeaderboardPageTransition = () => {
 		clearLeaderboardPageTransitionTimers()
 		state.pageTransitionActive = false
+		app.classList.remove('is-page-transitioning')
 		if (pageTransitionNode) {
 			pageTransitionNode.classList.remove('is-active')
 			pageTransitionNode.setAttribute('aria-hidden', 'true')
 		}
 	}
 
-	const replayPageTransitionGif = () => {
+	const replayPageTransitionGif = (src) => {
 		if (!pageTransitionAssetNode) {
 			return
 		}
+		const nextSrc = src || LEADERBOARD_PAGE_TRANSITION_RIGHT_SRC
+		const replaySrc = `${nextSrc}?t=${Date.now()}`
 		pageTransitionAssetNode.src = ''
+		if (pageTransitionNode) {
+			pageTransitionNode.style.setProperty('--page-transition-mask', toStyleAssetUrl(replaySrc))
+		}
 		pageTransitionAssetNode.offsetHeight
-		pageTransitionAssetNode.src = `${LEADERBOARD_PAGE_TRANSITION_SRC}?t=${Date.now()}`
+		pageTransitionAssetNode.src = replaySrc
+	}
+
+	const runPageGifTransition = (src, switchAction) => {
+		if (state.pageTransitionActive) {
+			return
+		}
+		if (!pageTransitionNode || prefersReducedMotion()) {
+			switchAction()
+			return
+		}
+
+		clearLeaderboardPageTransitionTimers()
+		state.pageTransitionActive = true
+		app.classList.add('is-page-transitioning')
+		replayPageTransitionGif(src)
+		pageTransitionNode.setAttribute('aria-hidden', 'false')
+		pageTransitionNode.classList.add('is-active')
+
+		state.pageTransitionSwitchTimer = window.setTimeout(() => {
+			state.pageTransitionSwitchTimer = null
+			switchAction()
+		}, LEADERBOARD_PAGE_TRANSITION_SWITCH_MS)
+
+		state.pageTransitionTimer = window.setTimeout(finishLeaderboardPageTransition, LEADERBOARD_PAGE_TRANSITION_MS)
 	}
 
 	const transitionLeaderboardOpen = (open) => {
@@ -1371,23 +1406,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (nextOpen === state.answerLeaderboardOpen || state.pageTransitionActive) {
 			return
 		}
-		if (!pageTransitionNode || prefersReducedMotion()) {
+		const transitionSrc = nextOpen ? LEADERBOARD_PAGE_TRANSITION_RIGHT_SRC : LEADERBOARD_PAGE_TRANSITION_LEFT_SRC
+		runPageGifTransition(transitionSrc, () => {
 			setLeaderboardOpen(nextOpen)
+		})
+	}
+
+	const transitionRulesOpen = (open) => {
+		const nextOpen = !!open
+		if (nextOpen === state.rulesOpen || state.pageTransitionActive) {
 			return
 		}
-
-		clearLeaderboardPageTransitionTimers()
-		state.pageTransitionActive = true
-		replayPageTransitionGif()
-		pageTransitionNode.setAttribute('aria-hidden', 'false')
-		pageTransitionNode.classList.add('is-active')
-
-		state.pageTransitionSwitchTimer = window.setTimeout(() => {
-			state.pageTransitionSwitchTimer = null
-			setLeaderboardOpen(nextOpen)
-		}, LEADERBOARD_PAGE_TRANSITION_SWITCH_MS)
-
-		state.pageTransitionTimer = window.setTimeout(finishLeaderboardPageTransition, LEADERBOARD_PAGE_TRANSITION_MS)
+		const transitionSrc = nextOpen ? LEADERBOARD_PAGE_TRANSITION_LEFT_SRC : LEADERBOARD_PAGE_TRANSITION_RIGHT_SRC
+		runPageGifTransition(transitionSrc, () => {
+			setRulesOpen(nextOpen)
+		})
 	}
 
 	const updateAnswerSubmitState = () => {
@@ -3503,10 +3536,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			applyFilters({ keepCurrent: true })
 		})
 		rulesToggle?.addEventListener('click', () => {
-			setRulesOpen(!state.rulesOpen)
+			transitionRulesOpen(!state.rulesOpen)
 		})
 		rulesCloseNode?.addEventListener('click', () => {
-			setRulesOpen(false)
+			transitionRulesOpen(false)
 		})
 		document.addEventListener('click', (event) => {
 			if (!state.filterMenuOpen || !filterMenu || !filterToggle) {
