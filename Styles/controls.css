@@ -1,0 +1,244 @@
+/* Center header actions horizontally and place them above the card */
+.game__header-actions {
+	position: fixed;
+	left: 50%;
+	top: clamp(36px, 18vh, 120px);
+	width: min(var(--deck-width), calc(100vw - max(40px, env(safe-area-inset-left)) - max(40px, env(safe-area-inset-right))));
+	transform: translateX(-50%);
+	justify-content: space-between;
+	gap: clamp(10px, 4vw, 28px);
+	z-index: 60;
+	isolation: isolate;
+}
+
+.game__header-actions .game__filter-toggle,
+.game__header-actions .game__motion-toggle,
+.game__header-actions .game__language-toggle {
+	padding: 0;
+	width: 88px;
+	height: 88px;
+	min-width: 0;
+	border-radius: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+.game__header-actions .game__language-toggle {
+	min-width: 0;
+}
+
+.game__header-actions .game__filter-toggle,
+.game__header-actions .game__motion-toggle,
+.game__header-actions .game__language-toggle,
+.game__header-actions .game__filter-toggle:hover,
+.game__header-actions .game__filter-toggle:focus-visible,
+.game__header-actions .game__filter-toggle:active,
+.game__header-actions .game__filter-toggle.is-active,
+.game__header-actions .game__motion-toggle:hover,
+.game__header-actions .game__motion-toggle:focus-visible,
+.game__header-actions .game__motion-toggle:active,
+.game__header-actions .game__motion-toggle.is-active,
+.game__header-actions .game__motion-toggle.is-disabled,
+.game__header-actions .game__language-toggle:hover,
+.game__header-actions .game__language-toggle:focus-visible,
+.game__header-actions .game__language-toggle:active,
+.game__header-actions .game__language-toggle.is-active {
+	background: transparent;
+	border-color: transparent;
+	box-shadow: none;
+	opacity: 1;
+}
+
+.header-icon {
+	width: var(--header-icon-width);
+	height: var(--header-icon-height);
+	display: block;
+	object-fit: contain;
+	mix-blend-mode: normal;
+	filter: none;
+	-webkit-mask-image: none;
+}
+
+.game__eyebrow {
+	margin: 0 0 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: var(--accent);
+}
+
+.game__motion-toggle,
+.game__language-toggle,
+.game__filter-toggle,
+.game__spawn-toggle,
+.game__rules-link {
+	margin: 0;
+	padding: clamp(0.62rem, 1.2vw, 0.78rem) clamp(0.78rem, 1.7vw, 1.04rem);
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+	cursor: pointer;
+	opacity: 1;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+	text-decoration: none;
+}
+
+.game__language-toggle {
+	min-width: clamp(82px, 11vw, 104px);
+}
+
+.game__motion-toggle:hover,
+.game__motion-toggle:focus-visible,
+.game__language-toggle:hover,
+.game__language-toggle:focus-visible,
+.game__filter-toggle:hover,
+.game__filter-toggle:focus-visible,
+.game__spawn-toggle:hover,
+.game__spawn-toggle:focus-visible,
+.game__rules-link:hover,
+.game__rules-link:focus-visible {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+	outline: none;
+}
+
+.game__motion-toggle.is-active,
+.game__language-toggle.is-active,
+.game__filter-toggle.is-active,
+.game__spawn-toggle.is-active {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+	color: #fff;
+	opacity: 1;
+}
+
+.game__motion-toggle.is-disabled {
+	opacity: 1;
+	cursor: not-allowed;
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+}
+
+.filter-menu {
+	position: fixed;
+	right: clamp(8px, 1.8vw, 16px);
+	top: calc(max(16px, env(safe-area-inset-top)) + 62px);
+	width: min(90vw, 22rem);
+	padding: var(--space-3) var(--space-3) var(--space-2);
+	border-radius: var(--radius-md);
+	background: rgba(8, 12, 22, 0.94);
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+	backdrop-filter: blur(10px);
+	z-index: 14;
+	opacity: 0;
+	transform: translateY(-10px) scale(0.98);
+	transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.filter-menu.is-open {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+}
+
+.filter-menu__title {
+	margin: 0 0 var(--space-2);
+	font-size: 0.82rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--muted);
+	font-weight: 700;
+}
+
+.filter-menu__option {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: 0.94rem;
+	padding: clamp(5px, 0.9vw, 8px) var(--space-1);
+	color: var(--text);
+}
+
+.filter-menu__option input {
+	accent-color: var(--accent);
+}
+
+.filter-menu__divider {
+	border: 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+	margin: 8px 0 6px;
+}
+
+.game__title {
+	margin: 0;
+	font-size: clamp(1.18rem, 3vw, 1.75rem);
+	line-height: 1.05;
+	letter-spacing: -0.05em;
+	font-weight: 800;
+	max-width: 11ch;
+}
+
+/* counter removed — UI no longer shows remaining card count */
+
+.game__motion-toggle {
+	margin: 0;
+	padding: 0.72rem 0.95rem;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+	cursor: pointer;
+	opacity: 1;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.game__spawn-toggle {
+	min-width: 114px;
+}
+
+.game__motion-toggle:hover,
+.game__motion-toggle:focus-visible,
+.game__filter-toggle:hover,
+.game__filter-toggle:focus-visible,
+.game__spawn-toggle:hover,
+.game__spawn-toggle:focus-visible {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+	outline: none;
+}
+
+.game__motion-toggle.is-active,
+.game__filter-toggle.is-active,
+.game__spawn-toggle.is-active {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+	color: #fff;
+	opacity: 1;
+}
+
+.game__motion-toggle.is-disabled {
+	opacity: 1;
+	cursor: not-allowed;
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+}

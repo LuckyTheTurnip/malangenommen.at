@@ -1,0 +1,212 @@
+@media (max-width: 520px) {
+	:root {
+		--card-radius: 36px;
+		--browser-bottom-safe-space: max(96px, calc(env(safe-area-inset-bottom) + 76px));
+		--deck-width: min(86vw, 336px);
+	}
+
+	.game {
+		padding-inline: 12px;
+		gap: 12px;
+	}
+
+	.game.is-page-exiting-to-rules {
+		transform: translate3d(-52vw, 0, -90px) rotateY(-12deg) scale(0.95);
+	}
+
+	.game.is-page-entering-from-rules {
+		transform: translate3d(-44vw, 0, -70px) rotateY(-10deg) scale(0.96);
+	}
+
+	.game__header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.game__header-actions {
+		justify-content: space-between;
+	}
+
+	.game__header-actions .game__filter-toggle,
+	.game__header-actions .game__motion-toggle,
+	.game__header-actions .game__language-toggle {
+		width: 56px;
+		height: 56px;
+	}
+
+	.header-icon {
+		width: 48px;
+		height: 48px;
+	}
+
+	.game__title {
+		max-width: 14ch;
+	}
+
+	.stack-card__inner,
+	.active-card__content {
+		padding: 18px 16px 16px;
+		gap: 12px;
+	}
+
+	.active-card__content--back {
+		padding: 14px;
+	}
+
+	.answer-composer__form {
+		left: 12px;
+		right: 12px;
+		bottom: calc(var(--browser-bottom-safe-space) + 12px);
+		width: auto;
+		gap: 7px;
+		padding: 10px;
+	}
+
+	.answer-composer__textarea {
+		min-height: 64px;
+	}
+
+	.answer-leaderboard {
+		padding: max(72px, env(safe-area-inset-top)) 14px max(82px, env(safe-area-inset-bottom));
+		transform: translate3d(82vw, 0, -80px) rotateY(16deg) scale(0.96);
+	}
+
+	.answer-leaderboard__list {
+		padding-inline: max(42px, calc(env(safe-area-inset-left) + 28px)) max(42px, calc(env(safe-area-inset-right) + 28px));
+	}
+
+	.answer-leaderboard__message {
+		width: min(78%, 320px);
+		--message-safe-random-x: clamp(-8px, var(--message-random-x), 8px);
+	}
+
+	.answer-leaderboard.is-open {
+		transform: translate3d(0, 0, 0);
+	}
+
+	.rules-view {
+		padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+		transform: translate3d(-82vw, 0, -80px) rotateY(-16deg) scale(0.96);
+	}
+
+	.rules-view.is-open {
+		transform: translate3d(0, 0, 0);
+	}
+
+	.game.is-leaderboard-view .game__brand,
+	.game.is-leaderboard-view .game__header,
+	.game.is-leaderboard-view .deck-stage {
+		transform: translate3d(-56vw, 0, -100px) rotateY(-14deg) scale(0.92);
+	}
+
+	.game.is-rules-view .game__brand,
+	.game.is-rules-view .game__header,
+	.game.is-rules-view .deck-stage {
+		transform: translate3d(56vw, 0, -100px) rotateY(14deg) scale(0.92);
+	}
+
+	.card-back-orbit {
+		width: 96%;
+	}
+
+	.game__motion-toggle,
+	.game__language-toggle,
+	.game__filter-toggle,
+	.game__spawn-toggle {
+		padding: 0.64rem 0.82rem;
+		font-size: 0.82rem;
+	}
+
+	.gesture-hint {
+		bottom: 6px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.active-card {
+		--shine-alpha: 0.16;
+		--shine-edge-alpha: 0.1;
+		--shine-rim-alpha: 0.1;
+		--shine-speckle-alpha: 0.04;
+		--facet-alpha: 0.025;
+	}
+
+	.variation-mini-card {
+		--shine-alpha: 0.14;
+		--shine-edge-alpha: 0.1;
+		--shine-rim-alpha: 0.1;
+		--facet-alpha: 0.03;
+	}
+
+	.game__bg-plane--next {
+		transition-duration: 120ms;
+	}
+
+	.game {
+		transition-duration: 0.01ms !important;
+	}
+
+	.card-back-orbit {
+		animation: none;
+	}
+
+	.flip-cue {
+		animation: none;
+	}
+
+	.swipe-up-cue {
+		animation: none;
+	}
+
+	.variation-mini-card {
+		transition-duration: 140ms !important;
+	}
+
+	.variation-mini-card.is-peek {
+		animation: none !important;
+	}
+
+	.card-face {
+		animation: none !important;
+		background-position: 0% 0%, 50% 50% !important;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
+
+	.variation-mini-card.is-peek {
+		animation-name: variation-peek-shake-shell !important;
+		animation-duration: 2.4s !important;
+		animation-timing-function: ease-in-out !important;
+		animation-iteration-count: infinite !important;
+	}
+
+	/* Keep reduced-motion for non-flip transitions, but do not crush sideways card flip timing. */
+	.stack-card,
+	.active-card.is-leaving,
+	.active-card.is-entering,
+	.card-transition-clone {
+		transition-duration: 0.01ms !important;
+	}
+
+	.game[data-spawn-motion='on'] .active-card.is-spawning .active-card__tilt {
+		animation: card-spawn-fly 920ms cubic-bezier(0.16, 0.84, 0.24, 1) both !important;
+	}
+
+	.answer-leaderboard__message {
+		opacity: 1 !important;
+		filter: none !important;
+		transform: none !important;
+		transition: none !important;
+	}
+
+	.answer-leaderboard__avatar,
+	.answer-leaderboard__bubble {
+		animation: none !important;
+	}
+}

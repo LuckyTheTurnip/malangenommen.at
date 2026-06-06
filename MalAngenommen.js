@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const answerLeaderboardListNode = document.querySelector('[data-answer-leaderboard-list]')
 	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
 	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
-	
+
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
 	const filterToggle = document.querySelector('[data-filter-toggle]')
@@ -58,105 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
-	const CATEGORY_STYLES = {
-		hypothetical: {
-			label: 'Hypothetical',
-			className: 'theme-hypothetical',
-			text: '#fff9f6',
-			logoSrc: 'Media/Logos/hypothetical_logo.GIF',
-			coreColor: '#e0b326',
-			logoColor: '#e0b326',
-			patternSrc: "Media/Patterns/Hypothetical Muster8.svg",
-			patternColorA: '#f7e971',
-			patternColorB: '#e0b326',
-			circleFillColor: '#f7e971',
-			questionShellBg: '#fff7cd',
-			questionShellText: '#4a3400',
-			questionShellBorder: '#b08c00',
-			accent: '#ff8a5b',
-			accentSoft: 'rgba(255, 138, 91, 0.18)',
-			top: 'rgba(38, 23, 31, 0.96)',
-			bottom: 'rgba(14, 10, 18, 0.97)'
-		},
-		showstopper: {
-			label: 'Showstopper',
-			className: 'theme-showstopper',
-			text: '#f4fbff',
-			logoSrc: 'Media/Logos/Showstopper_logo.GIF',
-			coreColor: '#90af31',
-			logoColor: '#90af31',
-			patternSrc: "Media/Patterns/Showstopper Muster8.svg",
-			patternColorA: '#90af31',
-			patternColorB: '#c6d977',
-			circleFillColor: '#c6d977',
-			questionShellBg: '#f5ffd6',
-			questionShellText: '#234200',
-			questionShellBorder: '#6f8f19',
-			accent: '#6fc4ff',
-			accentSoft: 'rgba(111, 196, 255, 0.16)',
-			top: 'rgba(17, 28, 44, 0.96)',
-			bottom: 'rgba(10, 14, 26, 0.98)'
-		},
-		kombichaos: {
-			label: 'Kombichaos',
-			className: 'theme-kombichaos',
-			text: '#f7fff1',
-			logoSrc: 'Media/Logos/kombichaos_logo.GIF',
-			coreColor: '#cd652e',
-			logoColor: '#cd652e',
-			patternSrc: "Media/Patterns/Kombichaos Muster8.svg",
-			patternColorA: '#cd652e',
-			patternColorB: '#dda0c4',
-			circleFillColor: '#dda0c4',
-			questionShellBg: '#ffd7c8',
-			questionShellText: '#5a1d00',
-			questionShellBorder: '#b34d1f',
-			accent: '#9eff7a',
-			accentSoft: 'rgba(158, 255, 122, 0.16)',
-			top: 'rgba(20, 30, 18, 0.96)',
-			bottom: 'rgba(10, 16, 12, 0.98)'
-		},
-		monkeyspaw: {
-			label: 'Monkey’s Paw',
-			className: 'theme-monkeyspaw',
-			text: '#fff7e9',
-			logoSrc: 'Media/Logos/MonkeysPaw_logo.GIF',
-			coreColor: '#2f56a8',
-			logoColor: '#2f56a8',
-			patternSrc: "Media/Patterns/Monkey's Paw Muster8.svg",
-			patternColorA: '#2f56a8',
-			patternColorB: '#9d87bf',
-			circleFillColor: '#9d87bf',
-			questionShellBg: '#eee6ff',
-			questionShellText: '#18114c',
-			questionShellBorder: '#5a45a0',
-			accent: '#ffc45c',
-			accentSoft: 'rgba(255, 196, 92, 0.16)',
-			top: 'rgba(35, 27, 17, 0.96)',
-			bottom: 'rgba(15, 11, 7, 0.98)'
-		}
-		,
-		default: {
-			label: 'Other',
-			className: 'theme-default',
-			text: '#111111',
-			logoSrc: '',
-			coreColor: '#6b6b6b',
-			logoColor: '#6b6b6b',
-			patternSrc: '',
-			patternColorA: '#f0f0f0',
-			patternColorB: '#d0d0d0',
-			circleFillColor: '#d0d0d0',
-			questionShellBg: '#ffffff',
-			questionShellText: '#111111',
-			questionShellBorder: '#e0e0e0',
-			accent: '#8a8a8a',
-			accentSoft: 'rgba(138, 138, 138, 0.12)',
-			top: 'rgba(24,24,24,0.9)',
-			bottom: 'rgba(10,10,10,0.9)'
-		}
-	}
-
+	const appConfig = window.MalAngenommenConfig || {}
+	const CATEGORY_STYLES = appConfig.categoryStyles || {}
 	const state = {
 		cards: [],
 		currentCard: null,
@@ -307,52 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const FACET_TEX_WIDTH = 512
 	const FACET_TEX_HEIGHT = 640
 	const FACET_POLYGON_COUNT = 10000
-	const VARIATION_VISUALS = [
-		{ patternSrc: 'Media/Patterns/Variation Muster_18.svg', colorA: '#8b64a9', colorB: '#bda8cf' },
-		{ patternSrc: 'Media/Patterns/Variation Muster_28.svg', colorA: '#d065a5', colorB: '#dda0c4' },
-		{ patternSrc: 'Media/Patterns/Variation Muster_38.svg', colorA: '#a85e8d', colorB: '#b390c0' },
-		{ patternSrc: 'Media/Patterns/Variation Muster_48.svg', colorA: '#cde2df', colorB: '#e3b1d0' }
-	]
-	const AVATAR_IMAGE_SOURCES = []
-	const ANSWER_TEXT = {
-		de: {
-			toggle: 'Eigene Antwort',
-			name: 'Name',
-			answer: 'Antwort',
-			namePlaceholder: 'Gib deinen Namen ein',
-			answerPlaceholder: 'Schreib deine Antwort auf die Frage',
-			submit: 'Senden',
-			submitting: 'Wird gesendet...',
-			cancel: 'Schliessen',
-			leaderboard: 'Leaderboard',
-			showLeaderboard: 'Leaderboard',
-			hideLeaderboard: 'Zuruck',
-			empty: 'Noch keine Antworten.',
-			success: 'Antwort gesendet.',
-			error: 'Antwort konnte nicht gesendet werden.',
-			countSingular: '1 Antwort',
-			countPlural: (count) => `${count} Antworten`
-		},
-		en: {
-			toggle: 'Your answer',
-			name: 'Name',
-			answer: 'Answer',
-			namePlaceholder: 'Enter your name',
-			answerPlaceholder: 'Write your answer to the question',
-			submit: 'Send',
-			submitting: 'Sending...',
-			cancel: 'Close',
-			leaderboard: 'Leaderboard',
-			showLeaderboard: 'Leaderboard',
-			hideLeaderboard: 'Close',
-			empty: 'No answers yet.',
-			success: 'Answer sent.',
-			error: 'Answer could not be sent.',
-			countSingular: '1 answer',
-			countPlural: (count) => `${count} answers`
-		}
-	}
-
+	const VARIATION_VISUALS = appConfig.variationVisuals || []
+	const AVATAR_IMAGE_SOURCES = appConfig.avatarImageSources || []
+	const ANSWER_TEXT = appConfig.answerText || {}
 	const normalizeLanguage = (value) => {
 		return value === 'en' ? 'en' : 'de'
 	}
@@ -375,6 +235,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const getAnswerCopy = () => ANSWER_TEXT[normalizeLanguage(state.language)] || ANSWER_TEXT.de
+
+	const toStyleAssetUrl = (path) => {
+		const value = String(path || '').trim()
+		if (!value) {
+			return 'none'
+		}
+		if (/^(?:data:|https?:|\/)/i.test(value)) {
+			return `url("${value}")`
+		}
+		const styleRelativePath = value.startsWith('Media/') ? `../${value}` : value
+		return `url("${styleRelativePath}")`
+	}
 
 	const softClamp = (value, max) => {
 		return max * Math.tanh(value / max)
@@ -458,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			return []
 		}
 	}
-	
+
 	const createAnswerId = () => {
 		if (window.crypto && typeof window.crypto.randomUUID === 'function') {
 			return window.crypto.randomUUID()
@@ -1107,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return 'on'
 	}
 
-	
+
 
 	const shuffle = (items) => {
 		const next = items.slice()
@@ -1308,12 +1180,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		app.style.setProperty('--card-bottom', theme.bottom)
 
 		activeCard.style.setProperty('--card-text', theme.text)
-		activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
+		activeCard.style.setProperty('--card-pattern-url', toStyleAssetUrl(theme.patternSrc))
 		activeCard.style.setProperty('--back-circle-a', unifiedColor)
 		activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
 		activeCard.style.setProperty('--back-orbit-color', unifiedColor)
 		activeCard.style.setProperty('--back-logo-tone', unifiedColor)
-		activeCard.style.setProperty('--back-logo-src', `url("${theme.logoSrc}")`)
+		activeCard.style.setProperty('--back-logo-src', toStyleAssetUrl(theme.logoSrc))
 		activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 		activeCard.style.setProperty('--question-shell-bg', theme.questionShellBg || '#ffffff')
 		activeCard.style.setProperty('--question-shell-text', theme.questionShellText || '#111111')
@@ -1875,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		variationCardNode.style.setProperty('--variation-purple-a', visual.colorA)
 		variationCardNode.style.setProperty('--variation-purple-b', visual.colorB)
-		variationCardNode.style.setProperty('--variation-pattern-url', `url("${visual.patternSrc}")`)
+		variationCardNode.style.setProperty('--variation-pattern-url', toStyleAssetUrl(visual.patternSrc))
 	}
 
 	const renderVariationFan = () => {
@@ -1905,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			button.style.setProperty('--fan-depth', `${Math.abs(centeredOffset)}`)
 			button.style.setProperty('--fan-color-a', choice.visual.colorA)
 			button.style.setProperty('--fan-color-b', choice.visual.colorB)
-			button.style.setProperty('--fan-pattern-url', `url("${choice.visual.patternSrc}")`)
+			button.style.setProperty('--fan-pattern-url', toStyleAssetUrl(choice.visual.patternSrc))
 			button.setAttribute('aria-label', `Variation ${choice.index + 1}`)
 			if (state.activeVariationIndex === choice.index && state.miniCardOpen) {
 				button.classList.add('is-selected')
@@ -2847,12 +2719,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			activeCard.style.setProperty('--card-bottom', theme.bottom)
 			activeCard.style.setProperty('--accent', theme.accent)
 			activeCard.style.setProperty('--card-text', theme.text)
-			activeCard.style.setProperty('--card-pattern-url', `url("${theme.patternSrc}")`)
+			activeCard.style.setProperty('--card-pattern-url', toStyleAssetUrl(theme.patternSrc))
 			activeCard.style.setProperty('--back-circle-a', unifiedColor)
 			activeCard.style.setProperty('--back-circle-b', theme.patternColorB)
 			activeCard.style.setProperty('--back-orbit-color', unifiedColor)
 			activeCard.style.setProperty('--back-logo-tone', unifiedColor)
-			activeCard.style.setProperty('--back-logo-src', `url("${theme.logoSrc}")`)
+			activeCard.style.setProperty('--back-logo-src', toStyleAssetUrl(theme.logoSrc))
 			activeCard.style.setProperty('--back-fill-tone', theme.circleFillColor || theme.patternColorA)
 
 			setTheme(card)

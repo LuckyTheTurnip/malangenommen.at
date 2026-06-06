@@ -1,0 +1,186 @@
+.rules-view {
+	position: fixed;
+	inset: 0;
+	z-index: 22;
+	width: 100%;
+	height: 100dvh;
+	padding: max(18px, env(safe-area-inset-top)) clamp(14px, 4vw, 42px) max(20px, env(safe-area-inset-bottom));
+	background:
+		radial-gradient(circle at 80% 12%, var(--accent-soft), transparent 34%),
+		linear-gradient(180deg, rgba(8, 12, 22, 0.95), rgba(4, 7, 13, 0.99));
+	color: var(--text);
+	opacity: 0;
+	pointer-events: none;
+	transform: translate3d(-72vw, 0, -120px) rotateY(-22deg) scale(0.94);
+	transform-origin: 50% 50%;
+	transition: transform 560ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 300ms ease;
+}
+
+.rules-view.is-open {
+	opacity: 1;
+	pointer-events: auto;
+	transform: translate3d(0, 0, 0);
+}
+
+.rules-view__inner {
+	width: min(100%, 960px);
+	height: 100%;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: clamp(16px, 3vw, 24px);
+}
+
+.rules-view__header {
+	display: grid;
+	gap: 16px;
+}
+
+.rules-view__back {
+	justify-self: end;
+	margin: 0;
+	padding: 0.72rem 0.98rem;
+	border: 0;
+	border-radius: 999px;
+	color: color-mix(in srgb, var(--card-bottom) 84%, black 16%);
+	background: color-mix(in srgb, var(--accent) 82%, white 18%);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+	font: inherit;
+	font-size: clamp(0.78rem, 1.8vw, 0.9rem);
+	font-weight: 800;
+	line-height: 1;
+	cursor: pointer;
+	transition: transform 180ms ease, background 180ms ease;
+}
+
+.rules-view__back:hover,
+.rules-view__back:focus-visible {
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.rules-view__title {
+	margin: 0;
+	font-size: clamp(1.8rem, 5vw, 4rem);
+	line-height: 1.05;
+	letter-spacing: 0;
+}
+
+.rules-view__content {
+	min-height: 0;
+	display: grid;
+	gap: 14px;
+	overflow: auto;
+	padding-right: 4px;
+}
+
+.rules-view__section {
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: var(--radius-md);
+	padding: clamp(14px, 2.6vw, 20px);
+	backdrop-filter: blur(8px);
+}
+
+.rules-view__heading {
+	margin: 0 0 10px;
+	color: color-mix(in srgb, var(--accent) 70%, white 30%);
+	font-size: clamp(1.08rem, 2.2vw, 1.34rem);
+}
+
+.rules-view__paragraph {
+	margin: 0;
+	color: rgba(255, 255, 255, 0.74);
+	line-height: 1.62;
+}
+
+.rules-view__list {
+	margin: 0;
+	padding-left: 1.2rem;
+	color: rgba(255, 255, 255, 0.74);
+	line-height: 1.62;
+	display: grid;
+	gap: 8px;
+}
+
+.rules-view__status {
+	margin: 0;
+	color: #ffc3af;
+}
+
+.card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	font-size: 0.9rem;
+	line-height: 1.3;
+	color: var(--muted);
+}
+
+.gesture-hint {
+	position: absolute;
+	left: 50%;
+	bottom: 10px;
+	transform: translateX(-50%);
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0.65rem 0.95rem;
+	border-radius: 999px;
+	background: rgba(7, 11, 20, 0.58);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	color: var(--muted);
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+	pointer-events: none;
+}
+
+.gesture-hint__arrow {
+	color: var(--accent);
+	font-size: 1rem;
+}
+
+.game__status {
+	min-height: 1.25rem;
+	text-align: center;
+	color: var(--muted);
+	font-size: 0.9rem;
+	letter-spacing: 0.02em;
+}
+
+.theme-hypothetical {
+	--accent: #ff8a5b;
+	--accent-soft: rgba(255, 138, 91, 0.18);
+	--card-top: rgba(38, 23, 31, 0.96);
+	--card-bottom: rgba(14, 10, 18, 0.97);
+	--back-logo-size: 65%;
+}
+
+.theme-showstopper {
+	--accent: #6fc4ff;
+	--accent-soft: rgba(111, 196, 255, 0.16);
+	--card-top: rgba(17, 28, 44, 0.96);
+	--card-bottom: rgba(10, 14, 26, 0.98);
+	--back-logo-size: 58%;
+}
+
+.theme-kombichaos {
+	--accent: #9eff7a;
+	--accent-soft: rgba(158, 255, 122, 0.16);
+	--card-top: rgba(20, 30, 18, 0.96);
+	--card-bottom: rgba(10, 16, 12, 0.98);
+	--back-logo-size: 56%;
+}
+
+.theme-monkeyspaw {
+	--accent: #ffc45c;
+	--accent-soft: rgba(255, 196, 92, 0.16);
+	--card-top: rgba(35, 27, 17, 0.96);
+	--card-bottom: rgba(15, 11, 7, 0.98);
+	--back-logo-size: 65%;
+}
+
