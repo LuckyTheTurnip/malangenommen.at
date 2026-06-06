@@ -67,8 +67,8 @@
 	--browser-bottom-safe-space: max(18px, env(safe-area-inset-bottom));
 
 	/* Header icon tweakable CSS variables (change these to preview color/size tweaks) */
-	--header-icon-width: 72px;
-	--header-icon-height: 72px;
+	--header-icon-width: 82px;
+	--header-icon-height: 82px;
 	--header-icon-hue: 0deg;
 	--header-icon-saturate: 1.05;
 	--header-icon-brightness: 1.02;
@@ -309,4 +309,3 @@ body::before {
 	margin-left: auto;
 	flex-wrap: wrap;
 }
-

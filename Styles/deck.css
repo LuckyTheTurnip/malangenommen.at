@@ -11,7 +11,7 @@
 	-webkit-perspective: 1200px;
 
 	/* Keep a consistent gap between the fixed header action icons and the card area */
-	margin-top: calc(clamp(36px, 18vh, 120px) + 48px);
+	margin-top: calc(clamp(36px, 18vh, 120px) + 8px);
 }
 
 .loading-indicator {
@@ -694,4 +694,3 @@
 	font-weight: 900;
 	color: color-mix(in srgb, var(--question-shell-text, #111111) 90%, black 10%);
 }
-
