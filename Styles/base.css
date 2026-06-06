@@ -160,7 +160,7 @@ body::before {
 	inset: 0;
 	background: var(--accent);
 	mask-image: var(--page-transition-mask);
-	mask-mode: luminance;
+	mask-mode: alpha;
 	mask-position: center;
 	mask-repeat: no-repeat;
 	mask-size: cover;
