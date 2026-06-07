@@ -1,76 +1,155 @@
 {
 	"pageTitle": {
-		"de": "Regeln & Hintergrund",
-		"en": "Rules & Background"
+		"de": "Spielregeln",
+		"en": "Rules"
+	},
+	"hero": {
+		"eyebrow": {
+			"de": "Spielregeln",
+			"en": "Rules"
+		},
+		"imageSrc": "Media/Rules/malAngenommen_Faces.gif",
+		"imageAlt": {
+			"de": "Mal Angenommen Gesichter",
+			"en": "Mal Angenommen faces"
+		},
+		"intro": [
+			{
+				"de": "Vor euch liegt ein Haufen Karten voller absurder, idiotischer Szenarien. Perfekt als Icebreaker für ein erstes Date, als Gegenfragen an die Personalleitung bei einem Bewerbungsgespräch oder für neue Bekanntschaften bei einem Pubcrawl.",
+				"en": "In front of you is a stack of cards full of absurd, ridiculous scenarios. Perfect as an icebreaker for a first date, as counter-questions in a job interview, or for meeting new people on a pub crawl."
+			},
+			{
+				"de": "Keine Antworten sind zu dämlich, kein Einwand falsch. Lernt euch gegenseitig auf eine ganz neue Art und Weise kennen!",
+				"en": "No answer is too silly and no objection is wrong. Get to know each other in a completely new way."
+			},
+			{
+				"de": "Spielt gegeneinander um Punkte mit dem gegebenen Regelsystem auf der nächsten Seite oder nehmt die Karten einfach so her, um etwas Zeit totzuschlagen. Alles kann, nichts muss :)",
+				"en": "Play against each other for points using the rule system below, or simply use the cards to pass some time. Everything is optional."
+			}
+		]
 	},
 	"sections": [
 		{
-			"id": "goal",
+			"id": "gameplay",
 			"title": {
-				"de": "Ziel des Spiels",
-				"en": "Goal of the Game"
-			},
-			"blocks": [
-				{
-					"type": "paragraph",
-					"de": "Mal Angenommen ist ein Gesprächsspiel. Es gibt keine Punkte und keine Gewinner – das Ziel ist kreative, ehrliche und lustige Antworten.",
-					"en": "Mal Angenommen is a conversation game. There are no points and no winners – the goal is creative, honest and funny answers."
-				}
-			]
-		},
-		{
-			"id": "how-to-play",
-			"title": {
-				"de": "So wird gespielt",
+				"de": "Spielablauf",
 				"en": "How to Play"
 			},
 			"blocks": [
 				{
-					"type": "list",
-					"items": {
-						"de": [
-							"Eine Person liest die aktuelle Karte laut vor.",
-							"Alle dürfen kurz überlegen und dann reihum antworten.",
-							"Wenn eine Variation verfügbar ist, kann sie geöffnet und statt der Standardfrage gespielt werden.",
-							"Mit einem Swipe nach oben kommt die nächste Karte."
-						],
-						"en": [
-							"One person reads the current card out loud.",
-							"Everyone takes a short moment and then answers in turn.",
-							"If a variation is available, you can open it and play it instead of the default prompt.",
-							"Swipe up to move to the next card."
-						]
-					}
+					"type": "paragraph",
+					"de": "Zu Beginn des Spiels wählt eine Richter:in für die erste Runde. Die Richter:in zieht eine Karte vom Stapel und liest diese laut vor. Nun gibt jede Spieler:in seine Antwort auf den vorgelesenen Prompt und die Richter:in wählt ihren Favoriten. Denkt dran, hinterfragt die Antwort eurer Mitspieler und diskutiert, kein Einwand ist fehl am Platz. Nach welchem Kriterium diese gewählt wird liegt einzig und allein bei der Richter:in.",
+					"en": "At the start of the game, choose a judge for the first round. The judge draws a card and reads it aloud. Every player gives an answer to the prompt, and the judge chooses a favorite. Ask follow-up questions, challenge each other, and discuss. The judge alone decides what makes an answer win."
+				},
+				{
+					"type": "paragraph",
+					"de": "Die Gewinner:in wird Richter:in der nächsten Runde, behält die Karte und kriegt somit einen Punkt. Und so beginnt der Spaß von vorne!",
+					"en": "The winner becomes the judge for the next round, keeps the card, and gets one point. Then the fun starts again."
 				}
 			]
 		},
 		{
-			"id": "categories",
+			"id": "drinking-rules",
 			"title": {
-				"de": "Kategorien",
-				"en": "Categories"
+				"de": "Mit Trinkregeln",
+				"en": "With Drinking Rules"
 			},
 			"blocks": [
 				{
 					"type": "paragraph",
-					"de": "Jede Kategorie hat ihren eigenen Stil und Fragetyp. Im Filter-Menü könnt ihr Kategorien ein- oder ausblenden.",
-					"en": "Each category has its own style and question flavor. You can enable or disable categories in the filter menu."
-				}
-			]
-		},
-		{
-			"id": "background",
-			"title": {
-				"de": "Hintergrund",
-				"en": "Background"
-			},
-			"blocks": [
-				{
-					"type": "paragraph",
-					"de": "Diese Seite ist absichtlich datengetrieben aufgebaut. Tauscht den Text einfach in dieser JSON-Datei aus, um Regeln, Story und Hausregeln laufend zu aktualisieren.",
-					"en": "This page is intentionally data-driven. Just replace the text in this JSON file to keep rules, story and house rules up to date."
+					"de": "Die Gewinnerin der Runde sucht sich eine Person aus. Die Person muss so viele Schlücke nehmen, wie sie Punkte hat. Wenn die Person noch keine Punkte hat, nimmt sie einfach nur einen Schluck.",
+					"en": "The winner of the round chooses one person. That person takes as many sips as they have points. If they do not have any points yet, they simply take one sip."
 				}
 			]
 		}
-	]
+	],
+	"categoriesTitle": {
+		"de": "Kategorien",
+		"en": "Categories"
+	},
+	"categories": [
+		{
+			"id": "hypothetical",
+			"themeKey": "hypothetical",
+			"label": {
+				"de": "Hypothetical",
+				"en": "Hypothetical"
+			},
+			"title": {
+				"de": "Hypothetical",
+				"en": "Hypothetical"
+			},
+			"description": {
+				"de": "Die einfachste Kategorie. Ein Haufen an hypothetischen Fragen und Szenarien. Beschreibt und löst die euch gegebenen Prompts auf die kreativste, dümmste oder akkurateste Art und Weise die euch einfällt. \nManche Karten haben Variationen der Frage, die ihr alternativ oder zusätzlich zur aktuellen verwenden könnt.",
+				"en": "The simplest category. A collection of hypothetical questions and scenarios. Describe and solve the prompt in the most creative, silly, or accurate way you can. Some cards include variations that can be used instead of or alongside the current question."
+			},
+			"imageSrc": "Media/Logos/hypothetical_logo.GIF"
+		},
+		{
+			"id": "kombichaos",
+			"themeKey": "kombichaos",
+			"label": {
+				"de": "Kombichaos",
+				"en": "Kombichaos"
+			},
+			"title": {
+				"de": "Kombichaos",
+				"en": "Kombichaos"
+			},
+			"description": {
+				"de": "Jeder von euch nimmt 2 leere Zettel. Ihr seht auf der Karte einen Prompt samt Zwei Wörter. Auf jeden Zettel schriebt ihr jeweils eure Antwort für eins der Wörter und gebt einen Zettel an eure linke und den Anderen an eure rechte Nachtbar:in weiter, so dass jeder am Ende wieder Zwei unterschiedliche beschriebene Zettel hat. Eure Aufgabe ist nun den vorgelesenen Prompt mit den euch gegebenen Wörtern so gut vor der Richter*in zu erfüllen wie ihr könnt. Wenn ihr keine Zettel habt schreibt euch auf eurem gegenseitig die Wörter über eure Handys.",
+				"en": "Each player takes 2 blank slips of paper. You see a prompt on the card along with two words. On each slip, you write your answer for one of the words and pass one slip to your left neighbor and the other to your right neighbor, so that each player ends up with two different written slips. Your task is now to fulfill the read prompt with the given words as well as you can before the judge. If you don't have any slips, text each other the words over the phone."
+			},
+			"imageSrc": "Media/Logos/kombichaos_logo.GIF"
+		},
+		{
+			"id": "showstopper",
+			"themeKey": "showstopper",
+			"label": {
+				"de": "Showstopper",
+				"en": "Showstopper"
+			},
+			"title": {
+				"de": "Showstopper",
+				"en": "Showstopper"
+			},
+			"description": {
+				"de": "In dieser Kategorie gibt es keine Punkte zu gewinnen. Sie dient als kleine Pause zwischen All dem Wahnsinn und bietet ein paar ehrlichere Fragen an die Runde. Wenn euch das nicht interessiert könnt ihr Karten dieser Kategorie überspringen.",
+				"en": "In this category, there are no points to win. It serves as a small break between all the madness and offers more honest questions to the round. If you're not interested, you can skip cards from this category."
+			},
+			"imageSrc": "Media/Logos/Showstopper_logo.GIF"
+		},
+		{
+			"id": "monkeyspaw",
+			"themeKey": "monkeyspaw",
+			"label": {
+				"de": "Monkey’s Paw",
+				"en": "Monkey’s Paw"
+			},
+			"title": {
+				"de": "Monkey’s Paw",
+				"en": "Monkey’s Paw"
+			},
+			"description": {
+				"de": "Basierend auf der gleichnamigen Kurzgeschichte von William Wymark Jacobs.\nIhr seid ein Flaschengeist, ein sadistischer arschiger Flaschengeist. Lasst den geäußerten Wunsch von der Karte auf die schlimmstmögliche Art und Weise wahr werden.\nBeispiel: “Ich wünsche mir 10k Euro zu bekommen” \n-> Dein Wunsch geht in Erfüllung: Du wirst von einem Auto angefahren und landest im Krankenhaus und hast für den Rest deines Lebens Hüftprobleme. Nach einem langen und anstrengenden Gerichtsprozess bekommst du ein Schmerzensgeld von 10k.",
+				"en": "Placeholder description for Monkey’s Paw. The full category text will be added later."
+			},
+			"imageSrc": "Media/Logos/MonkeysPaw_logo.GIF"
+		}
+	],
+	"about": {
+		"title": {
+			"de": "Über mich",
+			"en": "About Me"
+		},
+		"body": {
+			"de": "Hi, meine Name ist Lucky und ich freue mich dass ihr mein Spiel spielt. Ursprünglich waren es nur ein paar dumme Fragen die meine Freund:innen und ich uns immer gegenseitig gestellt haben, oder fremden in Bars um in Gespräch zu kommen. Ich hoffe genau so viel Spaß und unvergessliche Momente mit diesen Fragen haben werdet wie ich. Denn egal wie unterschiedlich wir zunächst wirken, haben wir oft doch mehr Gemeinsamkeiten als wir am Anfang sehen wollen.\nIch werde das Spiel immer wieder um neue Fragen erweitern und deswegen würde ich mich total freuen wenn ihr mir eure eigenen Fragen zuschickt, die euch noch einfallen und die Ihr gerne im Spiel sehen wollt. Umso durchgeknallter, umso besser. \nIch freue mich von euch über Insta zu oder per Mail unter fragen@malangenommen.at",
+			"en": "Hi, my name is Lucky and I'm so glad you're playing my game. Originally, it was just a few silly questions that my friends and I would always ask each other, or strangers in bars to strike up a conversation. I hope you'll have just as much fun and as many unforgettable moments with these questions as I have. Because no matter how different we may seem at first, we often have more in common than we're willing to see in the beginning. \nI'll keep expanding the game with new questions, so I'd be absolutely thrilled if you sent me your own questions — ones that come to mind and that you'd love to see in the game. The more wild, the better. \nI look forward to hearing from you on Insta or by email at \n\bfragen@malangenommen.at"
+		},
+		"imageAlt": {
+			"de": "Lukas Kuhl",
+			"en": "Lukas Kuhl"
+		},
+		"imageSrc": "Media/Rules/kuhl_lukas_2.GIF"
+	}
 }

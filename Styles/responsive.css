@@ -85,12 +85,28 @@
 	}
 
 	.rules-view {
-		padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+		padding: 0;
 		transform: translate3d(-82vw, 0, -80px) rotateY(-16deg) scale(0.96);
 	}
 
 	.rules-view.is-open {
 		transform: translate3d(0, 0, 0);
+	}
+
+	.rules-layout__hero,
+	.rules-layout__section,
+	.rules-about {
+		width: 100%;
+	}
+
+	.rules-layout__mascot {
+		width: 42%;
+		margin-right: 14px;
+	}
+
+	.rules-about__portrait {
+		width: 38%;
+		margin-right: 14px;
 	}
 
 	.game.is-leaderboard-view .game__brand,

@@ -14,7 +14,7 @@ window.MalAngenommenConfig = {
 			questionShellBg: '#fff7cd',
 			questionShellText: '#4a3400',
 			questionShellBorder: '#b08c00',
-			accent: '#ff8a5b',
+			accent: '#ff6021',
 			accentSoft: 'rgba(255, 138, 91, 0.18)',
 			top: 'rgba(38, 23, 31, 0.96)',
 			bottom: 'rgba(14, 10, 18, 0.97)'
@@ -33,7 +33,7 @@ window.MalAngenommenConfig = {
 			questionShellBg: '#f5ffd6',
 			questionShellText: '#234200',
 			questionShellBorder: '#6f8f19',
-			accent: '#6fc4ff',
+			accent: '#ff35f5',
 			accentSoft: 'rgba(111, 196, 255, 0.16)',
 			top: 'rgba(17, 28, 44, 0.96)',
 			bottom: 'rgba(10, 14, 26, 0.98)'
@@ -68,10 +68,10 @@ window.MalAngenommenConfig = {
 			patternColorA: '#2f56a8',
 			patternColorB: '#9d87bf',
 			circleFillColor: '#9d87bf',
-			questionShellBg: '#eee6ff',
+			questionShellBg: '#8386f1',
 			questionShellText: '#18114c',
 			questionShellBorder: '#5a45a0',
-			accent: '#ffc45c',
+			accent: '#ffb637',
 			accentSoft: 'rgba(255, 196, 92, 0.16)',
 			top: 'rgba(35, 27, 17, 0.96)',
 			bottom: 'rgba(15, 11, 7, 0.98)'

@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const rulesToggle = document.querySelector('[data-rules-toggle]')
 	const rulesViewNode = document.querySelector('[data-rules-view]')
 	const rulesCloseNode = document.querySelector('[data-rules-close]')
+	const rulesLanguageToggle = document.querySelector('[data-rules-language-toggle]')
 	const rulesTitleNode = document.querySelector('[data-rules-title]')
 	const rulesSectionsNode = document.querySelector('[data-rules-sections]')
 	const rulesStatusNode = document.querySelector('[data-rules-status]')
@@ -108,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			tiltY: 0,
 			tiltZ: 0,
 			flipRotationDeg: 0,
-			hasFlippedCardOnce: false,
-			hasSwipedUpOnce: false,
+			cardViewCount: 0,
 			hasVariations: false,
 			miniCardOpen: false,
 			scratchRevealed: false,
@@ -170,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const SWIPE_RATIO = 1.2
 	const SWIPE_VELOCITY = 0.72
 	const FLIP_CUE_DELAY_MS = 5000
-	const SWIPE_UP_CUE_DELAY_MS = 15000
+	const FLIP_CUE_REPEAT_DELAY_MS = 30000
+	const SWIPE_UP_CUE_DELAY_MS = 10000
+	const SWIPE_UP_CUE_REPEAT_DELAY_MS = 60000
 	const LOADING_INDICATOR_DELAY_MS = 2000
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
@@ -637,6 +639,77 @@ document.addEventListener('DOMContentLoaded', () => {
 		return paragraph
 	}
 
+	const appendRulesParagraphs = (parent, entries, className = 'rules-view__paragraph') => {
+		if (!parent || !Array.isArray(entries)) {
+			return
+		}
+		entries.forEach((entry) => {
+			const text = translateRulesEntry(entry)
+			if (!text) return
+			const paragraph = document.createElement('p')
+			paragraph.className = className
+			paragraph.textContent = text
+			parent.appendChild(paragraph)
+		})
+	}
+
+	const getRulesCategoryTheme = (entry) => {
+		const key = String(entry?.themeKey || entry?.id || '').trim()
+		return CATEGORY_STYLES[key] || CATEGORY_STYLES.default || {}
+	}
+
+	const getRulesCategoryPatternSrc = (entry) => {
+		const key = String(entry?.themeKey || entry?.id || '').trim()
+		const patterns = {
+			hypothetical: 'Media/Rules/hypothetical_rule_pattern.png',
+			kombichaos: 'Media/Rules/Kombichaosl_rule_pattern.png',
+			showstopper: 'Media/Rules/Showstopperl_rule_pattern.png',
+			monkeyspaw: 'Media/Rules/MonkeyPawl_rule_pattern.png'
+		}
+		return patterns[key] || ''
+	}
+
+	const setRulesCategoryDetail = (detailNode, category, buttons) => {
+		if (!detailNode || !category) {
+			return
+		}
+		const theme = getRulesCategoryTheme(category)
+		const patternSrc = getRulesCategoryPatternSrc(category)
+		const panelColor = theme.coreColor || theme.logoColor || theme.accent || '#f5aa00'
+		const panelText = theme.text || '#ffffff'
+		detailNode.style.setProperty('--rules-category-bg', panelColor)
+		detailNode.style.setProperty('--rules-category-text', panelText)
+		detailNode.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
+		detailNode.innerHTML = ''
+
+		const logo = document.createElement('div')
+		logo.className = 'rules-category-detail__logo'
+		const imageSrc = String(category.imageSrc || theme.logoSrc || '').trim()
+		if (imageSrc) {
+			const image = document.createElement('img')
+			image.src = imageSrc
+			image.alt = ''
+			logo.appendChild(image)
+		}
+		detailNode.appendChild(logo)
+
+		const heading = document.createElement('h3')
+		heading.className = 'rules-category-detail__title'
+		heading.textContent = translateRulesEntry(category.title) || translateRulesEntry(category.label)
+		detailNode.appendChild(heading)
+
+		const description = document.createElement('p')
+		description.className = 'rules-category-detail__description'
+		description.textContent = translateRulesEntry(category.description)
+		detailNode.appendChild(description)
+
+		buttons.forEach((button) => {
+			const isActive = button.dataset.rulesCategoryTab === String(category.id || '')
+			button.classList.toggle('is-active', isActive)
+			button.setAttribute('aria-selected', isActive ? 'true' : 'false')
+		})
+	}
+
 	const renderRulesContent = () => {
 		if (!rulesTitleNode || !rulesSectionsNode || !rulesCloseNode) {
 			return
@@ -650,26 +723,136 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		rulesTitleNode.textContent = translateRulesEntry(state.rulesContent.pageTitle)
 		clearRulesSections()
+		rulesSectionsNode.classList.add('rules-view__content--layout')
+
+		const hero = state.rulesContent.hero || {}
+		const heroNode = document.createElement('section')
+		heroNode.className = 'rules-layout__hero'
+
+		const topRow = document.createElement('div')
+		topRow.className = 'rules-layout__top-row'
+		const checkerLeft = document.createElement('div')
+		checkerLeft.className = 'rules-layout__checker rules-layout__checker--left'
+		const logo = document.createElement('div')
+		logo.className = 'rules-layout__mark'
+		logo.setAttribute('aria-hidden', 'true')
+		const checkerRight = document.createElement('div')
+		checkerRight.className = 'rules-layout__checker rules-layout__checker--right'
+		topRow.appendChild(checkerLeft)
+		topRow.appendChild(logo)
+		topRow.appendChild(checkerRight)
+		heroNode.appendChild(topRow)
+
+		const heroTitle = document.createElement('h2')
+		heroTitle.className = 'rules-layout__main-title'
+		heroTitle.textContent = translateRulesEntry(hero.eyebrow) || translateRulesEntry(state.rulesContent.pageTitle)
+		heroNode.appendChild(heroTitle)
+
+		const intro = document.createElement('div')
+		intro.className = 'rules-layout__intro'
+		const mascot = document.createElement('img')
+		mascot.className = 'rules-layout__mascot'
+		mascot.src = String(hero.imageSrc || 'Media/Rules/malAngenommen_Faces.gif')
+		mascot.alt = translateRulesEntry(hero.imageAlt)
+		mascot.loading = 'lazy'
+		mascot.decoding = 'async'
+		const introCopy = document.createElement('div')
+		introCopy.className = 'rules-layout__intro-copy'
+		introCopy.appendChild(mascot)
+		appendRulesParagraphs(introCopy, hero.intro, 'rules-layout__intro-paragraph')
+		intro.appendChild(introCopy)
+		heroNode.appendChild(intro)
+		rulesSectionsNode.appendChild(heroNode)
+
 		const sections = Array.isArray(state.rulesContent.sections) ? state.rulesContent.sections : []
 		sections.forEach((section) => {
 			const article = document.createElement('article')
-			article.className = 'rules-view__section'
+			article.className = 'rules-layout__section'
 			if (section.id) {
 				article.id = `rules-${section.id}`
 			}
 			const heading = document.createElement('h2')
-			heading.className = 'rules-view__heading'
+			heading.className = 'rules-layout__section-title'
 			heading.textContent = translateRulesEntry(section.title)
 			article.appendChild(heading)
 			const blocks = Array.isArray(section.blocks) ? section.blocks : []
 			blocks.forEach((block) => {
 				const node = renderRulesBlock(block)
 				if (node) {
+					node.classList.add('rules-layout__section-copy')
 					article.appendChild(node)
 				}
 			})
 			rulesSectionsNode.appendChild(article)
 		})
+
+		const categories = Array.isArray(state.rulesContent.categories) ? state.rulesContent.categories : []
+		if (categories.length > 0) {
+			const categoriesSection = document.createElement('section')
+			categoriesSection.className = 'rules-categories'
+			const heading = document.createElement('h2')
+			heading.className = 'rules-categories__title'
+			heading.textContent = translateRulesEntry(state.rulesContent.categoriesTitle)
+			categoriesSection.appendChild(heading)
+
+			const tabList = document.createElement('div')
+			tabList.className = 'rules-categories__tabs'
+			tabList.setAttribute('role', 'tablist')
+			const detail = document.createElement('div')
+			detail.className = 'rules-category-detail'
+			detail.setAttribute('role', 'tabpanel')
+			const buttons = []
+
+			categories.forEach((category, index) => {
+				const button = document.createElement('button')
+				const theme = getRulesCategoryTheme(category)
+				const patternSrc = getRulesCategoryPatternSrc(category)
+				button.type = 'button'
+				button.className = 'rules-categories__tab'
+				button.dataset.rulesCategoryTab = String(category.id || '')
+				button.setAttribute('role', 'tab')
+				button.setAttribute('aria-selected', index === 0 ? 'true' : 'false')
+				button.style.setProperty('--rules-tab-bg', theme.coreColor || theme.logoColor || theme.accent || '#f5aa00')
+				button.style.setProperty('--rules-tab-text', theme.text || '#ffffff')
+				button.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
+				button.textContent = translateRulesEntry(category.label)
+				button.addEventListener('click', () => {
+					setRulesCategoryDetail(detail, category, buttons)
+				})
+				buttons.push(button)
+				tabList.appendChild(button)
+			})
+
+			categoriesSection.appendChild(tabList)
+			categoriesSection.appendChild(detail)
+			rulesSectionsNode.appendChild(categoriesSection)
+			setRulesCategoryDetail(detail, categories[0], buttons)
+		}
+
+		const about = state.rulesContent.about
+		if (about && typeof about === 'object') {
+			const aboutSection = document.createElement('section')
+			aboutSection.className = 'rules-about'
+			const portrait = document.createElement('img')
+			portrait.className = 'rules-about__portrait'
+			portrait.src = String(about.imageSrc || 'Media/Rules/kuhl_lukas_2.GIF')
+			portrait.alt = translateRulesEntry(about.imageAlt)
+			portrait.loading = 'lazy'
+			portrait.decoding = 'async'
+			const copy = document.createElement('div')
+			copy.className = 'rules-about__copy'
+			const heading = document.createElement('h2')
+			heading.className = 'rules-about__title'
+			heading.textContent = translateRulesEntry(about.title)
+			const body = document.createElement('p')
+			body.className = 'rules-about__text'
+			body.textContent = translateRulesEntry(about.body)
+			copy.appendChild(heading)
+			copy.appendChild(portrait)
+			copy.appendChild(body)
+			aboutSection.appendChild(copy)
+			rulesSectionsNode.appendChild(aboutSection)
+		}
 	}
 
 	const loadRulesContent = async () => {
@@ -1295,21 +1478,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const updateLanguageButton = () => {
-		if (!languageToggle) {
-			return
-		}
-
 		const isEnglish = state.language === 'en'
-		languageToggle.classList.toggle('is-active', isEnglish)
-		languageToggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
-
-		const img = languageToggle.querySelector('img')
 		const iconSrc = state.language === 'de' ? 'Media/Icons/German.webp' : 'Media/Icons/English.gif'
-		languageToggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
-		if (img) {
-			img.src = iconSrc
-			img.alt = state.language === 'de' ? 'Deutsch' : 'English'
-		}
+		const iconAlt = state.language === 'de' ? 'Deutsch' : 'English'
+
+		;[languageToggle, rulesLanguageToggle].forEach((toggle) => {
+			if (!toggle) {
+				return
+			}
+			toggle.classList.toggle('is-active', isEnglish)
+			toggle.setAttribute('aria-pressed', isEnglish ? 'true' : 'false')
+			toggle.style.setProperty('--header-icon-mask', toStyleAssetUrl(iconSrc))
+
+			const img = toggle.querySelector('img')
+			if (img) {
+				img.src = iconSrc
+				img.alt = iconAlt
+			}
+		})
 	}
 
 	const updateAnswerLabels = () => {
@@ -1757,19 +1943,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const scheduleFlipCue = () => {
-		if (!flipCueNode || state.hasFlippedCardOnce || !state.isFlipped || state.isAnimating) {
+		if (!flipCueNode || !state.isFlipped || state.isAnimating || state.enterAnimationActive || state.isDragging) {
 			hideFlipCue()
 			return
 		}
 
 		hideFlipCue()
+		const delay = state.cardViewCount <= 1 ? FLIP_CUE_DELAY_MS : FLIP_CUE_REPEAT_DELAY_MS
 		state.flipCueTimer = window.setTimeout(() => {
-			if (state.hasFlippedCardOnce || !state.isFlipped || state.isAnimating) {
+			if (!state.isFlipped || state.isAnimating || state.enterAnimationActive || state.isDragging) {
 				return
 			}
 			flipCueNode.hidden = false
 			flipCueNode.classList.add('is-visible')
-		}, FLIP_CUE_DELAY_MS)
+		}, delay)
 	}
 
 	const hideSwipeUpCue = () => {
@@ -1785,19 +1972,27 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const scheduleSwipeUpCue = () => {
-		if (!swipeUpCueNode || state.hasSwipedUpOnce || state.isAnimating || state.isDragging) {
+		if (!swipeUpCueNode || state.isAnimating || state.enterAnimationActive || state.isDragging) {
 			hideSwipeUpCue()
 			return
 		}
 
 		hideSwipeUpCue()
+		const delay = state.cardViewCount <= 1 ? SWIPE_UP_CUE_DELAY_MS : SWIPE_UP_CUE_REPEAT_DELAY_MS
 		state.swipeUpCueTimer = window.setTimeout(() => {
-			if (state.hasSwipedUpOnce || state.isAnimating || state.isDragging) {
+			if (state.isAnimating || state.enterAnimationActive || state.isDragging) {
 				return
 			}
 			swipeUpCueNode.hidden = false
 			swipeUpCueNode.classList.add('is-visible')
-		}, SWIPE_UP_CUE_DELAY_MS)
+		}, delay)
+	}
+
+	const resetSwipeCueTimers = () => {
+		hideFlipCue()
+		hideSwipeUpCue()
+		scheduleFlipCue()
+		scheduleSwipeUpCue()
 	}
 
 	const destroyVariationScratch = () => {
@@ -2936,12 +3131,12 @@ document.addEventListener('DOMContentLoaded', () => {
 				closeVariationCard()
 			}
 			if (resetFlip) {
+				state.cardViewCount += 1
 				applyMicrofacetTexture()
 				// New cards start on the logo side ("back side"), then flip to reveal the question side.
 				setFlipClass(true)
 				setFlipRotation(180)
-				scheduleFlipCue()
-				scheduleSwipeUpCue()
+				resetSwipeCueTimers()
 			}
 	}
 
@@ -3069,6 +3264,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (filteredCards.length === 0) {
 			state.currentCard = null
 			state.drawPile = []
+			state.cardViewCount = 0
+			hideFlipCue()
+			hideSwipeUpCue()
 			questionNode.textContent = 'Keine Karten mit den aktuellen Filtern.'
 			categoryLabel.textContent = 'Filter'
 			resetAnswerComposer()
@@ -3082,6 +3280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const randomIndex = Math.floor(Math.random() * filteredCards.length)
 		state.currentCard = filteredCards[randomIndex]
+		state.cardViewCount = 0
 		buildDrawPile(state.currentCard.id)
 		renderCard(state.currentCard)
 		saveGameSession()
@@ -3095,6 +3294,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (filteredCards.length === 0) {
 			state.currentCard = null
 			state.drawPile = []
+			state.cardViewCount = 0
+			hideFlipCue()
+			hideSwipeUpCue()
 			questionNode.textContent = 'Keine Karten mit den aktuellen Filtern.'
 			categoryLabel.textContent = 'Filter'
 			resetAnswerComposer()
@@ -3116,6 +3318,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const nextIndex = Math.floor(Math.random() * filteredCards.length)
 		state.currentCard = filteredCards[nextIndex]
+		state.cardViewCount = 0
 		buildDrawPile(state.currentCard.id)
 		renderCard(state.currentCard)
 		saveGameSession()
@@ -3134,7 +3337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.dragOffsetY = 0
 		state.isDragging = false
 		applyMotionTransform()
-		scheduleSwipeUpCue()
+		resetSwipeCueTimers()
 	}
 
 	const settleCardPositionAfterFlip = () => {
@@ -3146,7 +3349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		activeCard.style.setProperty('--drag-y', '0px')
 		activeCard.style.setProperty('--drag-rot', '0deg')
 		applyMotionTransform()
-		scheduleSwipeUpCue()
+		resetSwipeCueTimers()
 	}
 
 	const clearSpawnAnimation = () => {
@@ -3185,7 +3388,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		hideFlipCue()
 		hideSwipeUpCue()
-		state.hasSwipedUpOnce = true
 		const motionWasActive = suspendMotionForTransition()
 
 		if (state.drawPile.length === 0) {
@@ -3243,7 +3445,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			saveGameSession()
 			state.isAnimating = false
 			state.enterAnimationActive = false
-			scheduleSwipeUpCue()
+			resetSwipeCueTimers()
 			if (motionWasActive) {
 				setTimeout(() => resumeMotionAfterTransition(), 40)
 			}
@@ -3753,11 +3955,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		const normalizedDirection = direction === 'left' ? 'left' : 'right'
 		const nextRotation = state.flipRotationDeg + (normalizedDirection === 'left' ? -180 : 180)
 		setFlipRotation(nextRotation)
-		hideFlipCue()
-		state.hasFlippedCardOnce = true
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
+		resetSwipeCueTimers()
 		saveGameSession()
 
 		if (motionWasActive) {
@@ -3801,6 +4002,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		bindAnswerInteractions()
 		motionToggle?.addEventListener('click', toggleMotion)
 		languageToggle?.addEventListener('click', toggleLanguage)
+		rulesLanguageToggle?.addEventListener('click', toggleLanguage)
 		filterToggle?.addEventListener('click', () => {
 			setFilterMenuOpen(!state.filterMenuOpen)
 		})
@@ -3931,8 +4133,10 @@ document.addEventListener('DOMContentLoaded', () => {
 						buildDrawPile(savedCard.id)
 					}
 					renderCard(savedCard, { resetFlip: false })
+					state.cardViewCount = 1
 					setFlipClass(savedSession.isFlipped)
 					setFlipRotation(savedSession.flipRotationDeg)
+					resetSwipeCueTimers()
 					saveGameSession()
 				} else {
 					startFromRandomCard()

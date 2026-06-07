@@ -81,6 +81,32 @@
 	display: none;
 }
 
+.variation-mini-card__drag-indicator {
+	position: absolute;
+	left: clamp(8px, 4%, 14px);
+	top: clamp(8px, 4%, 14px);
+	z-index: 9;
+	width: clamp(104px, 58%, 168px);
+	aspect-ratio: 1;
+	display: none;
+	background: #0f4f2f;
+	pointer-events: none;
+	transform: rotate(-8deg);
+	mask-image: url("../Media/Icons/Drag_indicator.gif");
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	mask-mode: alpha;
+	-webkit-mask-image: url("../Media/Icons/Drag_indicator.gif");
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+.variation-mini-card.is-peek .variation-mini-card__drag-indicator {
+	display: block;
+}
+
 .variation-mini-card.is-dragging {
 	transition: none !important;
 }

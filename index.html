@@ -171,6 +171,7 @@
                             </div>
                         </div>
                         <div class="variation-mini-card__scratch" data-variation-scratch></div>
+                        <span class="variation-mini-card__drag-indicator" aria-hidden="true"></span>
                     </div>
                 </div>
             </section>
@@ -184,7 +185,9 @@
                 <span class="answer-leaderboard-back-button__icon" aria-hidden="true"></span>
             </button>
             <div class="answer-leaderboard__header">
+                <span class="answer-leaderboard__pattern answer-leaderboard__pattern--left" aria-hidden="true"></span>
                 <span class="answer-leaderboard__logo" aria-hidden="true"></span>
+                <span class="answer-leaderboard__pattern answer-leaderboard__pattern--right" aria-hidden="true"></span>
                 <p class="answer-leaderboard__title" data-answer-leaderboard-title>Leaderboard</p>
             </div>
             <div class="answer-leaderboard__list" data-answer-leaderboard-list>
@@ -195,6 +198,10 @@
         <section class="rules-view" id="rules-view" data-rules-view aria-hidden="true">
             <div class="rules-view__inner">
                 <div class="rules-view__header">
+                    <div class="rules-view__control-bar" aria-hidden="true"></div>
+                    <button class="rules-view__language" type="button" data-rules-language-toggle aria-pressed="false" aria-label="Language">
+                        <img class="header-icon" src="Media/Icons/German.webp" alt="Deutsch">
+                    </button>
                     <button class="rules-view__back" type="button" data-rules-close>Zurück</button>
                     <h1 class="rules-view__title" data-rules-title>Regeln &amp; Hintergrund</h1>
                 </div>

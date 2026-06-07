@@ -549,8 +549,8 @@
 	bottom: 0;
 	transform: translate(-50%, 0);
 	-webkit-transform: translate(-50%, 0);
-	width: 15vw;
-	height: 15vh;
+	width: clamp(92px, 22vw, 160px);
+	aspect-ratio: 1;
 	display: grid;
 	place-items: center;
 	opacity: 0;
