@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const answerLeaderboardListNode = document.querySelector('[data-answer-leaderboard-list]')
 	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
 	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
+	const answerLeaderboardBackNode = document.querySelector('[data-answer-leaderboard-back]')
 
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
@@ -1346,9 +1347,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			answerLeaderboardNode.setAttribute('aria-hidden', state.answerLeaderboardOpen ? 'false' : 'true')
 		}
 		if (answerLeaderboardToggleNode) {
-			answerLeaderboardToggleNode.textContent = state.answerLeaderboardOpen ? copy.hideLeaderboard : copy.showLeaderboard
-			answerLeaderboardToggleNode.classList.toggle('is-active', state.answerLeaderboardOpen)
+			answerLeaderboardToggleNode.textContent = copy.showLeaderboard
 			answerLeaderboardToggleNode.setAttribute('aria-expanded', state.answerLeaderboardOpen ? 'true' : 'false')
+			answerLeaderboardToggleNode.toggleAttribute('hidden', state.answerLeaderboardOpen)
 		}
 		if (state.answerLeaderboardOpen) {
 			scheduleLeaderboardParallax()
@@ -2783,7 +2784,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					const mid = Math.floor((low + high) / 2)
 					node.style.fontSize = `${mid}px`
 
-					const nodeFits = node.scrollHeight <= box.clientHeight + 2 && node.scrollWidth <= box.clientWidth + 2
+					const nodeFits = node.scrollHeight <= node.clientHeight + 2
+						&& node.scrollWidth <= node.clientWidth + 2
+						&& node.scrollHeight <= box.clientHeight + 2
+						&& node.scrollWidth <= box.clientWidth + 2
 					const layoutFits = typeof extraCheck === 'function' ? extraCheck() : true
 					if (nodeFits && layoutFits) {
 						bestSize = mid
@@ -2797,7 +2801,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			fitTextNode(questionNode, questionBox, 14, 34, () => {
-				return questionBox.scrollHeight <= questionBox.clientHeight + 2 && questionBox.scrollWidth <= questionBox.clientWidth + 2
+				const shellFits = questionBox.scrollHeight <= questionBox.clientHeight + 2 && questionBox.scrollWidth <= questionBox.clientWidth + 2
+				if (!shellFits) {
+					return false
+				}
+
+				if (!kombiWordsNode || kombiWordsNode.hidden) {
+					return true
+				}
+
+				const questionRect = questionNode.getBoundingClientRect()
+				const kombiRect = kombiWordsNode.getBoundingClientRect()
+				const minimumGap = 6
+				return questionRect.bottom + minimumGap <= kombiRect.top
 			})
 
 			if (categoryLabel && categoryLabel.style.display !== 'none') {
@@ -3634,7 +3650,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerUsernameNode?.addEventListener('input', updateAnswerSubmitState)
 		answerTextNode?.addEventListener('input', updateAnswerSubmitState)
 		answerLeaderboardToggleNode?.addEventListener('click', () => {
-			transitionLeaderboardOpen(!state.answerLeaderboardOpen)
+			transitionLeaderboardOpen(true)
+		})
+		answerLeaderboardBackNode?.addEventListener('click', () => {
+			transitionLeaderboardOpen(false)
 		})
 		answerFormNode?.addEventListener('submit', async (event) => {
 			event.preventDefault()

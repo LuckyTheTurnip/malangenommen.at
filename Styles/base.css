@@ -231,6 +231,7 @@ body::before {
 .game.is-page-transitioning .game__header-actions,
 .game.is-page-transitioning .game__rules-link,
 .game.is-page-transitioning .answer-leaderboard-toggle,
+.game.is-page-transitioning .answer-leaderboard-back-button,
 .game.is-page-transitioning .answer-leaderboard__message {
 	opacity: 0;
 	pointer-events: none;
