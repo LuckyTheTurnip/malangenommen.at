@@ -171,14 +171,9 @@
 	position: fixed;
 	left: 50%;
 	top: calc(clamp(28px, 13vh, 86px) + clamp(68px, 12vw, 98px));
-	width: min(var(--deck-width), calc(100vw - max(40px, env(safe-area-inset-left)) - max(40px, env(safe-area-inset-right))));
+	width: min(calc(var(--deck-width) + clamp(48px, 10vw, 92px)), calc(100vw - max(40px, env(safe-area-inset-left)) - max(40px, env(safe-area-inset-right))));
 	max-height: 0;
 	padding: 0 var(--space-3);
-	border-radius: var(--radius-md);
-	background: rgba(8, 12, 22, 0.94);
-	border: 1px solid rgba(255, 255, 255, 0.14);
-	box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
-	backdrop-filter: blur(10px);
 	z-index: 58;
 	opacity: 0;
 	overflow: hidden;
@@ -186,11 +181,35 @@
 	transform: translateX(-50%) translateY(-8px) scaleY(0.86);
 	transform-origin: top center;
 	transition: max-height 260ms cubic-bezier(0.2, 0.7, 0.2, 1), padding 260ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 180ms ease, transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	isolation: isolate;
+}
+
+.filter-menu::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: var(--accent);
+	opacity: 0.8;
+	mask-image: url("../Media/Icons/Filterbox.gif");
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: 100% 100%;
+	mask-mode: alpha;
+	-webkit-mask-image: url("../Media/Icons/Filterbox.gif");
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: 100% 100%;
+}
+
+.filter-menu > * {
+	position: relative;
+	z-index: 1;
 }
 
 .filter-menu.is-open {
 	max-height: min(38vh, 320px);
-	padding: var(--space-3) var(--space-3) var(--space-2);
+	padding: var(--space-4) clamp(28px, 7vw, 52px) var(--space-3);
 	opacity: 1;
 	pointer-events: auto;
 	transform: translateX(-50%) translateY(0) scaleY(1);
@@ -212,10 +231,30 @@
 	font-size: 0.94rem;
 	padding: clamp(5px, 0.9vw, 8px) var(--space-1);
 	color: var(--text);
+	cursor: pointer;
 }
 
 .filter-menu__option input {
-	accent-color: var(--accent);
+	-webkit-appearance: none;
+	appearance: none;
+	width: 1.35rem;
+	height: 1.35rem;
+	flex: 0 0 1.35rem;
+	margin: 0;
+	background-image: url("../Media/Icons/Checkbox_idle.gif");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	cursor: pointer;
+}
+
+.filter-menu__option input:checked {
+	background-image: url("../Media/Icons/Checkbox_active.gif");
+}
+
+.filter-menu__option input:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
 }
 
 .filter-menu__divider {
