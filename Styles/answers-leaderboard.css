@@ -4,9 +4,9 @@
 	min-width: 0;
 	margin: 0;
     font-family: 'Social Book', 'Fraunces', serif;
-	font-weight: 900;
+	font-weight: 500;
 	font-size: clamp(1.55rem, 5vw, 2.35rem);
-	line-height: 1.12;
+	line-height: 1.05;
 	letter-spacing: -0.045em;
 	text-wrap: balance;
 	hyphens: auto;
@@ -183,22 +183,18 @@
 	transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
 }
 
-.answer-leaderboard-toggle[hidden] {
-	display: none !important;
-}
-
 .answer-leaderboard-toggle::before {
 	content: "";
 	width: 100%;
 	height: 100%;
 	display: block;
 	background: var(--accent);
-	mask-image: url("../Media/Icons/Leaderboard_idle.gif");
+	mask-image: var(--page-button-icon);
 	mask-position: center;
 	mask-repeat: no-repeat;
 	mask-size: contain;
 	mask-mode: alpha;
-	-webkit-mask-image: url("../Media/Icons/Leaderboard_idle.gif");
+	-webkit-mask-image: var(--page-button-icon);
 	-webkit-mask-position: center;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-size: contain;
@@ -211,88 +207,16 @@
 	outline: none;
 }
 
-.game.is-leaderboard-view .answer-leaderboard-toggle,
+.answer-leaderboard-toggle.is-active {
+	left: clamp(8px, 2.2vw, 18px);
+	right: auto;
+	background: transparent;
+}
+
 .game.is-rules-view .answer-leaderboard-toggle {
 	opacity: 0;
-	visibility: hidden;
 	pointer-events: none;
 	transform: translateY(8px);
-}
-
-.answer-leaderboard-back-button {
-	position: fixed;
-	left: 0;
-	top: 0;
-	z-index: 90;
-	display: grid;
-	place-items: center;
-	margin: 0;
-	padding: 0;
-	width: 72px;
-	height: 72px;
-	min-width: 72px;
-	max-width: 72px;
-	min-height: 72px;
-	max-height: 72px;
-	border: 0;
-	border-radius: 0;
-	color: transparent;
-	background: transparent;
-	box-shadow: none;
-	appearance: none;
-	-webkit-appearance: none;
-	font-size: 0;
-	line-height: 0;
-	cursor: pointer;
-	opacity: 0;
-	pointer-events: none;
-	transform: translateX(-8px);
-	transition: transform 180ms ease, opacity 180ms ease, background 180ms ease;
-}
-
-.answer-leaderboard-back-button__icon {
-	display: block;
-	width: 62px;
-	height: 62px;
-	background: var(--accent);
-	mask-image: url("../Media/Icons/Arrow_leaderboard.gif");
-	mask-position: center;
-	mask-repeat: no-repeat;
-	mask-size: contain;
-	mask-mode: alpha;
-	-webkit-mask-image: url("../Media/Icons/Arrow_leaderboard.gif");
-	-webkit-mask-position: center;
-	-webkit-mask-repeat: no-repeat;
-	-webkit-mask-size: contain;
-}
-
-.answer-leaderboard.is-open .answer-leaderboard-back-button {
-	opacity: 1;
-	pointer-events: auto;
-	transform: none;
-}
-
-.answer-leaderboard-back-button:hover,
-.answer-leaderboard-back-button:focus-visible {
-	background: transparent;
-	box-shadow: none;
-	outline: none;
-}
-
-@media (max-width: 520px) {
-	.answer-leaderboard-back-button {
-		width: 64px;
-		height: 64px;
-		min-width: 64px;
-		max-width: 64px;
-		min-height: 64px;
-		max-height: 64px;
-	}
-
-	.answer-leaderboard-back-button__icon {
-		width: 56px;
-		height: 56px;
-	}
 }
 
 /* Position rules button top-left corner */
@@ -618,8 +542,6 @@
 .answer-leaderboard__meta strong {
 	min-width: 0;
 	max-width: 100%;
-	font-family: 'Whyte Inktrap', 'Diatype Heavy', 'Inter', sans-serif;
-	font-weight: 900;
 	color: var(--accent);
 	overflow: hidden;
 	text-overflow: ellipsis;
