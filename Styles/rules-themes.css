@@ -342,39 +342,71 @@
 	margin-top: clamp(58px, 14vw, 88px);
 }
 
-.rules-categories__tabs {
-	width: 100%;
+.rules-category-stack {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
 	margin-top: clamp(18px, 5vw, 30px);
 }
 
-.rules-categories__tab {
+.rules-category-folder {
+	grid-area: 1 / 1;
+	z-index: var(--rules-folder-z, 1);
+	display: grid;
+	grid-template-rows: auto 1fr;
+	color: var(--rules-category-text, #ffffff);
+	cursor: pointer;
+	filter: brightness(0.95);
+	pointer-events: none;
+	transition: filter 180ms ease;
+}
+
+.rules-category-folder.is-active {
+	cursor: default;
+	filter: brightness(1);
+}
+
+.rules-category-folder__tab {
+	justify-self: start;
+	width: 25%;
 	min-width: 0;
 	min-height: clamp(42px, 11vw, 58px);
 	margin: 0;
 	padding: 0.4rem 0.35rem;
 	border: 0;
-	background-color: var(--rules-tab-bg);
+	border-radius: 0;
+	background-color: var(--rules-category-bg, #f5aa00);
 	background-image: var(--rules-category-pattern, none);
 	background-position: center;
 	background-repeat: repeat;
 	background-size: clamp(58px, 16vw, 92px) auto;
-	color: var(--rules-tab-text);
+	color: var(--rules-category-text, #ffffff);
 	font-family: 'Diatype Heavy', 'Inter', sans-serif;
 	font-size: clamp(0.6rem, 2.4vw, 0.78rem);
 	font-weight: 800;
 	line-height: 1;
+	text-align: center;
 	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
 	text-transform: uppercase;
 	cursor: pointer;
+	pointer-events: auto;
 }
 
-.rules-categories__tab.is-active {
-	filter: brightness(1.08);
+.rules-category-folder:nth-child(2) .rules-category-folder__tab {
+	margin-left: 25%;
 }
 
-.rules-categories__tab:focus-visible {
+.rules-category-folder:nth-child(3) .rules-category-folder__tab {
+	margin-left: 50%;
+}
+
+.rules-category-folder:nth-child(4) .rules-category-folder__tab {
+	margin-left: 75%;
+}
+
+.rules-category-folder.is-active .rules-category-folder__tab {
+	cursor: default;
+}
+
+.rules-category-folder__tab:focus-visible {
 	outline: 3px solid #ffffff;
 	outline-offset: -5px;
 }
@@ -392,6 +424,12 @@
 	background-size: clamp(112px, 32vw, 180px) auto;
 	color: var(--rules-category-text, #ffffff);
 	text-align: center;
+	pointer-events: none;
+	transition: opacity 180ms ease;
+}
+
+.rules-category-folder:not(.is-active) .rules-category-detail {
+	opacity: 0;
 }
 
 .rules-category-detail__logo {

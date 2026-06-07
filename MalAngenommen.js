@@ -227,7 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const FACET_TEX_HEIGHT = 640
 	const FACET_POLYGON_COUNT = 10000
 	const VARIATION_VISUALS = appConfig.variationVisuals || []
-	const AVATAR_IMAGE_SOURCES = appConfig.avatarImageSources || []
+	const AVATAR_MANIFEST_SRC = 'Media/Leaderboard/profile-pics.json'
+	const CONFIG_AVATAR_IMAGE_SOURCES = Array.isArray(appConfig.avatarImageSources) ? appConfig.avatarImageSources : []
+	let avatarImageSources = CONFIG_AVATAR_IMAGE_SOURCES.slice()
 	const ANSWER_TEXT = appConfig.answerText || {}
 	const normalizeLanguage = (value) => {
 		return value === 'en' ? 'en' : 'de'
@@ -251,6 +253,32 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const getAnswerCopy = () => ANSWER_TEXT[normalizeLanguage(state.language)] || ANSWER_TEXT.de
+
+	const normalizeAvatarImageSources = (value) => {
+		const rawSources = Array.isArray(value)
+			? value
+			: (value && Array.isArray(value.images) ? value.images : [])
+		return rawSources
+			.map((source) => String(source || '').trim())
+			.filter((source) => source && /\.png(?:[?#].*)?$/i.test(source))
+	}
+
+	const loadAvatarImageSources = async () => {
+		avatarImageSources = CONFIG_AVATAR_IMAGE_SOURCES.slice()
+		try {
+			const response = await fetch(AVATAR_MANIFEST_SRC, { cache: 'no-store' })
+			if (!response.ok) {
+				return
+			}
+			const manifest = await response.json()
+			const manifestSources = normalizeAvatarImageSources(manifest)
+			if (manifestSources.length > 0) {
+				avatarImageSources = manifestSources
+			}
+		} catch (error) {
+			console.warn('Leaderboard-Profilbilder konnten nicht geladen werden.', error)
+		}
+	}
 
 	const toStyleAssetUrl = (path) => {
 		const value = String(path || '').trim()
@@ -467,9 +495,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		avatar.className = 'answer-leaderboard__avatar'
 		avatar.setAttribute('aria-hidden', 'true')
 
-		if (AVATAR_IMAGE_SOURCES.length > 0) {
+		if (avatarImageSources.length > 0) {
 			const img = document.createElement('img')
-			img.src = AVATAR_IMAGE_SOURCES[hash % AVATAR_IMAGE_SOURCES.length]
+			img.src = avatarImageSources[hash % avatarImageSources.length]
 			img.alt = ''
 			avatar.appendChild(img)
 			return avatar
@@ -669,18 +697,36 @@ document.addEventListener('DOMContentLoaded', () => {
 		return patterns[key] || ''
 	}
 
-	const setRulesCategoryDetail = (detailNode, category, buttons) => {
-		if (!detailNode || !category) {
-			return
+	const buildRulesCategoryFolder = (category, index, selectFolder) => {
+		if (!category) {
+			return null
 		}
 		const theme = getRulesCategoryTheme(category)
 		const patternSrc = getRulesCategoryPatternSrc(category)
 		const panelColor = theme.coreColor || theme.logoColor || theme.accent || '#f5aa00'
 		const panelText = theme.text || '#ffffff'
-		detailNode.style.setProperty('--rules-category-bg', panelColor)
-		detailNode.style.setProperty('--rules-category-text', panelText)
-		detailNode.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
-		detailNode.innerHTML = ''
+		const categoryId = String(category.id || `category-${index}`)
+		const folder = document.createElement('article')
+		folder.className = 'rules-category-folder'
+		folder.dataset.rulesCategoryFolder = categoryId
+		folder.style.setProperty('--rules-category-bg', panelColor)
+		folder.style.setProperty('--rules-category-text', panelText)
+		folder.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
+		folder.style.setProperty('--rules-folder-index', String(index))
+
+		const tab = document.createElement('button')
+		tab.type = 'button'
+		tab.className = 'rules-category-folder__tab'
+		tab.dataset.rulesCategoryTab = categoryId
+		tab.setAttribute('role', 'tab')
+		tab.setAttribute('aria-controls', `rules-category-panel-${categoryId}`)
+		tab.textContent = translateRulesEntry(category.label)
+		folder.appendChild(tab)
+
+		const detail = document.createElement('div')
+		detail.className = 'rules-category-detail'
+		detail.id = `rules-category-panel-${categoryId}`
+		detail.setAttribute('role', 'tabpanel')
 
 		const logo = document.createElement('div')
 		logo.className = 'rules-category-detail__logo'
@@ -691,22 +737,45 @@ document.addEventListener('DOMContentLoaded', () => {
 			image.alt = ''
 			logo.appendChild(image)
 		}
-		detailNode.appendChild(logo)
+		detail.appendChild(logo)
 
 		const heading = document.createElement('h3')
 		heading.className = 'rules-category-detail__title'
 		heading.textContent = translateRulesEntry(category.title) || translateRulesEntry(category.label)
-		detailNode.appendChild(heading)
+		detail.appendChild(heading)
 
 		const description = document.createElement('p')
 		description.className = 'rules-category-detail__description'
 		description.textContent = translateRulesEntry(category.description)
-		detailNode.appendChild(description)
+		detail.appendChild(description)
+		folder.appendChild(detail)
 
-		buttons.forEach((button) => {
-			const isActive = button.dataset.rulesCategoryTab === String(category.id || '')
-			button.classList.toggle('is-active', isActive)
-			button.setAttribute('aria-selected', isActive ? 'true' : 'false')
+		folder.addEventListener('click', () => selectFolder(categoryId))
+		return folder
+	}
+
+	const setRulesCategoryStackActive = (folders, activeId) => {
+		if (!Array.isArray(folders) || folders.length === 0) {
+			return
+		}
+		const activeIndex = Math.max(0, folders.findIndex((folder) => folder.dataset.rulesCategoryFolder === activeId))
+		let inactiveSlot = 0
+		folders.forEach((folder, index) => {
+			const isActive = index === activeIndex
+			const tab = folder.querySelector('[data-rules-category-tab]')
+			const detail = folder.querySelector('.rules-category-detail')
+			folder.classList.toggle('is-active', isActive)
+			folder.style.setProperty('--rules-folder-z', String(isActive ? folders.length + 2 : inactiveSlot + 1))
+			if (tab) {
+				tab.setAttribute('aria-selected', isActive ? 'true' : 'false')
+				tab.tabIndex = 0
+			}
+			if (detail) {
+				detail.setAttribute('aria-hidden', isActive ? 'false' : 'true')
+			}
+			if (!isActive) {
+				inactiveSlot += 1
+			}
 		})
 	}
 
@@ -795,38 +864,28 @@ document.addEventListener('DOMContentLoaded', () => {
 			heading.textContent = translateRulesEntry(state.rulesContent.categoriesTitle)
 			categoriesSection.appendChild(heading)
 
-			const tabList = document.createElement('div')
-			tabList.className = 'rules-categories__tabs'
-			tabList.setAttribute('role', 'tablist')
-			const detail = document.createElement('div')
-			detail.className = 'rules-category-detail'
-			detail.setAttribute('role', 'tabpanel')
-			const buttons = []
+			const stack = document.createElement('div')
+			stack.className = 'rules-category-stack'
+			stack.setAttribute('role', 'tablist')
+			const folders = []
+			let activeCategoryId = String(categories[0]?.id || 'category-0')
+			const selectFolder = (categoryId) => {
+				activeCategoryId = categoryId
+				setRulesCategoryStackActive(folders, activeCategoryId)
+			}
 
 			categories.forEach((category, index) => {
-				const button = document.createElement('button')
-				const theme = getRulesCategoryTheme(category)
-				const patternSrc = getRulesCategoryPatternSrc(category)
-				button.type = 'button'
-				button.className = 'rules-categories__tab'
-				button.dataset.rulesCategoryTab = String(category.id || '')
-				button.setAttribute('role', 'tab')
-				button.setAttribute('aria-selected', index === 0 ? 'true' : 'false')
-				button.style.setProperty('--rules-tab-bg', theme.coreColor || theme.logoColor || theme.accent || '#f5aa00')
-				button.style.setProperty('--rules-tab-text', theme.text || '#ffffff')
-				button.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
-				button.textContent = translateRulesEntry(category.label)
-				button.addEventListener('click', () => {
-					setRulesCategoryDetail(detail, category, buttons)
-				})
-				buttons.push(button)
-				tabList.appendChild(button)
+				const folder = buildRulesCategoryFolder(category, index, selectFolder)
+				if (!folder) {
+					return
+				}
+				folders.push(folder)
+				stack.appendChild(folder)
 			})
 
-			categoriesSection.appendChild(tabList)
-			categoriesSection.appendChild(detail)
+			categoriesSection.appendChild(stack)
 			rulesSectionsNode.appendChild(categoriesSection)
-			setRulesCategoryDetail(detail, categories[0], buttons)
+			setRulesCategoryStackActive(folders, activeCategoryId)
 		}
 
 		const about = state.rulesContent.about
@@ -4071,6 +4130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			applySpawnMotionMode(storedSpawnMotionMode, true)
 
+			await loadAvatarImageSources()
 			const data = await getData()
 			state.cards = toCards(Array.isArray(data.cards) ? data.cards : [])
 			// build dynamic filter options from loaded card categories
