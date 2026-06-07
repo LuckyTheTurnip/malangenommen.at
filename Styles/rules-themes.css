@@ -253,12 +253,12 @@
 	aspect-ratio: 1;
 	display: block;
 	background: #f05a2b;
-	mask-image: url("../Media/Rules/Rules_active.gif");
+	mask-image: url("../Media/Rules/rules_active.gif");
 	mask-position: center;
 	mask-repeat: no-repeat;
 	mask-size: contain;
 	mask-mode: alpha;
-	-webkit-mask-image: url("../Media/Rules/Rules_active.gif");
+	-webkit-mask-image: url("../Media/Rules/rules_active.gif");
 	-webkit-mask-position: center;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-size: contain;

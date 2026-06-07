@@ -89,7 +89,7 @@
 	width: clamp(104px, 58%, 168px);
 	aspect-ratio: 1;
 	display: none;
-	background: #0f4f2f;
+	background: #351653;
 	pointer-events: none;
 	transform: rotate(-8deg);
 	mask-image: url("../Media/Icons/Drag_indicator.gif");

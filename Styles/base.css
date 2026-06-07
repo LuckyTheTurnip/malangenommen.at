@@ -312,19 +312,6 @@ body::before {
 	background: rgba(92, 152, 255, 0.16);
 }
 
-.corner-dot {
-	position: fixed;
-	top: max(16px, env(safe-area-inset-top));
-	right: max(16px, env(safe-area-inset-right));
-	width: 16px;
-	height: 16px;
-	border-radius: 999px;
-	background: hsl(143, 100%, 50%);
-	box-shadow: 0 0 0 6px rgba(56, 212, 107, 0.18), 0 0 24px rgba(56, 212, 107, 0.45);
-	pointer-events: none;
-	z-index: 6;
-}
-
 .game__header,
 .game__status {
 	width: min(100%, 82rem);
