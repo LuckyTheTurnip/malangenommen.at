@@ -129,6 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationTeaserPointerId: null,
 			variationTeaserSuppressClick: false,
 			variationTeaserSuppressClickTimer: null,
+			variationFanDragging: false,
+			variationFanPointerId: null,
+			variationFanDragCard: null,
+			variationFanDragIndex: -1,
+			variationFanDragStartX: 0,
+			variationFanDragStartY: 0,
+			variationFanLastX: 0,
+			variationFanLastY: 0,
+			variationFanTouchStartTime: 0,
+			variationFanSuppressClick: false,
+			variationFanSuppressClickTimer: null,
 			answerComposerOpen: false,
 			answerSuccessTimer: null,
 			answerLeaderboardOpen: false,
@@ -1911,6 +1922,71 @@ document.addEventListener('DOMContentLoaded', () => {
 		}, 260)
 	}
 
+	const clearVariationFanSuppressClick = () => {
+		if (state.variationFanSuppressClickTimer) {
+			clearTimeout(state.variationFanSuppressClickTimer)
+			state.variationFanSuppressClickTimer = null
+		}
+		state.variationFanSuppressClick = false
+	}
+
+	const setVariationFanSuppressClick = () => {
+		state.variationFanSuppressClick = true
+		if (state.variationFanSuppressClickTimer) {
+			clearTimeout(state.variationFanSuppressClickTimer)
+		}
+		state.variationFanSuppressClickTimer = window.setTimeout(() => {
+			state.variationFanSuppressClick = false
+			state.variationFanSuppressClickTimer = null
+		}, 260)
+	}
+
+	const getVariationFanCard = (target) => {
+		if (!variationFanNode || !(target instanceof Element)) {
+			return null
+		}
+		const card = target.closest('[data-variation-index]')
+		return card && variationFanNode.contains(card) ? card : null
+	}
+
+	const resetVariationFanCardDrag = (card = state.variationFanDragCard, { animate = false } = {}) => {
+		if (!card) {
+			return
+		}
+		card.classList.remove('is-dragging')
+		card.classList.toggle('is-returning', !!animate)
+		card.style.setProperty('--variation-fan-drag-x', '0px')
+		card.style.setProperty('--variation-fan-drag-y', '0px')
+		card.style.setProperty('--variation-fan-drag-rot', '0deg')
+		if (animate) {
+			window.setTimeout(() => {
+				card.classList.remove('is-returning')
+			}, 280)
+		} else {
+			card.classList.remove('is-returning')
+		}
+	}
+
+	const resetVariationFanDragState = () => {
+		state.variationFanDragging = false
+		state.variationFanPointerId = null
+		state.variationFanDragCard = null
+		state.variationFanDragIndex = -1
+		state.variationFanDragStartX = 0
+		state.variationFanDragStartY = 0
+		state.variationFanLastX = 0
+		state.variationFanLastY = 0
+		state.variationFanTouchStartTime = 0
+	}
+
+	const openVariationFanCard = (card) => {
+		const selectedIndex = Number.parseInt(card?.getAttribute('data-variation-index') || '-1', 10)
+		if (!Number.isInteger(selectedIndex) || selectedIndex < 0) {
+			return
+		}
+		openVariationCard(selectedIndex)
+	}
+
 	const applyVariationTeaserDrag = (x, y) => {
 		state.variationTeaserDragX = x
 		state.variationTeaserDragY = y
@@ -3356,6 +3432,129 @@ document.addEventListener('DOMContentLoaded', () => {
 			onVariationTeaserDragEnd()
 		}
 
+		const canDragVariationFanCard = (card) => {
+			return !!card
+				&& !state.isAnimating
+				&& !state.miniCardOpen
+				&& state.hasVariations
+				&& state.variationChoices.length > 1
+		}
+
+		const onVariationFanDragStart = (card, x, y, pointerId = null) => {
+			if (!canDragVariationFanCard(card)) {
+				return false
+			}
+			state.variationFanDragging = true
+			state.variationFanPointerId = pointerId
+			state.variationFanDragCard = card
+			state.variationFanDragIndex = Number.parseInt(card.getAttribute('data-variation-index') || '-1', 10)
+			state.variationFanDragStartX = x
+			state.variationFanDragStartY = y
+			state.variationFanLastX = x
+			state.variationFanLastY = y
+			state.variationFanTouchStartTime = performance.now()
+			card.classList.remove('is-returning')
+			card.classList.add('is-dragging')
+			return true
+		}
+
+		const onVariationFanDragMove = (x, y) => {
+			const card = state.variationFanDragCard
+			if (!state.variationFanDragging || !card) {
+				return
+			}
+
+			state.variationFanLastX = x
+			state.variationFanLastY = y
+
+			const deltaX = x - state.variationFanDragStartX
+			const deltaY = y - state.variationFanDragStartY
+			const dragDistance = Math.max(0, -deltaY)
+			const rotation = Math.max(-MAX_DRAG_ROTATION, Math.min(MAX_DRAG_ROTATION, deltaX * 0.02 - dragDistance * 0.03))
+
+			card.style.setProperty('--variation-fan-drag-x', `${deltaX * 0.08}px`)
+			card.style.setProperty('--variation-fan-drag-y', `${deltaY}px`)
+			card.style.setProperty('--variation-fan-drag-rot', `${rotation}deg`)
+
+			if (Math.hypot(deltaX, deltaY) > VARIATION_DRAG_DEADZONE) {
+				setVariationFanSuppressClick()
+			}
+		}
+
+		const onVariationFanDragEnd = () => {
+			const card = state.variationFanDragCard
+			if (!state.variationFanDragging || !card) {
+				return
+			}
+
+			const elapsed = Math.max(1, performance.now() - state.variationFanTouchStartTime)
+			const deltaX = state.variationFanLastX - state.variationFanDragStartX
+			const deltaY = state.variationFanLastY - state.variationFanDragStartY
+			const velocityY = Math.abs(deltaY) / elapsed
+			const isUpwardSwipe = deltaY < -SWIPE_DISTANCE && Math.abs(deltaY) > Math.abs(deltaX) * SWIPE_RATIO
+			const isFastFlick = deltaY < -40 && velocityY > SWIPE_VELOCITY
+
+			if (isUpwardSwipe || isFastFlick) {
+				setVariationFanSuppressClick()
+				resetVariationFanCardDrag(card)
+				resetVariationFanDragState()
+				openVariationFanCard(card)
+				return
+			}
+
+			resetVariationFanCardDrag(card, { animate: true })
+			resetVariationFanDragState()
+		}
+
+		const onVariationFanTouchStart = (event) => {
+			if (!event.touches || event.touches.length !== 1) {
+				return
+			}
+			const card = getVariationFanCard(event.target)
+			if (!card) {
+				return
+			}
+			const touch = event.touches[0]
+			onVariationFanDragStart(card, touch.clientX, touch.clientY)
+		}
+
+		const onVariationFanTouchMove = (event) => {
+			if (!state.variationFanDragging || !event.touches || event.touches.length !== 1) {
+				return
+			}
+			const touch = event.touches[0]
+			onVariationFanDragMove(touch.clientX, touch.clientY)
+			event.preventDefault()
+		}
+
+		const onVariationFanPointerDown = (event) => {
+			if (event.pointerType === 'touch') {
+				return
+			}
+			const card = getVariationFanCard(event.target)
+			if (!card) {
+				return
+			}
+			if (onVariationFanDragStart(card, event.clientX, event.clientY, event.pointerId)) {
+				card.setPointerCapture?.(event.pointerId)
+				event.preventDefault()
+			}
+		}
+
+		const onVariationFanPointerMove = (event) => {
+			if (!state.variationFanDragging || state.variationFanPointerId !== event.pointerId) {
+				return
+			}
+			onVariationFanDragMove(event.clientX, event.clientY)
+		}
+
+		const onVariationFanPointerEnd = (event) => {
+			if (state.variationFanPointerId !== event.pointerId) {
+				return
+			}
+			onVariationFanDragEnd()
+		}
+
 		variationCardNode.addEventListener('touchstart', onVariationTouchStart, { passive: true })
 		variationCardNode.addEventListener('touchmove', onVariationTouchMove, { passive: false })
 		variationCardNode.addEventListener('touchend', onVariationTouchEndDrag)
@@ -3388,12 +3587,24 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			event.preventDefault()
 			event.stopPropagation()
+			if (state.variationFanSuppressClick) {
+				clearVariationFanSuppressClick()
+				return
+			}
 			const selectedIndex = Number.parseInt(target.getAttribute('data-variation-index') || '-1', 10)
 			if (!Number.isInteger(selectedIndex) || selectedIndex < 0) {
 				return
 			}
 			openVariationCard(selectedIndex)
 		})
+		variationFanNode?.addEventListener('touchstart', onVariationFanTouchStart, { passive: true })
+		variationFanNode?.addEventListener('touchmove', onVariationFanTouchMove, { passive: false })
+		variationFanNode?.addEventListener('touchend', onVariationFanDragEnd)
+		variationFanNode?.addEventListener('touchcancel', onVariationFanDragEnd)
+		variationFanNode?.addEventListener('pointerdown', onVariationFanPointerDown)
+		variationFanNode?.addEventListener('pointermove', onVariationFanPointerMove)
+		variationFanNode?.addEventListener('pointerup', onVariationFanPointerEnd)
+		variationFanNode?.addEventListener('pointercancel', onVariationFanPointerEnd)
 		// Do not stop propagation on the scratch host itself:
 		// p5 touch callbacks rely on bubbling in Safari/Chrome mobile.
 	}
@@ -3578,7 +3789,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (filterMenu) {
 			filterMenu.addEventListener('change', (event) => {
 				const target = event.target
-				if (!(target instanceof HTMLInputElement) || !target.dataset.filterCategory) return
+				if (!(target instanceof HTMLInputElement)) return
+				if (target.matches('[data-filter-variations-only]')) {
+					state.variationsOnly = target.checked
+					applyFilters({ keepCurrent: true })
+					updateFilterToggleIcon()
+					return
+				}
+				if (!target.dataset.filterCategory) return
 				const inputs = Array.from(filterMenu.querySelectorAll('input[data-filter-category]'))
 				const enabled = inputs.filter((node) => node.checked).map((node) => String(node.dataset.filterCategory || '')).filter(Boolean)
 				state.enabledCategories = new Set(enabled)
@@ -3586,11 +3804,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				updateFilterToggleIcon()
 			})
 		}
-		filterVariationsOnlyInput?.addEventListener('change', () => {
-			state.variationsOnly = !!filterVariationsOnlyInput.checked
-			applyFilters({ keepCurrent: true })
-			updateFilterToggleIcon()
-		})
 		rulesToggle?.addEventListener('click', () => {
 			transitionRulesOpen(!state.rulesOpen)
 		})
@@ -3644,7 +3857,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (filterMenu) {
 					// remove existing category option nodes (keep title and divider)
 					const divider = filterMenu.querySelector('.filter-menu__divider')
-					Array.from(filterMenu.querySelectorAll('.filter-menu__option')).forEach((node) => node.remove())
+					Array.from(filterMenu.querySelectorAll('.filter-menu__option')).forEach((node) => {
+						if (node.querySelector('input[data-filter-category]')) {
+							node.remove()
+						}
+					})
 					// insert category options before divider
 					const insertBefore = divider || null
 					const categories = []

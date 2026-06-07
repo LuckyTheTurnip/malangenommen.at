@@ -30,13 +30,13 @@
 	.game__header-actions .game__filter-toggle,
 	.game__header-actions .game__motion-toggle,
 	.game__header-actions .game__language-toggle {
-		width: 64px;
-		height: 64px;
+		width: 58px;
+		height: 58px;
 	}
 
 	.header-icon {
-		width: 56px;
-		height: 56px;
+		width: 50px;
+		height: 50px;
 	}
 
 	.game__title {
