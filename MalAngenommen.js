@@ -697,36 +697,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		return patterns[key] || ''
 	}
 
-	const buildRulesCategoryFolder = (category, index, selectFolder) => {
-		if (!category) {
-			return null
+	const setRulesCategoryDetail = (detail, category) => {
+		if (!detail || !category) {
+			return
 		}
 		const theme = getRulesCategoryTheme(category)
 		const patternSrc = getRulesCategoryPatternSrc(category)
 		const panelColor = theme.coreColor || theme.logoColor || theme.accent || '#f5aa00'
 		const panelText = theme.text || '#ffffff'
-		const categoryId = String(category.id || `category-${index}`)
-		const folder = document.createElement('article')
-		folder.className = 'rules-category-folder'
-		folder.dataset.rulesCategoryFolder = categoryId
-		folder.style.setProperty('--rules-category-bg', panelColor)
-		folder.style.setProperty('--rules-category-text', panelText)
-		folder.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
-		folder.style.setProperty('--rules-folder-index', String(index))
-
-		const tab = document.createElement('button')
-		tab.type = 'button'
-		tab.className = 'rules-category-folder__tab'
-		tab.dataset.rulesCategoryTab = categoryId
-		tab.setAttribute('role', 'tab')
-		tab.setAttribute('aria-controls', `rules-category-panel-${categoryId}`)
-		tab.textContent = translateRulesEntry(category.label)
-		folder.appendChild(tab)
-
-		const detail = document.createElement('div')
-		detail.className = 'rules-category-detail'
-		detail.id = `rules-category-panel-${categoryId}`
-		detail.setAttribute('role', 'tabpanel')
+		detail.style.setProperty('--rules-category-bg', panelColor)
+		detail.style.setProperty('--rules-category-text', panelText)
+		detail.style.setProperty('--rules-category-pattern', patternSrc ? toStyleAssetUrl(patternSrc) : 'none')
+		detail.innerHTML = ''
 
 		const logo = document.createElement('div')
 		logo.className = 'rules-category-detail__logo'
@@ -748,35 +730,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		description.className = 'rules-category-detail__description'
 		description.textContent = translateRulesEntry(category.description)
 		detail.appendChild(description)
-		folder.appendChild(detail)
-
-		folder.addEventListener('click', () => selectFolder(categoryId))
-		return folder
 	}
 
-	const setRulesCategoryStackActive = (folders, activeId) => {
-		if (!Array.isArray(folders) || folders.length === 0) {
+	const setRulesCategorySelection = (categories, buttons, detail, activeId) => {
+		if (!Array.isArray(categories) || categories.length === 0) {
 			return
 		}
-		const activeIndex = Math.max(0, folders.findIndex((folder) => folder.dataset.rulesCategoryFolder === activeId))
-		let inactiveSlot = 0
-		folders.forEach((folder, index) => {
-			const isActive = index === activeIndex
-			const tab = folder.querySelector('[data-rules-category-tab]')
-			const detail = folder.querySelector('.rules-category-detail')
-			folder.classList.toggle('is-active', isActive)
-			folder.style.setProperty('--rules-folder-z', String(isActive ? folders.length + 2 : inactiveSlot + 1))
-			if (tab) {
-				tab.setAttribute('aria-selected', isActive ? 'true' : 'false')
-				tab.tabIndex = 0
-			}
-			if (detail) {
-				detail.setAttribute('aria-hidden', isActive ? 'false' : 'true')
-			}
-			if (!isActive) {
-				inactiveSlot += 1
-			}
+		const fallbackCategory = categories[0]
+		const getCategoryId = (category, index) => String(category?.id || `category-${index}`)
+		const activeIndex = categories.findIndex((category, index) => getCategoryId(category, index) === activeId)
+		const activeCategory = activeIndex >= 0 ? categories[activeIndex] : fallbackCategory
+		const activeCategoryId = getCategoryId(activeCategory, Math.max(0, activeIndex))
+		buttons.forEach((button) => {
+			const isActive = button.dataset.rulesCategoryTab === activeCategoryId
+			button.classList.toggle('is-active', isActive)
+			button.setAttribute('aria-selected', isActive ? 'true' : 'false')
 		})
+		setRulesCategoryDetail(detail, activeCategory)
 	}
 
 	const renderRulesContent = () => {
@@ -864,28 +834,42 @@ document.addEventListener('DOMContentLoaded', () => {
 			heading.textContent = translateRulesEntry(state.rulesContent.categoriesTitle)
 			categoriesSection.appendChild(heading)
 
-			const stack = document.createElement('div')
-			stack.className = 'rules-category-stack'
-			stack.setAttribute('role', 'tablist')
-			const folders = []
+			const selector = document.createElement('div')
+			selector.className = 'rules-category-selector'
+			selector.setAttribute('role', 'tablist')
+			const detail = document.createElement('div')
+			detail.className = 'rules-category-detail'
+			detail.id = 'rules-category-panel'
+			detail.setAttribute('role', 'tabpanel')
+			const buttons = []
 			let activeCategoryId = String(categories[0]?.id || 'category-0')
-			const selectFolder = (categoryId) => {
+			const selectCategory = (categoryId) => {
 				activeCategoryId = categoryId
-				setRulesCategoryStackActive(folders, activeCategoryId)
+				setRulesCategorySelection(categories, buttons, detail, activeCategoryId)
 			}
 
 			categories.forEach((category, index) => {
-				const folder = buildRulesCategoryFolder(category, index, selectFolder)
-				if (!folder) {
-					return
-				}
-				folders.push(folder)
-				stack.appendChild(folder)
+				const theme = getRulesCategoryTheme(category)
+				const categoryId = String(category.id || `category-${index}`)
+				const button = document.createElement('button')
+				button.type = 'button'
+				button.className = 'rules-category-label'
+				button.dataset.rulesCategoryTab = categoryId
+				button.setAttribute('role', 'tab')
+				button.setAttribute('aria-controls', detail.id)
+				button.setAttribute('aria-label', translateRulesEntry(category.label))
+				button.style.setProperty('--rules-category-bg', theme.coreColor || theme.logoColor || theme.accent || '#f5aa00')
+				button.addEventListener('click', () => {
+					selectCategory(categoryId)
+				})
+				buttons.push(button)
+				selector.appendChild(button)
 			})
 
-			categoriesSection.appendChild(stack)
+			categoriesSection.appendChild(selector)
+			categoriesSection.appendChild(detail)
 			rulesSectionsNode.appendChild(categoriesSection)
-			setRulesCategoryStackActive(folders, activeCategoryId)
+			setRulesCategorySelection(categories, buttons, detail, activeCategoryId)
 		}
 
 		const about = state.rulesContent.about
