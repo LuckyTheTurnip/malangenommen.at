@@ -75,6 +75,12 @@
 		min-height: 64px;
 	}
 
+	.answer-composer__viewport-reset:not([hidden]) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.answer-leaderboard {
 		padding: max(58px, env(safe-area-inset-top)) 8px max(12px, calc(env(safe-area-inset-bottom) + 8px));
 		transform: translate3d(82vw, 0, -80px) rotateY(16deg) scale(0.96);

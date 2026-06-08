@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const categoryLabel = activeCard ? activeCard.querySelector('[data-category-label]') : document.querySelector('[data-category-label]')
 	const answerComposerNode = activeCard ? activeCard.querySelector('[data-answer-composer]') : null
 	const answerToggleNode = activeCard ? activeCard.querySelector('[data-answer-toggle]') : null
+	const answerViewportResetNode = activeCard ? activeCard.querySelector('[data-answer-viewport-reset]') : null
 	const answerFormNode = activeCard ? activeCard.querySelector('[data-answer-form]') : null
 	const answerUsernameNode = activeCard ? activeCard.querySelector('[data-answer-username]') : null
 	const answerTextNode = activeCard ? activeCard.querySelector('[data-answer-text]') : null
@@ -1796,6 +1797,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		if (answerToggleNode) {
 			answerToggleNode.setAttribute('aria-expanded', state.answerComposerOpen ? 'true' : 'false')
+		}
+		if (answerViewportResetNode) {
+			answerViewportResetNode.hidden = state.answerComposerOpen
 		}
 		if (clearStatus && answerStatusNode) {
 			answerStatusNode.textContent = ''
@@ -4054,6 +4058,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerSubmitNode?.addEventListener('pointerdown', prepareAnswerPanelExit)
 		answerCancelNode?.addEventListener('touchend', prepareAnswerPanelExit)
 		answerSubmitNode?.addEventListener('touchend', prepareAnswerPanelExit)
+		answerViewportResetNode?.addEventListener('click', () => {
+			recoverMobileViewport({ forceScale: true })
+			answerViewportResetNode.hidden = true
+		})
 		answerCancelNode?.addEventListener('click', () => {
 			setAnswerComposerOpen(false)
 		})
