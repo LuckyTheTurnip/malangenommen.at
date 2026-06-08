@@ -80,7 +80,7 @@
 				"en": "Hypothetical"
 			},
 			"description": {
-				"de": "Die einfachste Kategorie. Ein Haufen an hypothetischen Fragen und Szenarien. Beschreibt und löst die euch gegebenen Prompts auf die kreativste, dümmste oder akkurateste Art und Weise, die euch einfällt. \nManche Karten haben Variationen der Frage, die ihr alternativ oder zusätzlich zur aktuellen verwenden könnt.",
+				"de": "Die einfachste Kategorie. Ein Haufen an hypothetischen Fragen und Szenarien. Beschreibt und löst die euch gegebenen Prompts auf die kreativste, dümmste oder akkurateste Art und Weise, die euch einfällt. \nManche Karten haben **Variationen** der Frage, die ihr alternativ oder zusätzlich zur aktuellen verwenden könnt.",
 				"en": "The simplest category. A collection of hypothetical questions and scenarios. Describe and solve the prompt in the most creative, silly, or accurate way you can. Some cards include variations that can be used instead of or alongside the current question."
 			},
 			"imageSrc": "Media/Logos/hypothetical_logo.GIF"
@@ -131,8 +131,8 @@
 				"en": "Monkey’s Paw"
 			},
 			"description": {
-				"de": "Basierend auf der gleichnamigen Kurzgeschichte von William Wymark Jacobs. \nIhr seid ein Flaschengeist, ein sadistischer, arschiger Flaschengeist. Lasst den geäußerten Wunsch von der Karte auf die schlimmstmögliche Art und Weise wahr werden. \nBeispiel: 'Ich wünsche mir 10k Euro zu bekommen' \n->Dein Wunsch geht in Erfüllung: Du wirst von einem Auto angefahren und landest im Krankenhaus und hast für den Rest deines Lebens Hüftprobleme. Nach einem langen und anstrengenden Gerichtsprozess bekommst du ein Schmerzensgeld von 10k.",
-				"en": "Based on the short story of the same name by William Wymark Jacobs. \nYou are a genie, a sadistic, bastardly genie. Make the wish on the card come true in the worst possible way. \nExample: 'I wish I could get 10k euros' \n→ Your wish is granted: You get hit by a car and end up in hospital with lifelong hip problems. After a long and gruelling court case, you receive 10k in damages."
+				"de": "Basierend auf der gleichnamigen Kurzgeschichte von William Wymark Jacobs. \nIhr seid ein Flaschengeist, ein sadistischer, arschiger Flaschengeist. Lasst den geäußerten Wunsch von der Karte auf die schlimmstmögliche Art und Weise wahr werden. \n**Beispiel:** *'Ich wünsche mir 10k Euro zu bekommen' \n->Dein Wunsch geht in Erfüllung: Du wirst von einem Auto angefahren und landest im Krankenhaus und hast für den Rest deines Lebens Hüftprobleme. Nach einem langen und anstrengenden Gerichtsprozess bekommst du ein Schmerzensgeld von 10k.*",
+				"en": "Based on the short story of the same name by William Wymark Jacobs. \nYou are a genie, a sadistic, bastardly genie. Make the wish on the card come true in the worst possible way. \n**Example:** *'I wish I could get 10k euros' \n→ Your wish is granted: You get hit by a car and end up in hospital with lifelong hip problems. After a long and gruelling court case, you receive 10k in damages.*"
 			},
 			"imageSrc": "Media/Logos/MonkeysPaw_logo.GIF"
 		}

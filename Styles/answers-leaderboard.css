@@ -40,6 +40,7 @@
 	font-weight: 800;
 	line-height: 1;
 	cursor: pointer;
+	touch-action: manipulation;
 	transition: transform 180ms ease, opacity 180ms ease, background 180ms ease;
 }
 
@@ -622,9 +623,9 @@
 	display: grid;
 	gap: clamp(6px, 1.2vw, 10px);
 	padding:
-		clamp(25px, 4.3vw, 38px)
-		clamp(33px, 6vw, 54px)
-		clamp(38px, 7vw, 66px)
+		clamp(30px, 4.6vw, 42px)
+		clamp(5px, 2vw, 20px)
+		clamp(75px, 4vw, 80px)
 		clamp(31px, 5.4vw, 50px);
 	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small);
 	background: transparent;
@@ -662,7 +663,7 @@
 	padding:
 		clamp(25px, 4.3vw, 38px)
 		clamp(31px, 5.4vw, 50px)
-		clamp(38px, 7vw, 66px)
+		clamp(48px, 8.2vw, 78px)
 		clamp(33px, 6vw, 54px);
 }
 

@@ -212,10 +212,18 @@
 }
 
 .variation-mini-card.is-flying-out {
-	opacity: 0;
-	transform: translate3d(calc(var(--variation-peek-x) + 86px), var(--variation-peek-y), 0) scale(0.9) rotate(5deg);
-	-webkit-transform: translate3d(calc(var(--variation-peek-x) + 86px), var(--variation-peek-y), 0) scale(0.9) rotate(5deg);
+	opacity: 1;
+	transform: translate3d(72vw, -48%, 0) scale(0.92) rotate(16deg);
+	-webkit-transform: translate3d(72vw, -48%, 0) scale(0.92) rotate(16deg);
 	pointer-events: none;
+}
+
+.variation-mini-card.is-teaser-entering {
+	opacity: 1;
+	transform: translate3d(calc(var(--variation-peek-x) + 34vw), calc(var(--variation-peek-y) + 2vh), 0) scale(0.9) rotate(10deg);
+	-webkit-transform: translate3d(calc(var(--variation-peek-x) + 34vw), calc(var(--variation-peek-y) + 2vh), 0) scale(0.9) rotate(10deg);
+	pointer-events: none;
+	transition: none !important;
 }
 
 .variation-mini-card__inner {

@@ -1,12 +1,14 @@
 /* Center header actions horizontally and place them above the card */
 .game__header-actions {
+	--header-icon-width: 60px;
+	--header-icon-height: 60px;
 	position: fixed;
-	left: 50%;
-	top: clamp(28px, 13vh, 86px);
-	width: min(var(--deck-width), calc(100vw - max(40px, env(safe-area-inset-left)) - max(40px, env(safe-area-inset-right))));
-	transform: translateX(-50%);
-	justify-content: space-between;
-	gap: clamp(10px, 4vw, 28px);
+	left: 40%;
+	top: clamp(48px, 15vh, 112px);
+	width: auto;
+	transform: translateX(-30%);
+	justify-content: center;
+	gap: clamp(2px, 1.8vw, 14px);
 	z-index: 60;
 	isolation: isolate;
 }
@@ -15,8 +17,8 @@
 .game__header-actions .game__motion-toggle,
 .game__header-actions .game__language-toggle {
 	padding: 0;
-	width: 84px;
-	height: 84px;
+	width: 42px;
+	height: 42px;
 	min-width: 0;
 	border-radius: 0;
 	display: inline-flex;
@@ -170,7 +172,7 @@
 .filter-menu {
 	position: fixed;
 	left: 50%;
-	top: calc(clamp(28px, 13vh, 86px) + clamp(68px, 12vw, 98px));
+	top: calc(clamp(48px, 15vh, 112px) + clamp(56px, 10vw, 78px));
 	width: min(calc(var(--deck-width) + clamp(48px, 10vw, 92px)), calc(100vw - max(40px, env(safe-area-inset-left)) - max(40px, env(safe-area-inset-right))));
 	max-height: 0;
 	padding: 0 var(--space-3);

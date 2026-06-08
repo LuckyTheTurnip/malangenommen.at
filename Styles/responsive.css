@@ -24,19 +24,23 @@
 	}
 
 	.game__header-actions {
-		justify-content: space-between;
+		--header-icon-width: 48px;
+		--header-icon-height: 48px;
+		top: clamp(100px, 20vh, 112px);
+		justify-content: center;
+		gap: 25px;
 	}
 
 	.game__header-actions .game__filter-toggle,
 	.game__header-actions .game__motion-toggle,
 	.game__header-actions .game__language-toggle {
-		width: 58px;
-		height: 58px;
+		width: 50px;
+		height: 50px;
 	}
 
 	.header-icon {
-		width: 50px;
-		height: 50px;
+		width: var(--header-icon-width);
+		height: var(--header-icon-height);
 	}
 
 	.game__title {
@@ -60,6 +64,11 @@
 		width: auto;
 		gap: 7px;
 		padding: 18px 22px 16px;
+	}
+
+	.answer-composer__input,
+	.answer-composer__textarea {
+		font-size: 16px;
 	}
 
 	.answer-composer__textarea {

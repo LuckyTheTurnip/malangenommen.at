@@ -18,6 +18,10 @@ html, body {
 	color: var(--text);
 	font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 	perspective: 1400px;
+	overflow-x: hidden;
+	overflow-x: clip;
+	overscroll-behavior-x: none;
+	touch-action: pan-y;
 }
 
 .rules-page {

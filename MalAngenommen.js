@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
 	const VARIATION_FLY_MS = 420
+	const VARIATION_TEASER_ENTER_MS = 40
 	const VARIATION_DRAG_SNAP_PROGRESS = 0.35
 	const VARIATION_DRAG_OPEN_DISTANCE = 160
 	const VARIATION_DRAG_SNAP_CENTER_RATIO = 0.24
@@ -637,6 +638,38 @@ document.addEventListener('DOMContentLoaded', () => {
 		return String(entry.de || entry.en || '')
 	}
 
+	const appendRulesFormattedText = (parent, value) => {
+		const text = String(value || '')
+		const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*([\s\S]+?)\*\*|\*([\s\S]+?)\*)/g
+		let lastIndex = 0
+		let match = pattern.exec(text)
+		while (match) {
+			if (match.index > lastIndex) {
+				parent.appendChild(document.createTextNode(text.slice(lastIndex, match.index)))
+			}
+			if (match[2]) {
+				const strong = document.createElement('strong')
+				const em = document.createElement('em')
+				em.textContent = match[2]
+				strong.appendChild(em)
+				parent.appendChild(strong)
+			} else if (match[3]) {
+				const strong = document.createElement('strong')
+				strong.textContent = match[3]
+				parent.appendChild(strong)
+			} else if (match[4]) {
+				const em = document.createElement('em')
+				em.textContent = match[4]
+				parent.appendChild(em)
+			}
+			lastIndex = pattern.lastIndex
+			match = pattern.exec(text)
+		}
+		if (lastIndex < text.length) {
+			parent.appendChild(document.createTextNode(text.slice(lastIndex)))
+		}
+	}
+
 	const clearRulesSections = () => {
 		if (rulesSectionsNode) {
 			rulesSectionsNode.innerHTML = ''
@@ -656,14 +689,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			list.className = 'rules-view__list'
 			items.forEach((item) => {
 				const li = document.createElement('li')
-				li.textContent = String(item || '')
+				appendRulesFormattedText(li, item)
 				list.appendChild(li)
 			})
 			return list
 		}
 		const paragraph = document.createElement('p')
 		paragraph.className = 'rules-view__paragraph'
-		paragraph.textContent = translateRulesEntry(block)
+		appendRulesFormattedText(paragraph, translateRulesEntry(block))
 		return paragraph
 	}
 
@@ -676,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!text) return
 			const paragraph = document.createElement('p')
 			paragraph.className = className
-			paragraph.textContent = text
+			appendRulesFormattedText(paragraph, text)
 			parent.appendChild(paragraph)
 		})
 	}
@@ -728,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const description = document.createElement('p')
 		description.className = 'rules-category-detail__description'
-		description.textContent = translateRulesEntry(category.description)
+		appendRulesFormattedText(description, translateRulesEntry(category.description))
 		detail.appendChild(description)
 	}
 
@@ -889,7 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			heading.textContent = translateRulesEntry(about.title)
 			const body = document.createElement('p')
 			body.className = 'rules-about__text'
-			body.textContent = translateRulesEntry(about.body)
+			appendRulesFormattedText(body, translateRulesEntry(about.body))
 			copy.appendChild(heading)
 			copy.appendChild(portrait)
 			copy.appendChild(body)
@@ -1693,9 +1726,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerSubmitNode.disabled = !(hasUsername && hasAnswer)
 	}
 
+	const blurAnswerFields = () => {
+		const active = document.activeElement
+		if (active === answerUsernameNode || active === answerTextNode) {
+			active.blur()
+		}
+	}
+
 	const setAnswerComposerOpen = (open, options = {}) => {
 		const { clearStatus = true } = options
 		state.answerComposerOpen = !!open
+		if (!state.answerComposerOpen) {
+			blurAnswerFields()
+		}
 		if (answerFormNode) {
 			answerFormNode.hidden = !state.answerComposerOpen
 		}
@@ -1973,6 +2016,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const isQuestionSideVisible = () => !state.isFlipped
+
 	const hideFlipCue = () => {
 		if (!flipCueNode) {
 			return
@@ -2085,7 +2130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		variationFanNode.innerHTML = ''
 		const choices = state.variationChoices
-		const isVisible = state.hasVariations && choices.length > 1
+		const isVisible = state.hasVariations && isQuestionSideVisible() && choices.length > 1
 		if (!isVisible) {
 			variationFanNode.hidden = true
 			variationFanNode.setAttribute('aria-hidden', 'true')
@@ -2120,7 +2165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			return
 		}
 
-		variationCardNode.classList.remove('is-peek', 'is-flying-in', 'is-open-center', 'is-flying-out')
+		variationCardNode.classList.remove('is-peek', 'is-flying-in', 'is-open-center', 'is-flying-out', 'is-teaser-entering')
 
 		if (visualState === 'peek') {
 			variationCardNode.classList.add('is-peek')
@@ -2139,6 +2184,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (visualState === 'flying-out') {
 			variationCardNode.classList.add('is-flying-out')
+			return
+		}
+
+		if (visualState === 'teaser-entering') {
+			variationCardNode.classList.add('is-teaser-entering')
 		}
 	}
 
@@ -2255,7 +2305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const canDragVariationTeaser = () => {
-		if (!variationCardNode || state.isAnimating || state.miniCardOpen || !state.hasVariations) {
+		if (!variationCardNode || state.isAnimating || state.miniCardOpen || !state.hasVariations || !isQuestionSideVisible()) {
 			return false
 		}
 		return variationCardNode.classList.contains('is-peek')
@@ -2285,10 +2335,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.canDismissVariation = false
 		setVariationVisualState('flying-out')
 		window.setTimeout(() => {
-			if (state.hasVariations && state.variationChoices.length <= 1) {
-				setVariationVisualState('peek')
+			if (state.hasVariations && isQuestionSideVisible() && state.variationChoices.length <= 1) {
 				variationCardNode.hidden = false
 				variationCardNode.setAttribute('aria-hidden', 'false')
+				setVariationVisualState('teaser-entering')
+				window.setTimeout(() => {
+					if (state.hasVariations && isQuestionSideVisible() && !state.miniCardOpen && state.variationChoices.length <= 1) {
+						setVariationVisualState('peek')
+					}
+				}, VARIATION_TEASER_ENTER_MS)
 			} else {
 				variationCardNode.hidden = true
 				variationCardNode.setAttribute('aria-hidden', 'true')
@@ -2306,8 +2361,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.canDismissVariation = false
 		state.activeVariationIndex = -1
 		if (variationCardNode) {
-			variationCardNode.classList.remove('is-open', 'is-revealed', 'is-peek', 'is-flying-in', 'is-open-center', 'is-flying-out')
-			if (state.hasVariations && state.variationChoices.length <= 1) {
+			variationCardNode.classList.remove('is-open', 'is-revealed', 'is-peek', 'is-flying-in', 'is-open-center', 'is-flying-out', 'is-teaser-entering')
+			if (state.hasVariations && isQuestionSideVisible() && state.variationChoices.length <= 1) {
 				variationCardNode.hidden = false
 				variationCardNode.setAttribute('aria-hidden', 'false')
 				setVariationVisualState('peek')
@@ -2326,7 +2381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		state.hasVariations = !!visible
-		if (visible) {
+		if (visible && isQuestionSideVisible()) {
 			if (state.variationChoices.length > 1) {
 				variationCardNode.hidden = true
 				variationCardNode.setAttribute('aria-hidden', 'true')
@@ -2734,7 +2789,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const openVariationCard = (selectedIndex = 0, options = {}) => {
 		const { fromDragSnap = false } = options
-		if (!state.currentCard || !variationCardNode || !variationTextNode || state.isAnimating || !state.hasVariations) {
+		if (!state.currentCard || !variationCardNode || !variationTextNode || state.isAnimating || !state.hasVariations || !isQuestionSideVisible()) {
 			return
 		}
 
@@ -2755,7 +2810,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		applyVariationVisualTheme(choice.visual)
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
-		variationCardNode.classList.remove('is-revealed', 'is-flying-out')
+		variationCardNode.classList.remove('is-revealed', 'is-flying-out', 'is-teaser-entering')
 		renderVariationFan()
 		if (fromDragSnap) {
 			variationCardNode.classList.remove('is-dragging', 'is-returning')
@@ -2799,7 +2854,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		applyVariationVisualTheme(choice.visual)
 		variationCardNode.hidden = false
 		variationCardNode.setAttribute('aria-hidden', 'false')
-		variationCardNode.classList.remove('is-peek', 'is-flying-in', 'is-flying-out')
+		variationCardNode.classList.remove('is-peek', 'is-flying-in', 'is-flying-out', 'is-teaser-entering')
 		variationCardNode.classList.add('is-open-center')
 		renderVariationFan()
 	}
@@ -3015,11 +3070,12 @@ document.addEventListener('DOMContentLoaded', () => {
 				let bestSize = minSize
 				let low = minSize
 				let high = maxSize
+				const precision = 0.1
 
 				node.style.fontSize = `${maxSize}px`
 
-				while (low <= high) {
-					const mid = Math.floor((low + high) / 2)
+				while (high - low > precision) {
+					const mid = (low + high) / 2
 					node.style.fontSize = `${mid}px`
 
 					const nodeFits = node.scrollHeight <= node.clientHeight + 2
@@ -3029,13 +3085,13 @@ document.addEventListener('DOMContentLoaded', () => {
 					const layoutFits = typeof extraCheck === 'function' ? extraCheck() : true
 					if (nodeFits && layoutFits) {
 						bestSize = mid
-						low = mid + 1
+						low = mid
 					} else {
-						high = mid - 1
+						high = mid
 					}
 				}
 
-				node.style.fontSize = `${bestSize}px`
+				node.style.fontSize = `${bestSize.toFixed(2)}px`
 			}
 
 			fitTextNode(questionNode, questionBox, 14, 34, () => {
@@ -3161,6 +3217,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			renderLeaderboard(card.id)
 			fitQuestionText()
+			if (resetFlip) {
+				state.cardViewCount += 1
+				applyMicrofacetTexture()
+				// New cards start on the logo side ("back side"), then flip to reveal the question side.
+				setFlipClass(true)
+				setFlipRotation(180)
+				resetSwipeCueTimers()
+			}
 			const cardVariations = getCardVariations(card)
 			buildVariationChoices(card)
 			const hasVariations = cardVariations.length > 0
@@ -3172,14 +3236,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				refreshOpenVariationCard(preservedVariationIndex)
 			} else {
 				closeVariationCard()
-			}
-			if (resetFlip) {
-				state.cardViewCount += 1
-				applyMicrofacetTexture()
-				// New cards start on the logo side ("back side"), then flip to reveal the question side.
-				setFlipClass(true)
-				setFlipRotation(180)
-				resetSwipeCueTimers()
 			}
 	}
 
@@ -3911,6 +3967,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				updateAnswerSubmitState()
 				return
 			}
+			blurAnswerFields()
 			const copy = getAnswerCopy()
 			answerSubmitNode.disabled = true
 			answerSubmitNode.textContent = copy.submitting
@@ -4001,6 +4058,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// toggle flipped state
 		setFlipClass(!state.isFlipped)
+		setVariationTabVisibility(state.hasVariations)
 		resetSwipeCueTimers()
 		saveGameSession()
 
@@ -4180,6 +4238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					state.cardViewCount = 1
 					setFlipClass(savedSession.isFlipped)
 					setFlipRotation(savedSession.flipRotationDeg)
+					setVariationTabVisibility(state.hasVariations)
 					resetSwipeCueTimers()
 					saveGameSession()
 				} else {

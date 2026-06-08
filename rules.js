@@ -84,6 +84,38 @@ document.addEventListener('DOMContentLoaded', () => {
 		return String(entry.de || entry.en || '')
 	}
 
+	const appendFormattedText = (parent, value) => {
+		const text = String(value || '')
+		const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*([\s\S]+?)\*\*|\*([\s\S]+?)\*)/g
+		let lastIndex = 0
+		let match = pattern.exec(text)
+		while (match) {
+			if (match.index > lastIndex) {
+				parent.appendChild(document.createTextNode(text.slice(lastIndex, match.index)))
+			}
+			if (match[2]) {
+				const strong = document.createElement('strong')
+				const em = document.createElement('em')
+				em.textContent = match[2]
+				strong.appendChild(em)
+				parent.appendChild(strong)
+			} else if (match[3]) {
+				const strong = document.createElement('strong')
+				strong.textContent = match[3]
+				parent.appendChild(strong)
+			} else if (match[4]) {
+				const em = document.createElement('em')
+				em.textContent = match[4]
+				parent.appendChild(em)
+			}
+			lastIndex = pattern.lastIndex
+			match = pattern.exec(text)
+		}
+		if (lastIndex < text.length) {
+			parent.appendChild(document.createTextNode(text.slice(lastIndex)))
+		}
+	}
+
 	const clearSections = () => {
 		sectionsNode.innerHTML = ''
 	}
@@ -101,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			list.className = 'rules-page__list'
 			items.forEach((item) => {
 				const li = document.createElement('li')
-				li.textContent = String(item || '')
+				appendFormattedText(li, item)
 				list.appendChild(li)
 			})
 			return list
@@ -109,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const paragraph = document.createElement('p')
 		paragraph.className = 'rules-page__paragraph'
-		paragraph.textContent = t(block)
+		appendFormattedText(paragraph, t(block))
 		return paragraph
 	}
 
