@@ -1804,7 +1804,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (clearStatus && answerStatusNode) {
 			answerStatusNode.textContent = ''
 		}
-		if (state.answerComposerOpen && answerUsernameNode) {
+		const canAutoFocusAnswer = window.matchMedia
+			? window.matchMedia('(hover: hover) and (pointer: fine)').matches
+			: false
+		if (state.answerComposerOpen && answerUsernameNode && canAutoFocusAnswer) {
 			window.setTimeout(() => answerUsernameNode.focus(), 40)
 		}
 		fitQuestionText()

@@ -58,12 +58,18 @@
 	}
 
 	.answer-composer__form {
-		left: 12px;
-		right: 12px;
-		bottom: calc(var(--browser-bottom-safe-space) + 12px);
-		width: auto;
+		position: absolute;
+		left: 50%;
+		right: auto;
+		bottom: calc(100% + 8px);
+		width: min(100%, 320px);
+		max-height: min(52vh, 360px);
 		gap: 7px;
 		padding: 18px 22px 16px;
+		overflow-y: auto;
+		overflow-x: hidden;
+		transform: translateX(-50%);
+		-webkit-overflow-scrolling: touch;
 	}
 
 	.answer-composer__input,
