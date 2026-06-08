@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
+	const RULES_CONTACT_EMAIL = 'fragen@malangenommen.at'
 	const PAGE_TRANSITION_MS = 520
 	const state = {
 		language: 'de',
@@ -116,6 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const createContactLink = () => {
+		const link = document.createElement('a')
+		link.className = 'rules-page__contact-link'
+		link.href = `mailto:${RULES_CONTACT_EMAIL}`
+		link.textContent = state.language === 'en'
+			? `Send an email to ${RULES_CONTACT_EMAIL}`
+			: `Mail an ${RULES_CONTACT_EMAIL} schreiben`
+		return link
+	}
+
 	const clearSections = () => {
 		sectionsNode.innerHTML = ''
 	}
@@ -187,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			sectionsNode.appendChild(article)
 		})
+		sectionsNode.appendChild(createContactLink())
 	}
 
 	const getContent = async () => {

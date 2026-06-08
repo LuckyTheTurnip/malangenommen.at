@@ -196,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const ANSWER_SUBMISSION_ENDPOINT = '/submission'
 	const API_BASE = 'https://myfirstapi-slcb.onrender.com/api/v2/views'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
+	const RULES_CONTACT_EMAIL = 'fragen@malangenommen.at'
 	const PAGE_TRANSITION_MS = 520
 	const LEADERBOARD_PAGE_TRANSITION_MS = 920
 	const LEADERBOARD_PAGE_TRANSITION_SWITCH_MS = 460
@@ -606,6 +607,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const bubbleEdge = document.createElement('span')
 			bubbleEdge.className = 'answer-leaderboard__bubble-edge'
 			bubbleEdge.setAttribute('aria-hidden', 'true')
+			const bubbleSpeech = document.createElement('span')
+			bubbleSpeech.className = 'answer-leaderboard__bubble-speech'
+			bubbleSpeech.setAttribute('aria-hidden', 'true')
 
 			const meta = document.createElement('p')
 			meta.className = 'answer-leaderboard__meta'
@@ -625,6 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			speaker.appendChild(meta)
 			bubble.appendChild(bubbleEdge)
+			bubble.appendChild(bubbleSpeech)
 			bubble.appendChild(text)
 			item.appendChild(speaker)
 			item.appendChild(bubble)
@@ -673,6 +678,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (lastIndex < text.length) {
 			parent.appendChild(document.createTextNode(text.slice(lastIndex)))
 		}
+	}
+
+	const createRulesContactLink = (className) => {
+		const link = document.createElement('a')
+		link.className = className
+		link.href = `mailto:${RULES_CONTACT_EMAIL}`
+		link.textContent = state.language === 'en'
+			? `Send an email to ${RULES_CONTACT_EMAIL}`
+			: `Mail an ${RULES_CONTACT_EMAIL} schreiben`
+		return link
 	}
 
 	const clearRulesSections = () => {
@@ -928,9 +943,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			const body = document.createElement('p')
 			body.className = 'rules-about__text'
 			appendRulesFormattedText(body, translateRulesEntry(about.body))
+			const contactLink = createRulesContactLink('rules-about__contact-link')
 			copy.appendChild(heading)
 			copy.appendChild(portrait)
 			copy.appendChild(body)
+			copy.appendChild(contactLink)
 			aboutSection.appendChild(copy)
 			rulesSectionsNode.appendChild(aboutSection)
 		}

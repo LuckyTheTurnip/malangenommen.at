@@ -515,7 +515,7 @@
 	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
-	gap: clamp(14px, 2.6vw, 24px);
+	gap: clamp(35px, 5.6vw, 48px);
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding: clamp(10px, 2.2vw, 22px) clamp(12px, 2.4vw, 30px) clamp(8px, 1.5vw, 16px);
@@ -549,6 +549,9 @@
 	--message-float-distance: 8px;
 	--message-float-duration: 6s;
 	--message-float-delay: 0s;
+	--bubble-speech-height: clamp(26px, 5.3vw, 44px);
+	--bubble-speech-overlap: clamp(12px, 2.8vw, 22px);
+	--bubble-speech-scale-x: clamp(8px, 2vw, 18px);
 	position: relative;
 	z-index: var(--message-z);
 	width: min(86%, 680px);
@@ -575,13 +578,15 @@
 }
 
 .answer-leaderboard__speaker {
+	position: relative;
 	flex: 0 0 auto;
 	align-self: flex-end;
 	width: clamp(58px, 11vw, 84px);
 	display: grid;
 	justify-items: center;
 	gap: clamp(5px, 1vw, 8px);
-	margin-bottom: clamp(-18px, -2.4vw, -10px);
+	margin-bottom: 0;
+	top: clamp(50px, 30vw, 60px);
 	animation: leaderboard-message-float var(--message-float-duration) ease-in-out infinite;
 	animation-delay: var(--message-float-delay);
 }
@@ -614,19 +619,24 @@
 .answer-leaderboard__bubble {
 	--bubble-radius-large: 22px;
 	--bubble-radius-small: 6px;
-	--bubble-frame-inset-x: clamp(7px, 1.4vw, 12px);
-	--bubble-frame-inset-y: clamp(9px, 1.8vw, 16px);
+	--bubble-frame-inset-x: clamp(3px, 0.8vw, 7px);
+	--bubble-frame-inset-y: clamp(2px, 0.6vw, 5px);
+	--bubble-frame-trim-y: 0px;
 	--bubble-outline-color: var(--accent);
-	--bubble-outline-mask: url("../Media/Icons/Speech_bubble_edge.gif");
+	--bubble-outline-mask: url("../Media/Icons/Filterbox.gif");
+	--bubble-speech-mask: url("../Media/Icons/Speechbubble.gif");
 	position: relative;
+	flex: 0 1 auto;
+	width: fit-content;
+	max-width: min(100%, 46ch);
+	margin-bottom: calc(var(--bubble-speech-height) - var(--bubble-speech-overlap));
 	min-width: 0;
 	display: grid;
-	gap: clamp(6px, 1.2vw, 10px);
+	gap: clamp(4px, 0.9vw, 7px);
 	padding:
-		clamp(30px, 4.6vw, 42px)
-		clamp(5px, 2vw, 20px)
-		clamp(75px, 4vw, 80px)
-		clamp(31px, 5.4vw, 50px);
+		clamp(8px, 1.5vw, 12px)
+		clamp(16px, 3vw, 26px)
+		clamp(9px, 1.7vw, 13px);
 	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small);
 	background: transparent;
 	color: #111827;
@@ -639,11 +649,11 @@
 .answer-leaderboard__bubble-edge {
 	position: absolute;
 	inset:
-		calc(var(--bubble-frame-inset-y) * -1)
+		calc(var(--bubble-frame-trim-y) - var(--bubble-frame-inset-y))
 		calc(var(--bubble-frame-inset-x) * -1);
 	z-index: 0;
 	width: calc(100% + var(--bubble-frame-inset-x) * 2);
-	height: calc(100% + var(--bubble-frame-inset-y) * 2);
+	height: calc(100% + var(--bubble-frame-inset-y) + var(--bubble-frame-inset-y) - var(--bubble-frame-trim-y) - var(--bubble-frame-trim-y));
 	display: block;
 	background: var(--bubble-outline-color);
 	mask-image: var(--bubble-outline-mask);
@@ -658,16 +668,33 @@
 	pointer-events: none;
 }
 
-.answer-leaderboard__message--right .answer-leaderboard__bubble {
-	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small) var(--bubble-radius-large);
-	padding:
-		clamp(25px, 4.3vw, 38px)
-		clamp(31px, 5.4vw, 50px)
-		clamp(48px, 8.2vw, 78px)
-		clamp(33px, 6vw, 54px);
+.answer-leaderboard__bubble-speech {
+	position: absolute;
+	top: calc(100% - var(--bubble-speech-overlap));
+	left: calc(var(--bubble-speech-scale-x) * -0.5);
+	z-index: 0;
+	width: calc(100% + var(--bubble-speech-scale-x));
+	height: var(--bubble-speech-height);
+	display: block;
+	background: var(--bubble-outline-color);
+	mask-image: var(--bubble-speech-mask);
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: 100% 100%;
+	mask-mode: alpha;
+	-webkit-mask-image: var(--bubble-speech-mask);
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: 100% 100%;
+	pointer-events: none;
 }
 
-.answer-leaderboard__message--left .answer-leaderboard__bubble-edge {
+.answer-leaderboard__message--right .answer-leaderboard__bubble {
+	border-radius: var(--bubble-radius-large) var(--bubble-radius-large) var(--bubble-radius-small) var(--bubble-radius-large);
+}
+
+.answer-leaderboard__message--left .answer-leaderboard__bubble-edge,
+.answer-leaderboard__message--left .answer-leaderboard__bubble-speech {
 	transform: scaleX(-1);
 }
 
@@ -703,6 +730,7 @@
 .answer-leaderboard__answer {
 	position: relative;
 	z-index: 1;
+	margin: 0;
 	color: rgba(17, 24, 39, 0.9);
 	font-size: clamp(0.95rem, 2vw, 1.12rem);
 	line-height: 1.32;

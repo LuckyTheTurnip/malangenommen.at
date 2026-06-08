@@ -113,7 +113,7 @@
 	}
 
 	.answer-leaderboard__list {
-		padding: 8px max(18px, calc(env(safe-area-inset-left) + 12px)) max(8px, calc(env(safe-area-inset-bottom) + 6px)) max(18px, calc(env(safe-area-inset-right) + 12px));
+		padding: 8px max(18px, calc(env(safe-area-inset-left) + 12px)) max(30px, calc(env(safe-area-inset-bottom) + 24px)) max(18px, calc(env(safe-area-inset-right) + 12px));
 	}
 
 	.answer-leaderboard__message {

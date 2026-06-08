@@ -125,6 +125,22 @@ html, body {
 	gap: 8px;
 }
 
+.rules-page__contact-link {
+	justify-self: start;
+	color: #ffc3af;
+	font-weight: 800;
+	line-height: 1.2;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+	text-transform: uppercase;
+}
+
+.rules-page__contact-link:hover,
+.rules-page__contact-link:focus-visible {
+	color: #fff1ea;
+}
+
 .rules-page__status {
 	margin: 8px 2px 0;
 	color: #ffc3af;
