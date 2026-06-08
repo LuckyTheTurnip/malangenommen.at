@@ -5,9 +5,32 @@
 		--deck-width: min(86vw, 336px);
 	}
 
+	html,
+	body {
+		min-height: 100%;
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior-x: none;
+		-webkit-overflow-scrolling: touch;
+	}
+
 	.game {
+		min-height: auto;
+		padding-block: max(16px, env(safe-area-inset-top)) max(160px, calc(env(safe-area-inset-bottom) + 128px));
 		padding-inline: 12px;
 		gap: 12px;
+		touch-action: pan-y;
+		overflow-x: hidden;
+	}
+
+	.deck-stage {
+		flex: 0 0 auto;
+		min-height: calc(var(--deck-width) / (1 / 1.4));
+		margin-bottom: 64px;
+	}
+
+	.active-card {
+		touch-action: none;
 	}
 
 	.game.is-page-exiting-to-rules {
