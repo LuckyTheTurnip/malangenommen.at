@@ -1731,15 +1731,29 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerSubmitNode.disabled = !(hasUsername && hasAnswer)
 	}
 
-	const recoverMobileViewport = () => {
+	const recoverMobileViewport = (options = {}) => {
+		const { forceScale = false } = options
+		let restoreViewportTimer = null
+		if (forceScale && viewportMetaNode) {
+			viewportMetaNode.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover')
+		}
 		const resetViewport = () => {
 			window.scrollTo(0, 0)
+			document.scrollingElement?.scrollTo(0, 0)
 			document.documentElement.scrollLeft = 0
 			document.body.scrollLeft = 0
 		}
-		resetViewport()
-		window.setTimeout(resetViewport, 80)
-		window.setTimeout(resetViewport, 260)
+		window.requestAnimationFrame(resetViewport)
+		;[0, 80, 180, 360, 700].forEach((delay) => {
+			window.setTimeout(resetViewport, delay)
+		})
+		if (forceScale && viewportMetaNode && originalViewportContent) {
+			restoreViewportTimer = window.setTimeout(() => {
+				viewportMetaNode.setAttribute('content', originalViewportContent)
+				resetViewport()
+			}, 900)
+		}
+		return restoreViewportTimer
 	}
 
 	const setAnswerViewportLock = (locked) => {
@@ -1755,17 +1769,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			viewportMetaNode.setAttribute('content', parts.join(', '))
 			return
 		}
-		window.setTimeout(() => {
-			viewportMetaNode.setAttribute('content', originalViewportContent)
-			recoverMobileViewport()
-		}, 320)
+		recoverMobileViewport({ forceScale: true })
 	}
 
 	const blurAnswerFields = () => {
 		const active = document.activeElement
 		if (active === answerUsernameNode || active === answerTextNode) {
 			active.blur()
-			recoverMobileViewport()
+			recoverMobileViewport({ forceScale: true })
 		}
 	}
 
@@ -1775,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		setAnswerViewportLock(state.answerComposerOpen)
 		if (!state.answerComposerOpen) {
 			blurAnswerFields()
-			recoverMobileViewport()
+			recoverMobileViewport({ forceScale: true })
 		}
 		if (answerFormNode) {
 			answerFormNode.hidden = !state.answerComposerOpen
@@ -4040,8 +4051,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 		answerUsernameNode?.addEventListener('focus', () => setAnswerViewportLock(true))
 		answerTextNode?.addEventListener('focus', () => setAnswerViewportLock(true))
-		answerUsernameNode?.addEventListener('blur', recoverMobileViewport)
-		answerTextNode?.addEventListener('blur', recoverMobileViewport)
+		answerUsernameNode?.addEventListener('blur', () => recoverMobileViewport({ forceScale: true }))
+		answerTextNode?.addEventListener('blur', () => recoverMobileViewport({ forceScale: true }))
 		answerUsernameNode?.addEventListener('input', updateAnswerSubmitState)
 		answerTextNode?.addEventListener('input', updateAnswerSubmitState)
 		answerLeaderboardToggleNode?.addEventListener('click', () => {
