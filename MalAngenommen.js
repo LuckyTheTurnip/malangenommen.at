@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
 	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
 	const answerLeaderboardBackNode = document.querySelector('[data-answer-leaderboard-back]')
+	const viewportMetaNode = document.querySelector('meta[name="viewport"]')
 
 	const motionToggle = document.querySelector('[data-motion-toggle]')
 	const languageToggle = document.querySelector('[data-language-toggle]')
@@ -130,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationTeaserPointerId: null,
 			variationTeaserSuppressClick: false,
 			variationTeaserSuppressClickTimer: null,
+			variationDismissTimer: null,
+			variationTeaserEnterTimer: null,
 			variationFanDragging: false,
 			variationFanPointerId: null,
 			variationFanDragCard: null,
@@ -166,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			,loadingIndicatorTimer: null
 		}
 
+	const originalViewportContent = viewportMetaNode ? viewportMetaNode.getAttribute('content') || '' : ''
+
 	const SWIPE_DISTANCE = 88
 	const SWIPE_RATIO = 1.2
 	const SWIPE_VELOCITY = 0.72
@@ -176,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const LOADING_INDICATOR_DELAY_MS = 2000
 	const VARIATION_SCRATCH_THRESHOLD = 0.5
 	const VARIATION_DISMISS_DISTANCE = 64
-	const VARIATION_FLY_MS = 420
+	const VARIATION_FLY_MS = 560
 	const VARIATION_TEASER_ENTER_MS = 40
 	const VARIATION_DRAG_SNAP_PROGRESS = 0.35
 	const VARIATION_DRAG_OPEN_DISTANCE = 160
@@ -1726,18 +1731,51 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerSubmitNode.disabled = !(hasUsername && hasAnswer)
 	}
 
+	const recoverMobileViewport = () => {
+		const resetViewport = () => {
+			window.scrollTo(0, 0)
+			document.documentElement.scrollLeft = 0
+			document.body.scrollLeft = 0
+		}
+		resetViewport()
+		window.setTimeout(resetViewport, 80)
+		window.setTimeout(resetViewport, 260)
+	}
+
+	const setAnswerViewportLock = (locked) => {
+		if (!viewportMetaNode || !originalViewportContent) {
+			return
+		}
+		if (locked) {
+			const parts = originalViewportContent
+				.split(',')
+				.map((part) => part.trim())
+				.filter((part) => part && !/^maximum-scale=/i.test(part) && !/^user-scalable=/i.test(part))
+			parts.push('maximum-scale=1', 'user-scalable=no')
+			viewportMetaNode.setAttribute('content', parts.join(', '))
+			return
+		}
+		window.setTimeout(() => {
+			viewportMetaNode.setAttribute('content', originalViewportContent)
+			recoverMobileViewport()
+		}, 320)
+	}
+
 	const blurAnswerFields = () => {
 		const active = document.activeElement
 		if (active === answerUsernameNode || active === answerTextNode) {
 			active.blur()
+			recoverMobileViewport()
 		}
 	}
 
 	const setAnswerComposerOpen = (open, options = {}) => {
 		const { clearStatus = true } = options
 		state.answerComposerOpen = !!open
+		setAnswerViewportLock(state.answerComposerOpen)
 		if (!state.answerComposerOpen) {
 			blurAnswerFields()
+			recoverMobileViewport()
 		}
 		if (answerFormNode) {
 			answerFormNode.hidden = !state.answerComposerOpen
@@ -2268,6 +2306,54 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.variationFanTouchStartTime = 0
 	}
 
+	const clearVariationDismissTimers = () => {
+		if (state.variationDismissTimer) {
+			clearTimeout(state.variationDismissTimer)
+			state.variationDismissTimer = null
+		}
+		if (state.variationTeaserEnterTimer) {
+			clearTimeout(state.variationTeaserEnterTimer)
+			state.variationTeaserEnterTimer = null
+		}
+	}
+
+	const resetVariationStateForFlip = () => {
+		clearVariationDismissTimers()
+		clearVariationTeaserSuppressClick()
+		clearVariationFanSuppressClick()
+		resetVariationTeaserDrag()
+		resetVariationFanCardDrag()
+		resetVariationFanDragState()
+		state.miniCardOpen = false
+		state.scratchRevealed = false
+		state.canDismissVariation = false
+		state.activeVariationIndex = -1
+		state.currentVariationText = ''
+		if (variationCardNode) {
+			variationCardNode.classList.remove(
+				'is-open',
+				'is-revealed',
+				'is-peek',
+				'is-flying-in',
+				'is-open-center',
+				'is-flying-out',
+				'is-teaser-entering',
+				'is-dragging',
+				'is-returning',
+				'is-snapping'
+			)
+			variationCardNode.hidden = true
+			variationCardNode.setAttribute('aria-hidden', 'true')
+			applyVariationTeaserDrag(0, 0)
+		}
+		if (variationFanNode) {
+			variationFanNode.hidden = true
+			variationFanNode.setAttribute('aria-hidden', 'true')
+			variationFanNode.classList.remove('is-selection-open')
+		}
+		destroyVariationScratch()
+	}
+
 	const openVariationFanCard = (card) => {
 		const selectedIndex = Number.parseInt(card?.getAttribute('data-variation-index') || '-1', 10)
 		if (!Number.isInteger(selectedIndex) || selectedIndex < 0) {
@@ -2333,13 +2419,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		resetVariationTeaserDrag()
 		state.miniCardOpen = false
 		state.canDismissVariation = false
+		clearVariationDismissTimers()
 		setVariationVisualState('flying-out')
-		window.setTimeout(() => {
+		state.variationDismissTimer = window.setTimeout(() => {
+			state.variationDismissTimer = null
 			if (state.hasVariations && isQuestionSideVisible() && state.variationChoices.length <= 1) {
 				variationCardNode.hidden = false
 				variationCardNode.setAttribute('aria-hidden', 'false')
 				setVariationVisualState('teaser-entering')
-				window.setTimeout(() => {
+				state.variationTeaserEnterTimer = window.setTimeout(() => {
+					state.variationTeaserEnterTimer = null
 					if (state.hasVariations && isQuestionSideVisible() && !state.miniCardOpen && state.variationChoices.length <= 1) {
 						setVariationVisualState('peek')
 					}
@@ -2355,6 +2444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const closeVariationCard = () => {
+		clearVariationDismissTimers()
 		resetVariationTeaserDrag()
 		state.miniCardOpen = false
 		state.scratchRevealed = false
@@ -3948,6 +4038,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		answerCancelNode?.addEventListener('click', () => {
 			setAnswerComposerOpen(false)
 		})
+		answerUsernameNode?.addEventListener('focus', () => setAnswerViewportLock(true))
+		answerTextNode?.addEventListener('focus', () => setAnswerViewportLock(true))
+		answerUsernameNode?.addEventListener('blur', recoverMobileViewport)
+		answerTextNode?.addEventListener('blur', recoverMobileViewport)
 		answerUsernameNode?.addEventListener('input', updateAnswerSubmitState)
 		answerTextNode?.addEventListener('input', updateAnswerSubmitState)
 		answerLeaderboardToggleNode?.addEventListener('click', () => {
@@ -3968,6 +4062,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				return
 			}
 			blurAnswerFields()
+			recoverMobileViewport()
 			const copy = getAnswerCopy()
 			answerSubmitNode.disabled = true
 			answerSubmitNode.textContent = copy.submitting
@@ -4054,6 +4149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const motionWasActive = suspendMotionForTransition()
 		const normalizedDirection = direction === 'left' ? 'left' : 'right'
 		const nextRotation = state.flipRotationDeg + (normalizedDirection === 'left' ? -180 : 180)
+		resetVariationStateForFlip()
 		setFlipRotation(nextRotation)
 
 		// toggle flipped state

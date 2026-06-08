@@ -108,6 +108,10 @@
 		width: 100%;
 	}
 
+	.rules-layout__checker {
+		width: min(42vw, 160px);
+	}
+
 	.rules-layout__mascot {
 		width: 42%;
 		margin-right: 14px;
