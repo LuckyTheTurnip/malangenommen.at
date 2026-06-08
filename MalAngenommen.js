@@ -4046,6 +4046,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			hideSwipeUpCue()
 			setAnswerComposerOpen(!state.answerComposerOpen)
 		})
+		const prepareAnswerPanelExit = () => {
+			blurAnswerFields()
+			recoverMobileViewport({ forceScale: true })
+		}
+		answerCancelNode?.addEventListener('pointerdown', prepareAnswerPanelExit)
+		answerSubmitNode?.addEventListener('pointerdown', prepareAnswerPanelExit)
+		answerCancelNode?.addEventListener('touchend', prepareAnswerPanelExit)
+		answerSubmitNode?.addEventListener('touchend', prepareAnswerPanelExit)
 		answerCancelNode?.addEventListener('click', () => {
 			setAnswerComposerOpen(false)
 		})
