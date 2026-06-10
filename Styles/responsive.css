@@ -157,7 +157,7 @@
 	}
 
 	.rules-about__portrait {
-		width: min(100%, clamp(170px, 54vw, 230px));
+		width: min(100%, clamp(210px, 62vw, 290px));
 		margin-right: 0;
 	}
 

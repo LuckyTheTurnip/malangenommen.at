@@ -101,7 +101,7 @@
 .answer-composer__form::before {
 	content: "";
 	position: absolute;
-	inset: 0;
+	inset: 0 calc(clamp(18px, 5vw, 42px) * -1) 0 0;
 	z-index: -1;
 	background: var(--accent);
 	opacity: 1;
