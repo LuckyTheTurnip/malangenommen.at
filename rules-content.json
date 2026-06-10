@@ -97,8 +97,8 @@
 				"en": "Kombichaos"
 			},
 			"description": {
-				"de": "Jeder von euch nimmt 2 leere Zettel. Ihr seht auf der Karte einen Prompt samt zwei Wörtern. Auf jeden Zettel schreibt ihr jeweils eure Antwort für eins der Wörter und gebt einen Zettel an eure linke und den anderen an eure rechte Nachbar*in weiter, sodass jeder am Ende wieder zwei unterschiedliche beschriebene Zettel hat. Eure Aufgabe ist nun, den vorgelesenen Prompt mit den euch gegebenen Wörtern so gut vor der Richter*in zu erfüllen, wie ihr könnt. Wenn ihr keine Zettel habt, schreibt euch die Wörter gegenseitig über eure Handys.",
-				"en": "Each player takes 2 blank slips of paper. You see a prompt on the card along with two words. On each slip, you write your answer for one of the words and pass one slip to your left neighbor and the other to your right neighbor, so that each player ends up with two different written slips. Your task is now to fulfill the read prompt with the given words as well as you can before the judge. If you don't have any slips, text each other the words over the phone."
+				"de": "Jeder von euch nimmt 2 leere Zettel. Ihr seht auf der Karte einen Prompt samt zwei Wörtern. Auf jeden Zettel schreibt ihr jeweils eure Antwort für eins der Wörter und gebt einen Zettel an eure linke und den anderen an eure rechte Nachbar:in weiter, sodass jeder am Ende wieder zwei unterschiedliche beschriebene Zettel hat. \nEure Aufgabe ist nun, den Prompt mit den euch gegebenen Wörtern so gut zu erfüllen, wie ihr könnt. Wenn ihr keine Zettel habt, schreibt euch die Wörter gegenseitig über eure Handys.",
+				"en": "Each player takes 2 blank slips of paper. You see a prompt on the card along with two words. On each slip, you write your answer for one of the words and pass one slip to your left neighbor and the other to your right neighbor, so that each player ends up with two different written slips. \nYour task is now to fulfill the read prompt with the given words as well as you can. If you don't have any slips, text each other the words over the phone."
 			},
 			"imageSrc": "Media/Logos/kombichaos_logo.GIF"
 		},
@@ -139,12 +139,12 @@
 	],
 	"about": {
 		"title": {
-			"de": "Über mich",
-			"en": "About Me"
+			"de": "Über das Spiel",
+			"en": "About the game"
 		},
 		"body": {
-			"de": "Hi, mein Name ist Lucky und ich freue mich, dass ihr mein Spiel spielt. Ursprünglich waren es nur ein paar dumme Fragen, die meine Freund:innen und ich uns immer gegenseitig gestellt haben, oder Fremden in Bars, um ins Gespräch zu kommen. \nIch hoffe, dass ihr genauso viel Spaß und unvergessliche Momente mit diesen Fragen haben werdet wie ich. Denn egal wie unterschiedlich wir zunächst wirken, haben wir oft doch mehr Gemeinsamkeiten als wir am Anfang sehen wollen. \n\nIch werde das Spiel immer wieder um neue Fragen erweitern und deswegen würde ich mich total freuen, wenn ihr mir eure eigenen Fragen zuschickt, die euch noch einfallen und die ihr gerne im Spiel sehen wollt. Umso durchgeknallter, umso besser. \nIch freue mich, von euch über Insta oder per Mail unter fragen@malangenommen.at zu hören.",
-			"en": "Hi, my name is Lucky and I'm so happy you're playing my game. Originally, it was just a few silly questions that my friends and I would always ask each other, or strangers in bars to strike up a conversation. \nI hope you'll have just as much fun and as many unforgettable moments with these questions as I have. Because no matter how different we may seem at first, we often have more in common than we're willing to see in the beginning. \n\nI'll keep expanding the game with new questions, so I'd be absolutely thrilled if you sent me your own questions — ones that come to mind and that you'd love to see in the game. The more wild, the better. \nI look forward to hearing from you on Insta or by email at \n\bfragen@malangenommen.at"
+			"de": "Hi, mein Name ist Lucky und ich freue mich, dass ihr mein Spiel spielt. Ursprünglich waren es nur ein paar dumme Fragen, die meine Freund:innen und ich uns immer gegenseitig gestellt haben, oder Fremden in Bars, um ins Gespräch zu kommen. \nIch hoffe, dass ihr genauso viel Spaß und unvergessliche Momente mit diesen Fragen haben werdet wie ich. Denn egal wie unterschiedlich wir zunächst wirken, haben wir oft doch mehr Gemeinsamkeiten als wir am Anfang sehen wollen. \n\nIch werde das Spiel immer wieder um neue Fragen erweitern und deswegen würde ich mich total freuen, wenn ihr mir eure eigenen Fragen zuschickt, die euch noch einfallen und die ihr gerne im Spiel sehen wollt. Umso durchgeknallter, umso besser. \nIch freue mich, von euch über Insta oder per Mail von euch zu hören.",
+			"en": "Hi, my name is Lucky and I'm so happy you're playing my game. Originally, it was just a few silly questions that my friends and I would always ask each other, or strangers in bars to strike up a conversation. \nI hope you'll have just as much fun and as many unforgettable moments with these questions as I have. Because no matter how different we may seem at first, we often have more in common than we're willing to see in the beginning. \n\nI'll keep expanding the game with new questions, so I'd be absolutely thrilled if you sent me your own questions — ones that come to mind and that you'd love to see in the game. The more wild, the better. \nI look forward to hearing from you on Insta or by email."
 		},
 		"imageAlt": {
 			"de": "Lukas Kuhl",

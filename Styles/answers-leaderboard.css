@@ -552,6 +552,7 @@
 	--bubble-speech-height: clamp(26px, 5.3vw, 44px);
 	--bubble-speech-overlap: clamp(12px, 2.8vw, 22px);
 	--bubble-speech-scale-x: clamp(8px, 2vw, 18px);
+	--bubble-gif-shift-x: -5px;
 	position: relative;
 	z-index: var(--message-z);
 	width: min(86%, 680px);
@@ -665,6 +666,7 @@
 	-webkit-mask-position: center;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
+	transform: translateX(var(--bubble-gif-shift-x));
 	pointer-events: none;
 }
 
@@ -686,6 +688,7 @@
 	-webkit-mask-position: center;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
+	transform: translateX(var(--bubble-gif-shift-x));
 	pointer-events: none;
 }
 
@@ -695,7 +698,7 @@
 
 .answer-leaderboard__message--left .answer-leaderboard__bubble-edge,
 .answer-leaderboard__message--left .answer-leaderboard__bubble-speech {
-	transform: scaleX(-1);
+	transform: translateX(var(--bubble-gif-shift-x)) scaleX(-1);
 }
 
 .answer-leaderboard__meta {
@@ -737,6 +740,45 @@
 	overflow-wrap: anywhere;
 }
 
+.message-sent-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1600;
+	display: grid;
+	place-items: center;
+	padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+	background: rgba(0, 0, 0, 0.58);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 180ms ease;
+}
+
+.message-sent-overlay.is-visible {
+	opacity: 1;
+}
+
+.message-sent-overlay[hidden] {
+	display: none;
+}
+
+.message-sent-overlay__asset {
+	width: clamp(168px, 48vw, 300px);
+	aspect-ratio: 1;
+	display: block;
+	background: var(--accent);
+	filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.34));
+	mask-image: url("../Media/Icons/message_sent.GIF");
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	mask-mode: alpha;
+	-webkit-mask-image: url("../Media/Icons/message_sent.GIF");
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	animation: message-sent-pop 360ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
 @keyframes leaderboard-message-float {
 	0%,
 	100% {
@@ -744,5 +786,16 @@
 	}
 	50% {
 		transform: translateY(calc(var(--message-float-distance) * -1));
+	}
+}
+
+@keyframes message-sent-pop {
+	0% {
+		opacity: 0;
+		transform: translateY(10px) scale(0.82) rotate(-2deg);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1) rotate(0deg);
 	}
 }

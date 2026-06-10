@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const answerLeaderboardEmptyNode = document.querySelector('[data-answer-leaderboard-empty]')
 	const answerLeaderboardToggleNode = document.querySelector('[data-answer-leaderboard-toggle]')
 	const answerLeaderboardBackNode = document.querySelector('[data-answer-leaderboard-back]')
+	const messageSentOverlayNode = document.querySelector('[data-message-sent-overlay]')
 	const viewportMetaNode = document.querySelector('meta[name="viewport"]')
 
 	const motionToggle = document.querySelector('[data-motion-toggle]')
@@ -114,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			hasVariations: false,
 			miniCardOpen: false,
 			scratchRevealed: false,
+			scratchStarted: false,
 			currentVariationText: '',
 			activeVariationIndex: -1,
 			variationChoices: [],
@@ -146,6 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			variationFanSuppressClickTimer: null,
 			answerComposerOpen: false,
 			answerSuccessTimer: null,
+			messageSentOverlayTimer: null,
+			messageSentOverlayHideTimer: null,
 			answerLeaderboardOpen: false,
 			answerHistory: [],
 			leaderboardParallaxFrame: 0,
@@ -197,11 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	const API_BASE = 'https://myfirstapi-slcb.onrender.com/api/v2/views'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
 	const RULES_CONTACT_EMAIL = 'fragen@malangenommen.at'
+	const RULES_INSTAGRAM_URL = 'https://www.instagram.com/luckysverycoolstuff?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=='
 	const PAGE_TRANSITION_MS = 520
 	const LEADERBOARD_PAGE_TRANSITION_MS = 920
 	const LEADERBOARD_PAGE_TRANSITION_SWITCH_MS = 460
 	const LEADERBOARD_PAGE_TRANSITION_RIGHT_SRC = 'Media/Icons/Page_Change_right.gif'
 	const LEADERBOARD_PAGE_TRANSITION_LEFT_SRC = 'Media/Icons/Page_Change_left.gif'
+	const MESSAGE_SENT_OVERLAY_MS = 1800
+	const MESSAGE_SENT_OVERLAY_FADE_MS = 180
 	const MAX_DRAG_ROTATION = 6
 	const MAX_TILT_X = 52
 	const MAX_TILT_Y = 52
@@ -684,9 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const link = document.createElement('a')
 		link.className = className
 		link.href = `mailto:${RULES_CONTACT_EMAIL}`
-		link.textContent = state.language === 'en'
-			? `Send an email to ${RULES_CONTACT_EMAIL}`
-			: `Mail an ${RULES_CONTACT_EMAIL} schreiben`
+		link.textContent = RULES_CONTACT_EMAIL
 		return link
 	}
 
@@ -842,21 +847,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const intro = document.createElement('div')
 		intro.className = 'rules-layout__intro'
-		const mascot = document.createElement('img')
-		mascot.className = 'rules-layout__mascot'
-		mascot.src = String(hero.imageSrc || 'Media/Rules/malAngenommen_Faces.gif')
-		mascot.alt = translateRulesEntry(hero.imageAlt)
-		mascot.loading = 'lazy'
-		mascot.decoding = 'async'
 		const introCopy = document.createElement('div')
 		introCopy.className = 'rules-layout__intro-copy'
-		introCopy.appendChild(mascot)
+		const introFrame = document.createElement('span')
+		introFrame.className = 'rules-layout__intro-filter'
+		introFrame.setAttribute('aria-hidden', 'true')
+		introCopy.appendChild(introFrame)
 		appendRulesParagraphs(introCopy, hero.intro, 'rules-layout__intro-paragraph')
 		intro.appendChild(introCopy)
 		heroNode.appendChild(intro)
 		rulesSectionsNode.appendChild(heroNode)
 
 		const sections = Array.isArray(state.rulesContent.sections) ? state.rulesContent.sections : []
+		let rulesStepIndex = 0
 		sections.forEach((section) => {
 			const article = document.createElement('article')
 			article.className = 'rules-layout__section'
@@ -868,13 +871,30 @@ document.addEventListener('DOMContentLoaded', () => {
 			heading.textContent = translateRulesEntry(section.title)
 			article.appendChild(heading)
 			const blocks = Array.isArray(section.blocks) ? section.blocks : []
-			blocks.forEach((block) => {
+			const steps = document.createElement('div')
+			steps.className = 'rules-steps'
+			blocks.forEach((block, blockIndex) => {
 				const node = renderRulesBlock(block)
 				if (node) {
+					rulesStepIndex += 1
+					const card = document.createElement('div')
+					card.className = 'rules-step-card'
+					const marker = document.createElement('span')
+					marker.className = 'rules-step-card__marker'
+					marker.textContent = String(rulesStepIndex).padStart(2, '0')
+					marker.setAttribute('aria-hidden', 'true')
+					const body = document.createElement('div')
+					body.className = 'rules-step-card__body'
 					node.classList.add('rules-layout__section-copy')
-					article.appendChild(node)
+					body.appendChild(node)
+					card.appendChild(marker)
+					card.appendChild(body)
+					steps.appendChild(card)
 				}
 			})
+			if (steps.children.length > 0) {
+				article.appendChild(steps)
+			}
 			rulesSectionsNode.appendChild(article)
 		})
 
@@ -943,11 +963,27 @@ document.addEventListener('DOMContentLoaded', () => {
 			const body = document.createElement('p')
 			body.className = 'rules-about__text'
 			appendRulesFormattedText(body, translateRulesEntry(about.body))
+			const links = document.createElement('div')
+			links.className = 'rules-about__links'
+			const instagramLink = document.createElement('a')
+			instagramLink.className = 'rules-about__instagram-link'
+			instagramLink.href = RULES_INSTAGRAM_URL
+			instagramLink.target = '_blank'
+			instagramLink.rel = 'noopener noreferrer'
+			instagramLink.setAttribute('aria-label', 'Instagram')
+			instagramLink.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1.2"></circle></svg>'
 			const contactLink = createRulesContactLink('rules-about__contact-link')
+			contactLink.setAttribute('aria-label', RULES_CONTACT_EMAIL)
+			contactLink.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg>'
+			const iconStack = document.createElement('div')
+			iconStack.className = 'rules-about__icon-stack'
 			copy.appendChild(heading)
-			copy.appendChild(portrait)
 			copy.appendChild(body)
-			copy.appendChild(contactLink)
+			links.appendChild(portrait)
+			iconStack.appendChild(instagramLink)
+			iconStack.appendChild(contactLink)
+			links.appendChild(iconStack)
+			copy.appendChild(links)
 			aboutSection.appendChild(copy)
 			rulesSectionsNode.appendChild(aboutSection)
 		}
@@ -1844,6 +1880,32 @@ document.addEventListener('DOMContentLoaded', () => {
 		setAnswerComposerOpen(false)
 	}
 
+	const showMessageSentOverlay = () => {
+		if (!messageSentOverlayNode) {
+			return
+		}
+		if (state.messageSentOverlayTimer) {
+			clearTimeout(state.messageSentOverlayTimer)
+			state.messageSentOverlayTimer = null
+		}
+		if (state.messageSentOverlayHideTimer) {
+			clearTimeout(state.messageSentOverlayHideTimer)
+			state.messageSentOverlayHideTimer = null
+		}
+		messageSentOverlayNode.hidden = false
+		messageSentOverlayNode.classList.remove('is-visible')
+		void messageSentOverlayNode.offsetWidth
+		messageSentOverlayNode.classList.add('is-visible')
+		state.messageSentOverlayTimer = window.setTimeout(() => {
+			messageSentOverlayNode.classList.remove('is-visible')
+			state.messageSentOverlayTimer = null
+			state.messageSentOverlayHideTimer = window.setTimeout(() => {
+				messageSentOverlayNode.hidden = true
+				state.messageSentOverlayHideTimer = null
+			}, MESSAGE_SENT_OVERLAY_FADE_MS)
+		}, MESSAGE_SENT_OVERLAY_MS)
+	}
+
 	const isAnswerInteractionTarget = (target) => {
 		return !!(answerComposerNode && target instanceof Node && answerComposerNode.contains(target))
 	}
@@ -2348,6 +2410,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	const setVariationScratchStarted = (started) => {
+		state.scratchStarted = !!started
+		if (variationCardNode) {
+			variationCardNode.classList.toggle('has-started-scratch', state.scratchStarted)
+		}
+	}
+
 	const resetVariationStateForFlip = () => {
 		clearVariationDismissTimers()
 		clearVariationTeaserSuppressClick()
@@ -2357,6 +2426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		resetVariationFanDragState()
 		state.miniCardOpen = false
 		state.scratchRevealed = false
+		setVariationScratchStarted(false)
 		state.canDismissVariation = false
 		state.activeVariationIndex = -1
 		state.currentVariationText = ''
@@ -2479,6 +2549,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		resetVariationTeaserDrag()
 		state.miniCardOpen = false
 		state.scratchRevealed = false
+		setVariationScratchStarted(false)
 		state.canDismissVariation = false
 		state.activeVariationIndex = -1
 		if (variationCardNode) {
@@ -2728,6 +2799,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			const scratchLine = (x, y, previousX = null, previousY = null) => {
+				setVariationScratchStarted(true)
 				const fromX = Number.isFinite(previousX) ? previousX : x
 				const fromY = Number.isFinite(previousY) ? previousY : y
 				p.line(fromX, fromY, x, y)
@@ -2735,6 +2807,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			const nativeScratchLine = (x, y, previousX = null, previousY = null) => {
+				setVariationScratchStarted(true)
 				if (!nativeScratchCtx) {
 					scratchLine(x, y, previousX, previousY)
 					return
@@ -2887,12 +2960,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			p.mouseDragged = () => {
+				setVariationScratchStarted(true)
 				p.line(p.pmouseX, p.pmouseY, p.mouseX, p.mouseY)
 				evaluateReveal()
 				return false
 			}
 
 			p.touchMoved = () => {
+				setVariationScratchStarted(true)
 				p.line(p.pmouseX, p.pmouseY, p.mouseX, p.mouseY)
 				evaluateReveal()
 				return false
@@ -2926,6 +3001,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		state.miniCardOpen = true
 		state.scratchRevealed = false
+		setVariationScratchStarted(false)
 		state.canDismissVariation = true
 		variationTextNode.textContent = choice.text
 		applyVariationVisualTheme(choice.visual)
@@ -2970,6 +3046,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		state.currentVariationText = choice.text
 		state.activeVariationIndex = choice.index
 		state.miniCardOpen = true
+		state.scratchRevealed = false
+		setVariationScratchStarted(false)
 		state.canDismissVariation = true
 		variationTextNode.textContent = choice.text
 		applyVariationVisualTheme(choice.visual)
@@ -4119,6 +4197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				answerTextNode.value = ''
 				updateAnswerSubmitState()
 				renderLeaderboard(state.currentCard.id)
+				showMessageSentOverlay()
 				if (answerStatusNode) {
 					answerStatusNode.textContent = copy.success
 				}

@@ -157,8 +157,8 @@
 	}
 
 	.rules-about__portrait {
-		width: 38%;
-		margin-right: 14px;
+		width: min(100%, clamp(170px, 54vw, 230px));
+		margin-right: 0;
 	}
 
 	.game.is-leaderboard-view .game__brand,

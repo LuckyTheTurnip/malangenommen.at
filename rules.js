@@ -121,9 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const link = document.createElement('a')
 		link.className = 'rules-page__contact-link'
 		link.href = `mailto:${RULES_CONTACT_EMAIL}`
-		link.textContent = state.language === 'en'
-			? `Send an email to ${RULES_CONTACT_EMAIL}`
-			: `Mail an ${RULES_CONTACT_EMAIL} schreiben`
+		link.textContent = RULES_CONTACT_EMAIL
 		return link
 	}
 
