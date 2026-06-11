@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const ANSWER_SUBMISSION_ENDPOINT = '/submission'
 	const API_BASE = 'https://myfirstapi-slcb.onrender.com/api/v2/views'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
-	const RULES_CONTACT_EMAIL = 'fragen@malangenommen.at'
+	const RULES_CONTACT_EMAIL = 'l_kuhl@icloud.com'
 	const RULES_INSTAGRAM_URL = 'https://www.instagram.com/luckysverycoolstuff?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=='
 	const PAGE_TRANSITION_MS = 520
 	const LEADERBOARD_PAGE_TRANSITION_MS = 920

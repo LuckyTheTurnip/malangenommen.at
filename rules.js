@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const LANGUAGE_STORAGE_KEY = 'malangenommen.language'
 	const PAGE_TRANSITION_STORAGE_KEY = 'malangenommen.pageTransition'
-	const RULES_CONTACT_EMAIL = 'fragen@malangenommen.at'
+	const RULES_CONTACT_EMAIL = 'l_kuhl@icloud.com'
 	const PAGE_TRANSITION_MS = 520
 	const state = {
 		language: 'de',
